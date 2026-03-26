@@ -94,5 +94,6 @@ th { color: var(--muted); font-weight: 600; background: var(--soft); }
 .pill-list { display: flex; flex-wrap: wrap; gap: 8px; }
 .pill { padding: 6px 10px; border-radius: 999px; background: var(--chip); color: var(--primary-deep); font-size: 12px; }
 .detail-gap { margin-top: 12px; }
-.toast { position: fixed; right: 24px; bottom: 24px; z-index: 40; min-width: 240px; max-width: 420px; padding: 14px 16px; border-radius: 14px; background: #111827; color: #fff; box-shadow: var(--shadow); }
+.toast { position: fixed; top: 28px; left: calc(100% - min(1120px, 88vw) / 2); transform: translateX(-50%); z-index: 40; min-width: 240px; max-width: 420px; padding: 14px 16px; border-radius: 14px; background: #111827; color: #fff; box-shadow: var(--shadow); }
 .empty { padding: 24px; text-align: center; color: var(--muted); }
+
