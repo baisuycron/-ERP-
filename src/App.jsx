@@ -20,6 +20,28 @@ const getCat3 = (c1, c2) => categoryTree.find((i) => i.label === c1)?.children.f
 const getBarcodes = (product) => product.skus.flatMap((sku) => sku.barcodes.filter((item) => item.code));
 const statusClass = (status) => ({ 已启用: "status-enabled", 已停用: "status-disabled", 已删除: "status-deleted" }[status] || "status-draft");
 
+const initialBoundaries = [
+  ["A", "阿"], ["B", "芭"], ["C", "擦"], ["D", "搭"], ["E", "蛾"], ["F", "发"], ["G", "噶"], ["H", "哈"], ["J", "击"], ["K", "喀"],
+  ["L", "垃"], ["M", "妈"], ["N", "拿"], ["O", "哦"], ["P", "啪"], ["Q", "期"], ["R", "然"], ["S", "撒"], ["T", "塌"], ["W", "挖"],
+  ["X", "昔"], ["Y", "压"], ["Z", "匝"]
+];
+
+function getChineseInitial(char) {
+  for (let i = initialBoundaries.length - 1; i >= 0; i -= 1) {
+    if (char.localeCompare(initialBoundaries[i][1], "zh-CN") >= 0) return initialBoundaries[i][0];
+  }
+  return "";
+}
+
+function getMnemonicFromName(name = "") {
+  return [...name.trim()].reduce((result, char) => {
+    if (/[A-Za-z]/.test(char)) return result + char.toUpperCase();
+    if (/[0-9]/.test(char)) return result + char;
+    if (/[一-龥]/.test(char)) return result + getChineseInitial(char);
+    return result;
+  }, "");
+}
+
 const createEmptyProduct = () => ({
   id: "",
   code: "",
@@ -116,6 +138,7 @@ export default function App() {
   const [detail, setDetail] = useState(null);
   const [editingId, setEditingId] = useState("");
   const [form, setForm] = useState(createEmptyProduct);
+  const [mnemonicDirty, setMnemonicDirty] = useState(false);
   const [toast, setToast] = useState("");
   const importRef = useRef(null);
 
@@ -154,13 +177,28 @@ export default function App() {
   const openCreate = () => {
     setEditingId("");
     setForm(createEmptyProduct());
+    setMnemonicDirty(false);
     setDrawerOpen(true);
   };
 
   const openEdit = (product) => {
     setEditingId(product.id);
     setForm(JSON.parse(JSON.stringify(product)));
+    setMnemonicDirty(Boolean(product.mnemonic) && product.mnemonic.toUpperCase() !== getMnemonicFromName(product.name));
     setDrawerOpen(true);
+  };
+
+  const handleNameChange = (name) => {
+    setForm((current) => {
+      const next = { ...current, name };
+      if (!mnemonicDirty) next.mnemonic = getMnemonicFromName(name);
+      return next;
+    });
+  };
+
+  const handleMnemonicChange = (mnemonic) => {
+    setMnemonicDirty(true);
+    setForm((current) => ({ ...current, mnemonic: mnemonic.toUpperCase() }));
   };
 
   const save = () => {
