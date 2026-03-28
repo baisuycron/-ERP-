@@ -1,6 +1,7 @@
 ﻿import { AutoComplete, Button, DatePicker, Input, InputNumber, Table, Tag, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import type { TableRowSelection } from 'antd/es/table/interface';
+import { DeleteOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { PurchaseReceiptItem, ReceiptProduct } from '../../types/purchaseReceipt';
 import { calculateReceiptItem, formatCurrency, formatQty } from '../../utils/purchaseInbound';
@@ -10,11 +11,20 @@ interface Props {
   products: ReceiptProduct[];
   readonly: boolean;
   onChange: (items: PurchaseReceiptItem[]) => void;
+  onBatchDelete: () => void;
   selectedRowKeys: React.Key[];
   onSelectedRowKeysChange: (keys: React.Key[]) => void;
 }
 
-export default function InboundItemsTable({ items, products, readonly, onChange, selectedRowKeys, onSelectedRowKeysChange }: Props) {
+export default function InboundItemsTable({
+  items,
+  products,
+  readonly,
+  onChange,
+  onBatchDelete,
+  selectedRowKeys,
+  onSelectedRowKeysChange,
+}: Props) {
   const isPlaceholderItem = (item: PurchaseReceiptItem) => !item.productId && !item.productCode && !item.productName;
 
   const updateItem = (id: string, patch: Partial<PurchaseReceiptItem>) => {
@@ -72,7 +82,22 @@ export default function InboundItemsTable({ items, products, readonly, onChange,
     fixed: true,
     selectedRowKeys,
     onChange: (keys) => onSelectedRowKeysChange(keys),
-    columnWidth: 48,
+        columnWidth: 48,
+    columnTitle: (
+      <Tooltip title="批量删除">
+        <Button
+          type="text"
+          danger
+          size="small"
+          icon={<DeleteOutlined />}
+          disabled={!selectedRowKeys.length}
+          onClick={(event) => {
+            event.stopPropagation();
+            onBatchDelete();
+          }}
+        />
+      </Tooltip>
+    ),
     getCheckboxProps: (record) => ({
       disabled: !readonly && isPlaceholderItem(record),
     }),
@@ -109,7 +134,7 @@ export default function InboundItemsTable({ items, products, readonly, onChange,
     { title: '单位', dataIndex: 'unit', width: 80 },
     { title: '订货数量', dataIndex: 'orderQty', width: 100, render: (value?: number) => (value || value === 0 ? formatQty(value) : '-') },
     {
-      title: '实收数量',
+      title: '入库数量',
       dataIndex: 'actualQty',
       width: 110,
       render: (value, record) =>
@@ -314,4 +339,7 @@ export default function InboundItemsTable({ items, products, readonly, onChange,
     />
   );
 }
+
+
+
 

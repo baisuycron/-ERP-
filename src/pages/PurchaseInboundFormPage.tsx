@@ -378,11 +378,6 @@ export default function PurchaseInboundFormPage() {
                 title={
                   <Space size={12} wrap>
                     <span>商品明细</span>
-                    {!readonly ? (
-                      <Button danger disabled={!selectedItemRowKeys.length} onClick={handleBatchDelete}>
-                        批量删除
-                      </Button>
-                    ) : null}
                   </Space>
                 }
                 extra={
@@ -400,6 +395,7 @@ export default function PurchaseInboundFormPage() {
                   products={meta.products}
                   readonly={readonly}
                   onChange={handleItemsChange}
+                  onBatchDelete={handleBatchDelete}
                   selectedRowKeys={selectedItemRowKeys}
                   onSelectedRowKeysChange={setSelectedItemRowKeys}
                 />
