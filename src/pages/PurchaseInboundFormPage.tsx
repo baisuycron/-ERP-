@@ -352,7 +352,7 @@ export default function PurchaseInboundFormPage() {
             meta={meta}
             mode={pageMode}
             statusLabel={detail?.status ? receiptStatusLabelMap[detail.status] : '未保存'}
-            rejectedRemark={detail?.lastRejectedRemark}
+            rejectedRemark={detail?.status === 'saved' ? detail.lastRejectedRemark : undefined}
             currentVersion={detail?.version}
             orderOptions={orderOptions}
             readonly={readonly}
