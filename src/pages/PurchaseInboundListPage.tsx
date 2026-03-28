@@ -24,7 +24,16 @@ import { purchaseInboundService } from '../services/purchaseInbound';
 import { ReceiptListFilters, ReceiptListItem, ReceiptMeta } from '../types/purchaseReceipt';
 import { formatCurrency, formatQty, receiptStatusColorMap, receiptStatusLabelMap } from '../utils/purchaseInbound';
 
-const initialFilters: ReceiptListFilters = { page: 1, pageSize: 10 };
+const getDefaultDateRangeValues = () => [dayjs().subtract(6, 'day'), dayjs()] as const;
+
+const getInitialFilters = (): ReceiptListFilters => {
+  const [start, end] = getDefaultDateRangeValues();
+  return {
+    page: 1,
+    pageSize: 10,
+    dateRange: [start.format('YYYY-MM-DD'), end.format('YYYY-MM-DD')],
+  };
+};
 
 type ColumnSettingKey =
   | 'receiptNo'
@@ -72,7 +81,7 @@ export default function PurchaseInboundListPage() {
     purchaseOrders: [],
     statusOptions: [],
   });
-  const [filters, setFilters] = useState<ReceiptListFilters>(initialFilters);
+  const [filters, setFilters] = useState<ReceiptListFilters>(getInitialFilters);
   const [loading, setLoading] = useState(false);
   const [tableData, setTableData] = useState<ReceiptListItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -106,6 +115,9 @@ export default function PurchaseInboundListPage() {
   };
 
   useEffect(() => {
+    const initialFilters = getInitialFilters();
+    form.setFieldsValue({ dateRange: getDefaultDateRangeValues() });
+    setFilters(initialFilters);
     fetchList(initialFilters);
   }, []);
 
@@ -135,7 +147,10 @@ export default function PurchaseInboundListPage() {
   };
 
   const handleReset = () => {
+    const defaultDateRange = getDefaultDateRangeValues();
+    const initialFilters = getInitialFilters();
     form.resetFields();
+    form.setFieldsValue({ dateRange: defaultDateRange });
     setFilters(initialFilters);
     fetchList(initialFilters);
   };

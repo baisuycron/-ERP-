@@ -46,7 +46,12 @@ export default function InboundHeaderFormV2({
         </Col>
         <Col span={6}>
           <Form.Item label="单据日期" name="receiptDate" rules={[{ required: true, message: '请选择单据日期' }]}>
-            <DatePicker disabled={readonly} style={{ width: '100%' }} disabledDate={(date) => !!date && date.isAfter(dayjs(), 'day')} />
+            <DatePicker
+              disabled={readonly}
+              placeholder="请选择单据日期"
+              style={{ width: '100%' }}
+              disabledDate={(date) => !!date && date.isAfter(dayjs(), 'day')}
+            />
           </Form.Item>
         </Col>
         <Col span={6}>
