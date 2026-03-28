@@ -116,7 +116,7 @@ export default function InboundItemsTable({
           <AutoComplete
             value={value}
             style={{ width: '100%' }}
-            placeholder="输入条码模糊查询"
+            placeholder="输入商品信息查询"
             popupClassName="purchase-inbound-autocomplete-popup"
             popupMatchSelectWidth={860}
             options={getBarcodeOptions(value ?? '')}
