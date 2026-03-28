@@ -553,6 +553,54 @@
   color: #6b7a90;
 }
 
+.purchase-inbound-items-table .ant-table-selection-column {
+  padding-left: 6px !important;
+  padding-right: 10px !important;
+}
+
+.purchase-inbound-items-table .ant-table-thead .ant-table-selection-column,
+.purchase-inbound-items-table .ant-table-tbody .ant-table-selection-column {
+  text-align: center;
+}
+
+.purchase-inbound-items-table .ant-table-selection-column .ant-checkbox-wrapper,
+.purchase-inbound-items-table .ant-table-selection-column .ant-checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.purchase-inbound-selection-head {
+  position: relative;
+  width: 100%;
+  min-height: 24px;
+}
+
+.purchase-inbound-selection-checkbox {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate(-50%, -50%);
+  flex: 0 0 auto;
+}
+
+.purchase-inbound-selection-delete.ant-btn {
+  position: absolute;
+  left: calc(50% + 14px);
+  top: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  transform: translateY(-50%);
+  flex: 0 0 auto;
+}
+
 .ant-table-wrapper .ant-table-thead > tr > th {
   background: #f8fafc;
   font-weight: 600;

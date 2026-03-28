@@ -82,21 +82,25 @@ export default function InboundItemsTable({
     fixed: true,
     selectedRowKeys,
     onChange: (keys) => onSelectedRowKeysChange(keys),
-        columnWidth: 48,
-    columnTitle: (
-      <Tooltip title="批量删除">
-        <Button
-          type="text"
-          danger
-          size="small"
-          icon={<DeleteOutlined />}
-          disabled={!selectedRowKeys.length}
-          onClick={(event) => {
-            event.stopPropagation();
-            onBatchDelete();
-          }}
-        />
-      </Tooltip>
+    columnWidth: 72,
+    columnTitle: (originalNode) => (
+      <div className="purchase-inbound-selection-head">
+        <div className="purchase-inbound-selection-checkbox">{originalNode}</div>
+        <Tooltip title="批量删除">
+          <Button
+            type="text"
+            danger
+            size="small"
+            icon={<DeleteOutlined />}
+            disabled={!selectedRowKeys.length}
+            className="purchase-inbound-selection-delete"
+            onClick={(event) => {
+              event.stopPropagation();
+              onBatchDelete();
+            }}
+          />
+        </Tooltip>
+      </div>
     ),
     getCheckboxProps: (record) => ({
       disabled: !readonly && isPlaceholderItem(record),
@@ -329,6 +333,7 @@ export default function InboundItemsTable({
 
   return (
     <Table
+      className="purchase-inbound-items-table"
       rowKey="id"
       rowSelection={readonly ? undefined : rowSelection}
       columns={columns}
