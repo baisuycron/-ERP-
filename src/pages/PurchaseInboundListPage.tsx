@@ -399,7 +399,7 @@ export default function PurchaseInboundListPage() {
             </Col>
             <Col xs={24} md={12} xl={6}>
               <Form.Item label="单据日期" name="dateRange">
-                <DatePicker.RangePicker style={{ width: '100%' }} />
+                <DatePicker.RangePicker style={{ width: '100%' }} placeholder={['', '']} />
               </Form.Item>
             </Col>
             <Col xs={24} md={12} xl={6}>
