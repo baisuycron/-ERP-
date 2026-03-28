@@ -130,7 +130,7 @@ const buildReceipt = (input: { id: string; status: ReceiptStatus; supplierId: st
   const createdAt = now.subtract(3, 'day').toISOString();
   return {
     id: input.id,
-    receiptNo: buildReceiptNo(),
+    receiptNo: buildReceiptNo(input.receiptDate),
     status: input.status,
     receiptDate: input.receiptDate,
     warehouseId: warehouse.id,

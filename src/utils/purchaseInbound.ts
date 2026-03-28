@@ -17,7 +17,13 @@ export const formatQty = (value: number) => `${Number(value || 0).toFixed(2).rep
 
 export const roundTo = (value: number, digits = 2) => Number(value.toFixed(digits));
 
-export const buildReceiptNo = () => `CGRK${dayjs().format('YYYYMMDDHHmmss')}`;
+const receiptSequenceByDate: Record<string, number> = {};
+
+export const buildReceiptNo = (receiptDate?: string) => {
+  const dateKey = dayjs(receiptDate || dayjs()).format('YYYYMMDD');
+  receiptSequenceByDate[dateKey] = (receiptSequenceByDate[dateKey] ?? 0) + 1;
+  return `CGRK${dateKey}${String(receiptSequenceByDate[dateKey]).padStart(5, '0')}`;
+};
 
 export const buildAttachment = (name: string, category: AttachmentItem['category']): AttachmentItem => ({
   uid: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,

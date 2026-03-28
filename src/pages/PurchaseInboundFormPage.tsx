@@ -185,7 +185,7 @@ export default function PurchaseInboundFormPage() {
 
   const fillForm = (receipt: PurchaseReceipt, isCopy = false) => {
     form.setFieldsValue({
-      receiptNo: isCopy ? buildReceiptNo() : receipt.receiptNo,
+      receiptNo: isCopy ? buildReceiptNo(receipt.receiptDate) : receipt.receiptNo,
       receiptDate: dayjs(isCopy ? dayjs() : receipt.receiptDate),
       warehouseId: receipt.warehouseId,
       supplierId: receipt.supplierId,
@@ -211,7 +211,7 @@ export default function PurchaseInboundFormPage() {
 
         if (pageMode === 'create') {
           form.setFieldsValue({
-            receiptNo: buildReceiptNo(),
+            receiptNo: buildReceiptNo(dayjs().format('YYYY-MM-DD')),
             receiptDate: dayjs(),
             warehouseId: undefined,
             supplierId: undefined,

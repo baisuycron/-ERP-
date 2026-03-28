@@ -102,7 +102,7 @@ const rebuildReceipt = (
 
   return {
     id: current?.id ?? `receipt-${Date.now()}`,
-    receiptNo: current?.receiptNo ?? buildReceiptNo(),
+    receiptNo: current?.receiptNo ?? buildReceiptNo(payload.receiptDate),
     status: current?.status ?? 'saved',
     receiptDate: payload.receiptDate,
     warehouseId: warehouse.id,
