@@ -490,6 +490,25 @@
   padding: 0 16px;
 }
 
+.purchase-inbound-form-shell > .ant-card-head .ant-card-head-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+
+.purchase-inbound-form-shell > .ant-card-head .ant-card-head-title {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.purchase-inbound-form-shell > .ant-card-head .ant-card-extra {
+  margin-inline-start: 12px;
+  padding: 0;
+  flex: 0 0 auto;
+}
+
 .purchase-inbound-form-shell > .ant-card-body {
   padding: 16px;
 }

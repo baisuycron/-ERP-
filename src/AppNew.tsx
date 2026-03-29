@@ -10,7 +10,7 @@
   UserOutlined,
 } from '@ant-design/icons';
 import { Badge, Input, Layout, Menu, Typography } from 'antd';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import ProductCreatePage from './pages/ProductCreatePage';
 import ProductImportPage from './pages/ProductImportPage';
@@ -52,6 +52,7 @@ const buildTabFromPath = (pathname: string) => {
 export default function AppNew() {
   const location = useLocation();
   const navigate = useNavigate();
+  const contentRef = useRef<HTMLElement | null>(null);
   const selectedKey =
     ['/purchase/inbounds', '/products', '/products/create', '/products/import'].find((item) =>
       location.pathname.startsWith(item),
@@ -67,6 +68,11 @@ export default function AppNew() {
     const nextTab = buildTabFromPath(location.pathname);
     if (!nextTab) return;
     setOpenTabs((current) => (current.some((item) => item.key === nextTab.key) ? current : [...current, nextTab]));
+  }, [location.pathname]);
+
+  useEffect(() => {
+    contentRef.current?.scrollTo({ top: 0, behavior: 'auto' });
+    setTopbarElevated(false);
   }, [location.pathname]);
 
   const handleCloseTab = (tabKey: string) => {
@@ -102,6 +108,7 @@ export default function AppNew() {
         />
       </Sider>
       <Content
+        ref={contentRef}
         className={`erp-content${isPurchaseInboundFormRoute ? ' is-detail-mode' : ''}`}
         onScroll={(event) => {
           if (isPurchaseInboundFormRoute) return;

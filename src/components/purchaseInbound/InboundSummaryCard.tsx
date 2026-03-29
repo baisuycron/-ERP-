@@ -10,7 +10,7 @@ export default function InboundSummaryCard({ items }: Props) {
   const summary = summarizeReceiptItems(items);
 
   const stats = [
-    { label: '商品种数', value: summary.productCount },
+    { label: '商品数', value: summary.productCount },
     { label: '明细行数', value: summary.itemCount },
     { label: '入库总数量', value: formatQty(summary.totalQty) },
     { label: '赠品总数量', value: formatQty(summary.giftTotalQty) },

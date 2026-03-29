@@ -116,6 +116,7 @@ export default function PurchaseInboundFormPage() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [auditRemark, setAuditRemark] = useState('');
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
 
   const copyId = searchParams.get('copyId');
   const pageMode: ReceiptMode = mode ?? (id ? 'view' : 'create');
@@ -277,12 +278,19 @@ export default function PurchaseInboundFormPage() {
     }
   };
 
-  const handleAudit = async (action: 'approve' | 'reject') => {
+  const handleAudit = async (action: 'approve' | 'reject', remark?: string) => {
     try {
       if (!id || !detail) return;
+      const finalRemark = action === 'reject' ? (remark ?? auditRemark).trim() : remark ?? auditRemark;
+      if (action === 'reject' && !finalRemark) {
+        messageApi.warning('请输入驳回意见。');
+        return;
+      }
       setSaving(true);
-      await purchaseInboundService.audit(id, { action, remark: auditRemark, version: detail.version });
+      await purchaseInboundService.audit(id, { action, remark: finalRemark, version: detail.version });
       messageApi.success(action === 'approve' ? '审核通过。' : '已驳回并退回修改。');
+      setRejectModalOpen(false);
+      setAuditRemark('');
       navigate(`/purchase/inbounds/${id}/view`);
     } catch (error) {
       messageApi.error(getErrorMessage(error));
@@ -322,7 +330,7 @@ export default function PurchaseInboundFormPage() {
                 <Button type="primary" loading={saving} onClick={() => handleAudit('approve')}>
                   审核通过
                 </Button>
-                <Button danger loading={saving} onClick={() => handleAudit('reject')}>
+                <Button danger loading={saving} onClick={() => setRejectModalOpen(true)}>
                   驳回
                 </Button>
               </>
@@ -425,17 +433,6 @@ export default function PurchaseInboundFormPage() {
             {detail ? <AuditTimeline nodes={detail.auditNodes} flags={detail.integrationFlags} /> : null}
           </Space>
 
-          {pageMode === 'audit' ? (
-            <Card size="small" title="审核意见" style={{ marginTop: 12 }}>
-              <Input.TextArea
-                rows={4}
-                value={auditRemark}
-                onChange={(event) => setAuditRemark(event.target.value)}
-                placeholder="驳回时必须填写意见；通过时可补充说明。"
-              />
-            </Card>
-          ) : null}
-
           {detail ? (
             <Card size="small" title="操作日志" style={{ marginTop: 12 }}>
               <List
@@ -455,6 +452,27 @@ export default function PurchaseInboundFormPage() {
           ) : null}
         </Form>
       </Card>
+
+      <Modal
+        title="填写驳回意见"
+        open={rejectModalOpen}
+        okText="确认驳回"
+        cancelText="取消"
+        confirmLoading={saving}
+        onCancel={() => {
+          if (saving) return;
+          setRejectModalOpen(false);
+          setAuditRemark('');
+        }}
+        onOk={() => handleAudit('reject', auditRemark)}
+      >
+        <Input.TextArea
+          rows={4}
+          value={auditRemark}
+          onChange={(event) => setAuditRemark(event.target.value)}
+          placeholder="请填写驳回意见"
+        />
+      </Modal>
 
       <Modal
         title="选择采购订货单"
