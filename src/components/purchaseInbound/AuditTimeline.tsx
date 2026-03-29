@@ -29,7 +29,7 @@ export default function AuditTimeline({ nodes, flags }: Props) {
                 </Space>
                 <Typography.Text type="secondary">审核人：{node.auditor}</Typography.Text>
                 <Typography.Text type="secondary">
-                  审核时间：{node.auditTime ? dayjs(node.auditTime).format('YYYY-MM-DD HH:mm:ss') : '待审核'}
+                  审核日期：{node.auditTime ? dayjs(node.auditTime).format('YYYY-MM-DD HH:mm:ss') : '待审核'}
                 </Typography.Text>
                 <Typography.Text>{node.remark || '暂无审核意见'}</Typography.Text>
               </Space>
