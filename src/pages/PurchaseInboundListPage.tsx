@@ -481,7 +481,8 @@ export default function PurchaseInboundListPage() {
             current: filters.page,
             pageSize: filters.pageSize,
             total,
-            showSizeChanger: true,
+            showSizeChanger: { showSearch: false },
+            locale: { items_per_page: '条 / 页' },
             showTotal: (value) => `共 ${value} 条采购入库单记录`,
             onChange: (page, pageSize) => {
               const next = { ...filters, page, pageSize };

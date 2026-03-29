@@ -306,6 +306,14 @@
   padding: 16px 24px;
 }
 
+.erp-filter-card .ant-card-body {
+  padding-bottom: 10px;
+}
+
+.erp-data-card .ant-card-body {
+  padding-bottom: 10px;
+}
+
 .erp-filter-card .ant-form-item {
   margin-bottom: 12px;
 }
