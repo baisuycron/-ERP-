@@ -111,7 +111,7 @@ export default function AppNew() {
       >
         <div className={`erp-topbar${topbarElevated ? ' is-elevated' : ''}`}>
           <div className="erp-topbar-left">
-            <div className="erp-home-entry">
+            <div className={`erp-home-entry${location.pathname === '/' ? ' is-active' : ''}`}>
               <HomeOutlined />
               <span>首页</span>
             </div>

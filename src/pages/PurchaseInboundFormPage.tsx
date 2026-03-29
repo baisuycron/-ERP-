@@ -3,7 +3,7 @@ import { Alert, Button, Card, Col, Form, Input, List, Modal, Row, Space, Table, 
 import dayjs from 'dayjs';
 import { PlusOutlined } from '@ant-design/icons';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import AttachmentUploader from '../components/purchaseInbound/AttachmentUploader';
+import AttachmentUploader, { AttachmentUploadButton } from '../components/purchaseInbound/AttachmentUploader';
 import AuditTimeline from '../components/purchaseInbound/AuditTimeline';
 import InboundHeaderForm from '../components/purchaseInbound/InboundHeaderFormV2';
 import InboundItemsTable from '../components/purchaseInbound/InboundItemsTable';
@@ -405,7 +405,21 @@ export default function PurchaseInboundFormPage() {
 
           <Space direction="vertical" size={12} style={{ width: '100%', marginTop: 12 }}>
             <InboundSummaryCard items={items} />
-            <Card size="small" title="附件信息">
+            <Card
+              size="small"
+              title={
+                <Space size={12} wrap>
+                  <span>附件信息</span>
+                </Space>
+              }
+              extra={
+                !readonly ? (
+                  <Space wrap>
+                    <AttachmentUploadButton value={attachments} onChange={setAttachments} readonly={readonly} />
+                  </Space>
+                ) : null
+              }
+            >
               <AttachmentUploader value={attachments} onChange={setAttachments} readonly={readonly} />
             </Card>
             {detail ? <AuditTimeline nodes={detail.auditNodes} flags={detail.integrationFlags} /> : null}
@@ -491,6 +505,8 @@ export default function PurchaseInboundFormPage() {
         title="选择商品"
         open={productPickerOpen}
         width={980}
+        cancelText="关闭"
+        okText="确认"
         onCancel={() => {
           setProductPickerOpen(false);
           setProductKeyword('');

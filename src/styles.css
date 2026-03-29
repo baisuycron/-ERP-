@@ -106,10 +106,14 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: #1677ff;
+  color: #48576a;
   font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
+}
+
+.erp-home-entry.is-active {
+  color: #1677ff;
 }
 
 .erp-route-tabs {
@@ -130,14 +134,24 @@
   font-weight: 600;
   background: transparent;
   border: 0;
-  border-bottom: 3px solid transparent;
   cursor: pointer;
   white-space: nowrap;
+  position: relative;
 }
 
 .erp-route-tab.is-active {
   color: #1677ff;
-  border-bottom-color: #1677ff;
+}
+
+.erp-route-tab.is-active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -12px;
+  height: 3px;
+  background: #1677ff;
+  border-radius: 999px;
 }
 
 .erp-route-tab-close {
@@ -384,9 +398,13 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 12px;
-  padding-bottom: 10px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
   border-bottom: 1px solid #eef2f8;
+}
+
+.erp-data-card-head > .ant-btn {
+  transform: translateY(-4px);
 }
 
 .erp-data-tabs {
@@ -417,7 +435,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: -7px;
   height: 3px;
   border-radius: 999px;
   background: #1677ff;

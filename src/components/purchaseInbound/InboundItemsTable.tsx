@@ -321,15 +321,17 @@ export default function InboundItemsTable({
           <Tag>手工新增</Tag>
         ),
     },
-    {
+  ];
+
+  if (!readonly) {
+    columns.push({
       title: '操作',
       key: 'action',
       width: 100,
       fixed: 'right',
-      render: (_, record) =>
-        readonly || isPlaceholderItem(record) ? null : <Button type="link" danger onClick={() => removeItem(record.id)}>删除</Button>,
-    },
-  ];
+      render: (_, record) => (isPlaceholderItem(record) ? null : <Button type="link" danger onClick={() => removeItem(record.id)}>删除</Button>),
+    });
+  }
 
   return (
     <Table
