@@ -141,7 +141,7 @@ function ListPage({ filters, setFilters, page, setPage, pageSize, setPageSize, o
   );
 }
 
-function ProductPickerModal({ filters, setFilters, onClose }) {
+function ProductPickerModal({ filters, setFilters, selectedProductIds, onToggleProduct, onSave, onClose }) {
   return (
     <div className="modal-overlay">
       <div className="modal-mask" onClick={onClose} />
@@ -153,9 +153,9 @@ function ProductPickerModal({ filters, setFilters, onClose }) {
           <label className="picker-field"><span>商品ID</span><input value={filters.productId} onChange={(e) => setFilters({ ...filters, productId: e.target.value })} /></label>
           <div className="picker-actions"><button className="btn btn-reset" type="button" onClick={() => setFilters(initialPickerFilters)}>重置</button><button className="btn btn-search" type="button">查询</button></div>
         </div>
-        <div className="picker-table-wrap"><table className="picker-table goods-table"><thead><tr><th><input type="checkbox" /></th><th>商品</th><th>库存</th><th>商城价</th><th>规格数量</th></tr></thead><tbody>{pickerRows.map((item) => <tr key={item.id}><td><input type="checkbox" /></td><td><div className="product-cell"><div className="product-image">{item.image}</div><div className="product-meta"><div className="product-name">{item.name}</div><div className="product-id">商品ID： {item.id}</div></div></div></td><td>{item.stock}</td><td>{item.marketPrice}</td><td>共 {item.specCount} 个 规格</td></tr>)}</tbody></table></div>
+        <div className="picker-table-wrap"><table className="picker-table goods-table"><thead><tr><th><input type="checkbox" checked={pickerRows.length > 0 && selectedProductIds.length === pickerRows.length} onChange={(e) => onToggleProduct(e.target.checked ? pickerRows.map((item) => item.id) : [])} /></th><th>商品</th><th>库存</th><th>商城价</th><th>规格数量</th></tr></thead><tbody>{pickerRows.map((item) => <tr key={item.id}><td><input type="checkbox" checked={selectedProductIds.includes(item.id)} onChange={() => onToggleProduct(item.id)} /></td><td><div className="product-cell"><div className="product-image">{item.image}</div><div className="product-meta"><div className="product-name">{item.name}</div><div className="product-id">商品ID： {item.id}</div></div></div></td><td>{item.stock}</td><td>{item.marketPrice}</td><td>共 {item.specCount} 个 规格</td></tr>)}</tbody></table></div>
         <div className="picker-pagination"><span>共1条</span><select><option>10 条/页</option></select><button className="page-btn" type="button" disabled>‹</button><button className="page-btn is-current" type="button">1</button><button className="page-btn" type="button" disabled>›</button><span>到第</span><input className="page-input" placeholder="请输入" /><span>页</span><button className="btn btn-jump" type="button">跳转</button></div>
-        <div className="picker-footer"><button className="btn btn-create" type="button" onClick={onClose}>保存</button></div>
+        <div className="picker-footer"><button className="btn btn-create" type="button" onClick={onSave}>保存</button></div>
       </div>
     </div>
   );
@@ -271,7 +271,7 @@ function SpecPickerModal({ product, rule, onClose, onUpdateSpecField, onToggleSp
   );
 }
 
-function CreatePage({ form, onFormChange, selectedProducts, onBack, onOpenPicker, onOpenSpecPicker, onUpdateProductLimit, modalOpen }) {
+function CreatePage({ form, onFormChange, selectedProducts, selectedGoodsIds, onToggleGoodsSelection, onRemoveProduct, onBatchRemoveProducts, onBack, onOpenPicker, onOpenSpecPicker, onUpdateProductLimit, modalOpen }) {
   const isUnified = form.rule === limitRules[0];
 
   const getTotalLimitDisplay = (product) => {
@@ -279,6 +279,8 @@ function CreatePage({ form, onFormChange, selectedProducts, onBack, onOpenPicker
     const total = product.specs.filter((item) => item.status === "active").reduce((sum, item) => sum + Number(item.limitCount || 0), 0);
     return total ? String(total) : "";
   };
+
+  const hasSelectedProducts = selectedProducts.length > 0;
 
   return (
     <section className={`content-card create-card ${modalOpen ? "is-dimmed" : ""}`}>
@@ -295,10 +297,22 @@ function CreatePage({ form, onFormChange, selectedProducts, onBack, onOpenPicker
         <div className="goods-detail-title">商品详情:</div>
         <div className="goods-panel">
           <div className="goods-panel-head">已选规格列表 <span>({selectedProducts.length})</span></div>
-          <div className="goods-filter-bar"><label className="mini-field"><span>商品名称:</span><input value={form.productKeyword} onChange={(e) => onFormChange("productKeyword", e.target.value)} /></label><label className="mini-field"><span>商品ID:</span><input value={form.productId} onChange={(e) => onFormChange("productId", e.target.value)} /></label><label className="mini-field mini-field-spec"><span>规格ID:</span><input value={form.specId} onChange={(e) => onFormChange("specId", e.target.value)} /></label><label className="check-item"><input type="checkbox" checked={form.invalidSpecOnly} onChange={(e) => onFormChange("invalidSpecOnly", e.target.checked)} /><span>筛选失效规格</span></label><button className="btn btn-reset" type="button">重置</button><button className="btn btn-search" type="button">搜索</button></div>
-          <div className="goods-toolbar"><button className="btn btn-reset" type="button">批量删除</button><button className="btn btn-reset export-btn" type="button">导出搜索结果</button></div>
-          <div className="goods-table-shell"><table className="goods-table"><thead><tr><th><input type="checkbox" /></th><th>商品</th><th>商城价</th><th>限时价</th><th>总限购数量</th><th>库存</th><th>规格数量</th><th>操作</th></tr></thead><tbody>{selectedProducts.map((item) => <tr key={item.id}><td><input type="checkbox" /></td><td><div className="product-cell"><div className="product-image">{item.image}</div><div className="product-meta"><div className="product-name">{item.name}</div><div className="product-id">商品ID： {item.id}</div></div><button className="delete-link" type="button">删除商品</button></div></td><td>{item.marketPrice}</td><td>{item.flashPrice || "-"}</td><td><input className={`limit-input ${!isUnified ? "is-disabled" : ""}`} value={getTotalLimitDisplay(item)} readOnly={!isUnified} disabled={!isUnified} onChange={(e) => onUpdateProductLimit(item.id, e.target.value.replace(/[^\d]/g, ""))} /></td><td>{item.stock}</td><td>共 {item.specs.length} 个 规格</td><td><div className="spec-action"><button type="button" className="spec-open-btn" onClick={() => onOpenSpecPicker(item.id)}>已选 {item.specs.filter((spec) => spec.status === "active").length} 个 规格 <span>+</span></button></div></td></tr>)}</tbody></table></div>
-          <div className="goods-pagination"><span>共 125 条</span><select><option>10 条/页</option></select><button className="page-btn" type="button" disabled>‹</button><button className="page-btn is-current" type="button">1</button><button className="page-btn" type="button">2</button><button className="page-btn" type="button">3</button><button className="page-btn" type="button">4</button><button className="page-btn" type="button">5</button><span>...</span><button className="page-btn" type="button">13</button><button className="page-btn" type="button">›</button><span>到第</span><input className="page-input" placeholder="请输入" /><span>页</span><button className="btn btn-jump" type="button">跳转</button></div>
+          {hasSelectedProducts ? (
+            <>
+              <div className="goods-filter-bar"><label className="mini-field"><span>商品名称:</span><input value={form.productKeyword} onChange={(e) => onFormChange("productKeyword", e.target.value)} /></label><label className="mini-field"><span>商品ID:</span><input value={form.productId} onChange={(e) => onFormChange("productId", e.target.value)} /></label><label className="mini-field mini-field-spec"><span>规格ID:</span><input value={form.specId} onChange={(e) => onFormChange("specId", e.target.value)} /></label><label className="check-item"><input type="checkbox" checked={form.invalidSpecOnly} onChange={(e) => onFormChange("invalidSpecOnly", e.target.checked)} /><span>筛选失效规格</span></label><button className="btn btn-reset" type="button">重置</button><button className="btn btn-search" type="button">搜索</button></div>
+              <div className="goods-toolbar"><button className="btn btn-reset" type="button" onClick={onBatchRemoveProducts}>批量删除</button><button className="btn btn-reset export-btn" type="button">导出搜索结果</button></div>
+              <div className="goods-table-shell"><table className="goods-table"><thead><tr><th><input type="checkbox" checked={selectedProducts.length > 0 && selectedGoodsIds.length === selectedProducts.length} onChange={(e) => onToggleGoodsSelection(e.target.checked ? selectedProducts.map((item) => item.id) : [])} /></th><th>商品</th><th>商城价</th><th>限时价</th><th>总限购数量</th><th>库存</th><th>规格数量</th><th>操作</th></tr></thead><tbody>{selectedProducts.map((item) => <tr key={item.id}><td><input type="checkbox" checked={selectedGoodsIds.includes(item.id)} onChange={() => onToggleGoodsSelection(item.id)} /></td><td><div className="product-cell"><div className="product-image">{item.image}</div><div className="product-meta"><div className="product-name">{item.name}</div><div className="product-id">商品ID： {item.id}</div></div><button className="delete-link" type="button" onClick={() => onRemoveProduct(item.id)}>删除商品</button></div></td><td>{item.marketPrice}</td><td>{item.flashPrice || "-"}</td><td><input className={`limit-input ${!isUnified ? "is-disabled" : ""}`} value={getTotalLimitDisplay(item)} readOnly={!isUnified} disabled={!isUnified} onChange={(e) => onUpdateProductLimit(item.id, e.target.value.replace(/[^\d]/g, ""))} /></td><td>{item.stock}</td><td>共 {item.specs.length} 个 规格</td><td><div className="spec-action"><button type="button" className="spec-open-btn" onClick={() => onOpenSpecPicker(item.id)}>已选 {item.specs.filter((spec) => spec.status === "active").length} 个 规格 <span>+</span></button></div></td></tr>)}</tbody></table></div>
+              <div className="goods-pagination"><span>共 125 条</span><select><option>10 条/页</option></select><button className="page-btn" type="button" disabled>‹</button><button className="page-btn is-current" type="button">1</button><button className="page-btn" type="button">2</button><button className="page-btn" type="button">3</button><button className="page-btn" type="button">4</button><button className="page-btn" type="button">5</button><span>...</span><button className="page-btn" type="button">13</button><button className="page-btn" type="button">›</button><span>到第</span><input className="page-input" placeholder="请输入" /><span>页</span><button className="btn btn-jump" type="button">跳转</button></div>
+            </>
+          ) : (
+            <div className="goods-empty-state">
+              <div className="goods-empty-illustration" aria-hidden="true">
+                <div className="goods-empty-box goods-empty-box-left" />
+                <div className="goods-empty-box goods-empty-box-right" />
+                <div className="goods-empty-tag">+</div>
+              </div>
+            </div>
+          )}
         </div>
         <div className="create-footer"><button className="btn btn-create" type="button">保存</button><button className="btn btn-reset" type="button" onClick={onBack}>返回列表</button></div>
       </div>
@@ -316,7 +330,9 @@ export default function App() {
   const [pageSize, setPageSize] = useState(20);
   const [createForm, setCreateForm] = useState(initialCreateForm);
   const [pickerFilters, setPickerFilters] = useState(initialPickerFilters);
-  const [selectedProducts, setSelectedProducts] = useState(createInitialProducts);
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [selectedGoodsIds, setSelectedGoodsIds] = useState([]);
+  const [selectedPickerProductIds, setSelectedPickerProductIds] = useState([]);
   const [toastMessage, setToastMessage] = useState("");
 
   const activeSpecProduct = selectedProducts.find((item) => item.id === activeSpecProductId) || selectedProducts[0];
@@ -344,6 +360,70 @@ export default function App() {
       ...product,
       specs: product.specs.map((spec) => (spec.id === specId ? { ...spec, [field]: value } : spec))
     }));
+  };
+
+  const handleTogglePickerProduct = (value) => {
+    if (Array.isArray(value)) {
+      setSelectedPickerProductIds(value);
+      return;
+    }
+
+    setSelectedPickerProductIds((current) => (current.includes(value) ? current.filter((item) => item !== value) : [...current, value]));
+  };
+
+  const handleSavePicker = () => {
+    if (selectedPickerProductIds.length === 0) {
+      setToastMessage("请先选择商品");
+      return;
+    }
+
+    const catalogProducts = createInitialProducts();
+    const selectedCatalogProducts = catalogProducts.filter((item) => selectedPickerProductIds.includes(item.id));
+
+    setSelectedProducts((current) => {
+      const existingIds = new Set(current.map((item) => item.id));
+      const newProducts = selectedCatalogProducts.filter((item) => !existingIds.has(item.id));
+      return [...current, ...newProducts];
+    });
+
+    setIsPickerOpen(false);
+  };
+
+  const handleToggleGoodsSelection = (value) => {
+    if (Array.isArray(value)) {
+      setSelectedGoodsIds(value);
+      return;
+    }
+
+    setSelectedGoodsIds((current) => (current.includes(value) ? current.filter((item) => item !== value) : [...current, value]));
+  };
+
+  const handleRemoveProduct = (productId) => {
+    setSelectedProducts((current) => current.filter((item) => item.id !== productId));
+    setSelectedGoodsIds((current) => current.filter((item) => item !== productId));
+    setSelectedPickerProductIds((current) => current.filter((item) => item !== productId));
+
+    if (activeSpecProductId === productId) {
+      setIsSpecOpen(false);
+      setActiveSpecProductId("");
+    }
+  };
+
+  const handleBatchRemoveProducts = () => {
+    if (selectedGoodsIds.length === 0) {
+      return;
+    }
+
+    const selectedIdSet = new Set(selectedGoodsIds);
+    setSelectedProducts((current) => current.filter((item) => !selectedIdSet.has(item.id)));
+    setSelectedPickerProductIds((current) => current.filter((item) => !selectedIdSet.has(item)));
+
+    if (activeSpecProductId && selectedIdSet.has(activeSpecProductId)) {
+      setIsSpecOpen(false);
+      setActiveSpecProductId("");
+    }
+
+    setSelectedGoodsIds([]);
   };
 
   useEffect(() => {
@@ -402,16 +482,27 @@ export default function App() {
         <Header />
         <main className="workspace-main">
           <TabSection creating={isCreating} onSwitchToList={() => { setIsCreating(false); closeAllCreateOverlays(); }} />
-          {isCreating ? <CreatePage form={createForm} onFormChange={handleFormChange} selectedProducts={selectedProducts} onBack={() => { setIsCreating(false); closeAllCreateOverlays(); }} onOpenPicker={() => { setIsSpecOpen(false); setIsPickerOpen(true); }} onOpenSpecPicker={(productId) => { setIsPickerOpen(false); setActiveSpecProductId(productId); setIsSpecOpen(true); }} onUpdateProductLimit={handleUpdateProductLimit} modalOpen={isPickerOpen || isSpecOpen} /> : <ListPage filters={filters} setFilters={setFilters} page={page} setPage={setPage} pageSize={pageSize} setPageSize={setPageSize} onCreate={() => setIsCreating(true)} />}
+          {isCreating ? <CreatePage form={createForm} onFormChange={handleFormChange} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} onToggleGoodsSelection={handleToggleGoodsSelection} onRemoveProduct={handleRemoveProduct} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); closeAllCreateOverlays(); }} onOpenPicker={() => { setIsSpecOpen(false); setSelectedPickerProductIds(selectedProducts.map((item) => item.id)); setIsPickerOpen(true); }} onOpenSpecPicker={(productId) => { setIsPickerOpen(false); setActiveSpecProductId(productId); setIsSpecOpen(true); }} onUpdateProductLimit={handleUpdateProductLimit} modalOpen={isPickerOpen || isSpecOpen} /> : <ListPage filters={filters} setFilters={setFilters} page={page} setPage={setPage} pageSize={pageSize} setPageSize={setPageSize} onCreate={() => setIsCreating(true)} />}
         </main>
       </section>
 
-      {isCreating && isPickerOpen ? <ProductPickerModal filters={pickerFilters} setFilters={setPickerFilters} onClose={() => setIsPickerOpen(false)} /> : null}
+      {isCreating && isPickerOpen ? <ProductPickerModal filters={pickerFilters} setFilters={setPickerFilters} selectedProductIds={selectedPickerProductIds} onToggleProduct={handleTogglePickerProduct} onSave={handleSavePicker} onClose={() => setIsPickerOpen(false)} /> : null}
       {isCreating && isSpecOpen ? <SpecPickerModal product={activeSpecProduct} rule={createForm.rule} onClose={() => setIsSpecOpen(false)} onUpdateSpecField={handleUpdateSpecField} onToggleSpecStatus={handleToggleSpecStatus} /> : null}
       {toastMessage ? <div className="page-toast">{toastMessage}</div> : null}
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
 

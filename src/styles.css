@@ -96,7 +96,7 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .create-actions-row { display: flex; align-items: center; }
 .picker-btn { min-width: 94px; padding: 0 14px; }
 .goods-detail-title { margin: 30px 0 10px 74px; font-size: 14px; color: #222; }
-.goods-panel { margin-left: 92px; width: calc(100% - 140px); min-height: 458px; border: 1px solid #d9dee6; }
+.goods-panel { margin-left: 92px; width: calc(100% - 140px); min-height: 300px; border: 1px solid #d9dee6; }
 .goods-panel-head { height: 40px; padding: 0 14px; line-height: 40px; background: #f6f8fb; border-bottom: 1px solid #d9dee6; font-size: 14px; }
 .goods-panel-head span { color: #4c6da8; }
 .goods-filter-bar { display: flex; align-items: center; gap: 12px; padding: 14px 18px 8px; flex-wrap: wrap; }
@@ -128,6 +128,14 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .spec-open-btn { border: none; background: transparent; color: #1d2a39; padding: 0; }
 .spec-open-btn span { color: #ff9f2d; font-size: 16px; line-height: 1; }
 .create-footer { display: flex; gap: 12px; margin: 20px 0 0 0; }
+.goods-empty-state { display: flex; align-items: center; justify-content: center; min-height: 220px; }
+.goods-empty-illustration { position: relative; width: 150px; height: 116px; }
+.goods-empty-box { position: absolute; bottom: 8px; width: 62px; height: 72px; border: 2px solid #d8dde6; border-radius: 10px; background: linear-gradient(180deg, #f9fbff, #eef3f9); }
+.goods-empty-box::before { content: ""; position: absolute; top: 12px; left: 12px; width: 36px; height: 10px; border-radius: 999px; background: #dfe5ee; }
+.goods-empty-box::after { content: ""; position: absolute; top: 30px; left: 12px; width: 28px; height: 6px; border-radius: 999px; background: #e6ebf2; box-shadow: 0 14px 0 #e6ebf2; }
+.goods-empty-box-left { left: 14px; transform: rotate(-8deg); }
+.goods-empty-box-right { right: 14px; transform: rotate(8deg); }
+.goods-empty-tag { position: absolute; top: 10px; left: 50%; width: 38px; height: 38px; margin-left: -19px; border-radius: 999px; background: #f0b429; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 24px; line-height: 1; box-shadow: 0 8px 20px rgba(240, 180, 41, 0.26); }
 
 .modal-overlay { position: fixed; inset: 0; z-index: 100; }
 .modal-mask { position: absolute; inset: 0; background: rgba(255, 255, 255, 0.55); }
@@ -184,4 +192,7 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 
 
 .page-toast { position: fixed; top: 24px; left: 50%; transform: translateX(-50%); z-index: 220; padding: 10px 18px; border-radius: 6px; background: rgba(36, 36, 36, 0.92); color: #fff; font-size: 14px; line-height: 1.4; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18); }
+
+
+
 
