@@ -194,7 +194,7 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .detail-spec-modal { position: absolute; top: 110px; left: 50%; width: 840px; min-height: 520px; transform: translateX(-50%); background: #fff; border: 1px solid #bfc5cd; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18); padding: 0 20px 20px; }
 .picker-modal { top: 62px; width: 752px; min-height: 676px; padding: 0 20px 22px; }
 .spec-modal { top: 150px; width: 830px; min-height: 575px; max-height: calc(100vh - 180px); padding: 0 20px 18px; display: flex; flex-direction: column; overflow: hidden; }
-.batch-spec-modal { top: 48px; width: 980px; min-height: 680px; max-height: calc(100vh - 96px); padding: 0 20px 24px; overflow-y: auto; }
+.batch-spec-modal { top: 48px; width: 980px; min-height: 680px; max-height: calc(100vh - 96px); padding: 0 20px 2px; overflow-y: auto; }
 .picker-header { display: flex; align-items: center; justify-content: space-between; height: 62px; }
 .picker-header h3 { margin: 0; font-size: 18px; font-weight: 700; color: #333; }
 .picker-close { border: none; background: transparent; color: #999; font-size: 28px; line-height: 1; }
@@ -228,7 +228,7 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .batch-spec-table th:nth-child(5) { width: 86px; }
 .batch-spec-table th:nth-child(6) { width: 100px; }
 .batch-spec-table th:nth-child(7) { width: 100px; }
-.batch-spec-footer { display: flex; align-items: center; justify-content: space-between; padding: 18px 0 0; }
+.batch-spec-footer { display: flex; align-items: center; justify-content: space-between; padding: 0; }
 .batch-spec-toggle { display: inline-flex; align-items: center; gap: 8px; color: #4a5565; font-size: 14px; }
 .batch-spec-toggle input { width: 14px; height: 14px; }
 .spec-product-head { display: flex; align-items: center; gap: 18px; padding: 6px 0 28px 12px; }
