@@ -15,7 +15,6 @@ const menuItems = [
 
 const statuses = ["全部", "未开始", "进行中", "已结束"];
 const activityCategories = ["常规活动", "节日活动", "品牌活动"];
-const limitRules = ["按商品统一限购", "按每个规格独立限购"];
 const productCategories = ["饮料酒水", "休闲食品", "日化用品"];
 
 const marketingPageNames = ["限时购1", "限时购"];
@@ -39,9 +38,28 @@ const pickerRows = [
 ];
 
 const emptyFilters = { status: "全部", dateRange: "", activityName: "", activityId: "", productId: "", specId: "", productName: "" };
-const initialCreateForm = { activityName: "", category: "", startTime: "", endTime: "", rule: limitRules[0], productKeyword: "", productId: "", onlyUnpricedProducts: false };
+const initialCreateForm = { activityName: "", category: "", startTime: "", endTime: "", productKeyword: "", productId: "", onlyUnpricedProducts: false };
 const initialPickerFilters = { category: "", productName: "", productId: "" };
 const cloneProducts = (products) => JSON.parse(JSON.stringify(products));
+const getActiveSpecs = (product) => product.specs.filter((spec) => spec.status === "active");
+const hasUnifiedFlashPrice = (product) => String(product.flashPrice || "").trim() !== "";
+const hasUnifiedTotalLimit = (product) => String(product.totalLimit || "").trim() !== "";
+const hasUnifiedActivityStock = (product) => String(product.activityStock || "").trim() !== "";
+const getNumericStockValue = (value) => {
+  const numericValue = Number(value || 0);
+  return Number.isFinite(numericValue) ? numericValue : 0;
+};
+const getProductActivityStockDisplay = (product) => {
+  if (hasUnifiedActivityStock(product)) return product.activityStock;
+  const total = getActiveSpecs(product).reduce((sum, spec) => sum + getNumericStockValue(spec.activityStock), 0);
+  return total > 0 ? String(total) : "";
+};
+const syncProductActivityStock = (product, nextTotalValue) => {
+  return {
+    ...product,
+    activityStock: nextTotalValue
+  };
+};
 
 function createInitialProducts() {
   return [
@@ -51,6 +69,7 @@ function createInitialProducts() {
       marketPrice: "￥30~50",
       flashPrice: "￥20~40",
       totalLimit: "",
+      activityStock: "",
       stock: 100,
       image: "百",
       specs: [
@@ -68,6 +87,7 @@ function createInitialProducts() {
       marketPrice: "￥30",
       flashPrice: "",
       totalLimit: "",
+      activityStock: "",
       stock: 100,
       image: "景",
       specs: [
@@ -613,17 +633,16 @@ function ProductPickerModal({ filters, setFilters, selectedProductIds, onToggleP
   );
 }
 
-function BatchSpecStepModal({ products, rule, selectedSpecIdsByProduct, onToggleSpecSelection, onToggleAllSpecs, onBatchToggleSpecs, onClose, onSave, onUpdateProductLimit, onUpdateSpecField, onToggleSpecStatus, onShowToast }) {
+function BatchSpecStepModal({ products, selectedSpecIdsByProduct, onToggleSpecSelection, onToggleAllSpecs, onBatchToggleSpecs, onClose, onSave, onUpdateProductLimit, onUpdateProductActivityStock, onUpdateSpecField, onToggleSpecStatus, onShowToast }) {
   const [hideConfigured, setHideConfigured] = useState(false);
   const [batchFieldsByProduct, setBatchFieldsByProduct] = useState({});
-  const isUnified = rule === limitRules[0];
   const hasConfiguredFlashPrice = (value) => {
     const numericValue = Number.parseFloat(String(value || "").replace(/[^\d.]/g, ""));
     return Number.isFinite(numericValue) && numericValue > 0;
   };
 
   const getTotalLimitDisplay = (product) => {
-    if (isUnified) return product.totalLimit;
+    if (hasUnifiedTotalLimit(product)) return product.totalLimit;
     const total = product.specs.filter((item) => item.status === "active").reduce((sum, item) => sum + Number(item.limitCount || 0), 0);
     return total ? String(total) : "";
   };
@@ -654,7 +673,7 @@ function BatchSpecStepModal({ products, rule, selectedSpecIdsByProduct, onToggle
       ["flashPrice", fields.flashPrice.trim()],
       ["limitCount", fields.limitCount.trim()],
       ["activityStock", fields.activityStock.trim()]
-    ].filter(([field, value]) => value && (!isUnified || field !== "limitCount"));
+    ].filter(([, value]) => value);
 
     if (updates.length === 0) {
       onShowToast("请先填写批量设置内容");
@@ -699,6 +718,9 @@ function BatchSpecStepModal({ products, rule, selectedSpecIdsByProduct, onToggle
             const selectableSpecs = visibleSpecs.filter((spec) => spec.status !== "merged");
             const allSelectableSelected = selectableSpecs.length > 0 && selectableSpecs.every((spec) => selectedSpecIds.includes(spec.id));
             const batchFields = getBatchFields(product.id);
+            const useUnifiedFlashPrice = hasUnifiedFlashPrice(product);
+            const useUnifiedTotalLimit = hasUnifiedTotalLimit(product);
+            const useUnifiedActivityStock = hasUnifiedActivityStock(product);
 
             return (
               <section className="batch-spec-section" key={product.id}>
@@ -711,16 +733,16 @@ function BatchSpecStepModal({ products, rule, selectedSpecIdsByProduct, onToggle
                     </div>
                   </div>
                   <div className="batch-spec-summary">
-                    <div className="batch-spec-summary-item"><span>活动总库存</span><strong>{product.stock}</strong></div>
-                    <label className="batch-spec-summary-item batch-spec-summary-input"><span>总限购数量</span><input value={getTotalLimitDisplay(product)} readOnly={!isUnified} disabled={!isUnified} onChange={(e) => onUpdateProductLimit(product.id, e.target.value.replace(/[^\d]/g, ""))} /></label>
+                    <label className="batch-spec-summary-item batch-spec-summary-input"><span>总活动库存</span><input value={getProductActivityStockDisplay(product)} onChange={(e) => onUpdateProductActivityStock(product.id, e.target.value.replace(/[^\d]/g, ""))} /></label>
+                    <label className="batch-spec-summary-item batch-spec-summary-input"><span>总限购数量</span><input value={getTotalLimitDisplay(product)} onChange={(e) => onUpdateProductLimit(product.id, e.target.value.replace(/[^\d]/g, ""))} /></label>
                   </div>
                 </div>
                 <div className="batch-spec-toolbar">
                   <div className="spec-batch-left">
                     <span>批量设置:</span>
-                    <input placeholder="限时价" value={batchFields.flashPrice} onChange={(e) => handleBatchFieldChange(product.id, "flashPrice", e.target.value)} />
-                    <input placeholder="限购数量" value={batchFields.limitCount} onChange={(e) => handleBatchFieldChange(product.id, "limitCount", e.target.value)} disabled={isUnified} className={isUnified ? "is-disabled" : ""} />
-                    <input placeholder="活动库存" value={batchFields.activityStock} onChange={(e) => handleBatchFieldChange(product.id, "activityStock", e.target.value)} />
+                    <input placeholder="限时价" value={batchFields.flashPrice} onChange={(e) => handleBatchFieldChange(product.id, "flashPrice", e.target.value)} disabled={useUnifiedFlashPrice} className={useUnifiedFlashPrice ? "is-disabled" : ""} />
+                    <input placeholder="限购数量" value={batchFields.limitCount} onChange={(e) => handleBatchFieldChange(product.id, "limitCount", e.target.value)} disabled={useUnifiedTotalLimit} className={useUnifiedTotalLimit ? "is-disabled" : ""} />
+                    <input placeholder="活动库存" value={batchFields.activityStock} onChange={(e) => handleBatchFieldChange(product.id, "activityStock", e.target.value)} disabled={useUnifiedActivityStock} className={useUnifiedActivityStock ? "is-disabled" : ""} />
                     <button className="btn btn-search" type="button" onClick={() => handleApplyBatchFields(product)}>确定</button>
                   </div>
                 </div>
@@ -780,9 +802,10 @@ function BatchSpecStepModal({ products, rule, selectedSpecIdsByProduct, onToggle
                               </div>
                             </td>
                             <td>{row.marketPrice}</td>
-                            <td><input className="spec-inline-input" value={row.flashPrice} onChange={(e) => onUpdateSpecField(product.id, row.id, "flashPrice", e.target.value)} /></td>
+                            <td>{useUnifiedFlashPrice ? <span className="spec-unified-label">按商品统一限时价</span> : <input className="spec-inline-input" value={row.flashPrice} onChange={(e) => onUpdateSpecField(product.id, row.id, "flashPrice", e.target.value)} />}</td>
                             <td>{row.stock}</td>
-                            <td><input className="spec-inline-input" value={row.activityStock} onChange={(e) => onUpdateSpecField(product.id, row.id, "activityStock", e.target.value.replace(/[^\d]/g, ""))} /></td>
+                            <td>{useUnifiedTotalLimit ? <span className="spec-unified-label">按商品统一总限购数量</span> : <input className="spec-inline-input" value={row.limitCount} onChange={(e) => onUpdateSpecField(product.id, row.id, "limitCount", e.target.value.replace(/[^\d]/g, ""))} />}</td>
+                            <td>{useUnifiedActivityStock ? <span className="spec-unified-label">按商品统一活动库存</span> : <input className="spec-inline-input" value={row.activityStock} onChange={(e) => onUpdateSpecField(product.id, row.id, "activityStock", e.target.value.replace(/[^\d]/g, ""))} />}</td>
                             <td><button className="spec-link spec-remove" type="button" onClick={() => onToggleSpecStatus(product.id, row.id, "available")}>撤出活动</button></td>
                           </tr>
                         );
@@ -800,10 +823,12 @@ function BatchSpecStepModal({ products, rule, selectedSpecIdsByProduct, onToggle
   );
 }
 
-function SpecPickerModal({ product, rule, selectedSpecIds, onToggleSpecSelection, onToggleAllSpecs, onBatchToggleSpecs, onClose, onUpdateSpecField, onToggleSpecStatus, onShowToast }) {
+function SpecPickerModal({ product, selectedSpecIds, onToggleSpecSelection, onToggleAllSpecs, onBatchToggleSpecs, onClose, onUpdateSpecField, onToggleSpecStatus, onShowToast }) {
   if (!product) return null;
 
-  const isUnified = rule === limitRules[0];
+  const useUnifiedFlashPrice = hasUnifiedFlashPrice(product);
+  const useUnifiedTotalLimit = hasUnifiedTotalLimit(product);
+  const useUnifiedActivityStock = hasUnifiedActivityStock(product);
   const [batchFields, setBatchFields] = useState({ flashPrice: "", limitCount: "", activityStock: "" });
   const selectableSpecs = product.specs.filter((spec) => spec.status !== "merged");
   const sortedSpecs = [...product.specs].sort((left, right) => {
@@ -837,7 +862,7 @@ function SpecPickerModal({ product, rule, selectedSpecIds, onToggleSpecSelection
       ["flashPrice", batchFields.flashPrice.trim()],
       ["limitCount", batchFields.limitCount.trim()],
       ["activityStock", batchFields.activityStock.trim()]
-    ].filter(([field, value]) => value && (!isUnified || field !== "limitCount"));
+    ].filter(([, value]) => value);
 
     if (updates.length === 0) {
       onShowToast("请先填写批量设置内容");
@@ -870,9 +895,9 @@ function SpecPickerModal({ product, rule, selectedSpecIds, onToggleSpecSelection
         <div className="spec-batch-bar">
           <div className="spec-batch-left">
             <span>批量设置:</span>
-            <input placeholder="限时价" value={batchFields.flashPrice} onChange={(e) => handleBatchFieldChange("flashPrice", e.target.value)} />
-            <input placeholder="限购数量" value={batchFields.limitCount} onChange={(e) => handleBatchFieldChange("limitCount", e.target.value)} disabled={isUnified} className={isUnified ? "is-disabled" : ""} />
-            <input placeholder="活动库存" value={batchFields.activityStock} onChange={(e) => handleBatchFieldChange("activityStock", e.target.value)} />
+            <input placeholder="限时价" value={batchFields.flashPrice} onChange={(e) => handleBatchFieldChange("flashPrice", e.target.value)} disabled={useUnifiedFlashPrice} className={useUnifiedFlashPrice ? "is-disabled" : ""} />
+            <input placeholder="限购数量" value={batchFields.limitCount} onChange={(e) => handleBatchFieldChange("limitCount", e.target.value)} disabled={useUnifiedTotalLimit} className={useUnifiedTotalLimit ? "is-disabled" : ""} />
+            <input placeholder="活动库存" value={batchFields.activityStock} onChange={(e) => handleBatchFieldChange("activityStock", e.target.value)} disabled={useUnifiedActivityStock} className={useUnifiedActivityStock ? "is-disabled" : ""} />
             <button className="btn btn-search" type="button" onClick={handleApplyBatchFields}>确定</button>
           </div>
         </div>
@@ -935,11 +960,11 @@ function SpecPickerModal({ product, rule, selectedSpecIds, onToggleSpecSelection
                     </td>
                     <td>{row.stock}</td>
                     <td>{row.marketPrice}</td>
-                    <td><input className="spec-inline-input" value={row.flashPrice} onChange={(e) => onUpdateSpecField(product.id, row.id, "flashPrice", e.target.value)} /></td>
+                    <td>{useUnifiedFlashPrice ? <span className="spec-unified-label">按商品统一限时价</span> : <input className="spec-inline-input" value={row.flashPrice} onChange={(e) => onUpdateSpecField(product.id, row.id, "flashPrice", e.target.value)} />}</td>
                     <td>
-                      {isUnified ? <span className="spec-unified-label">按商品统一限购</span> : <input className="spec-inline-input" value={row.limitCount} onChange={(e) => onUpdateSpecField(product.id, row.id, "limitCount", e.target.value.replace(/[^\d]/g, ""))} />}
+                      {useUnifiedTotalLimit ? <span className="spec-unified-label">按商品统一总限购数量</span> : <input className="spec-inline-input" value={row.limitCount} onChange={(e) => onUpdateSpecField(product.id, row.id, "limitCount", e.target.value.replace(/[^\d]/g, ""))} />}
                     </td>
-                    <td><input className="spec-inline-input" value={row.activityStock} onChange={(e) => onUpdateSpecField(product.id, row.id, "activityStock", e.target.value.replace(/[^\d]/g, ""))} /></td>
+                    <td>{useUnifiedActivityStock ? <span className="spec-unified-label">按商品统一活动库存</span> : <input className="spec-inline-input" value={row.activityStock} onChange={(e) => onUpdateSpecField(product.id, row.id, "activityStock", e.target.value.replace(/[^\d]/g, ""))} />}</td>
                     <td><button className="spec-link spec-remove" type="button" onClick={() => onToggleSpecStatus(product.id, row.id, "available")}>撤出活动</button></td>
                   </tr>
                 );
@@ -962,12 +987,11 @@ function SpecPickerModal({ product, rule, selectedSpecIds, onToggleSpecSelection
   );
 }
 
-function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, selectedProducts, selectedGoodsIds, onToggleGoodsSelection, onRemoveProduct, onBatchRemoveProducts, onBack, onOpenPicker, onOpenSpecPicker, onUpdateProductLimit, onSave, modalOpen }) {
-  const isUnified = form.rule === limitRules[0];
+function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, selectedProducts, selectedGoodsIds, onToggleGoodsSelection, onRemoveProduct, onBatchRemoveProducts, onBack, onOpenPicker, onOpenSpecPicker, onUpdateProductFlashPrice, onUpdateProductLimit, onUpdateProductActivityStock, onSave, modalOpen }) {
   const showUnpricedFilter = pageName === "限时购1" || pageName === "限时购";
 
   const getTotalLimitDisplay = (product) => {
-    if (isUnified) return product.totalLimit;
+    if (hasUnifiedTotalLimit(product)) return product.totalLimit;
     const total = product.specs.filter((item) => item.status === "active").reduce((sum, item) => sum + Number(item.limitCount || 0), 0);
     return total ? String(total) : "";
   };
@@ -975,7 +999,7 @@ function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, 
   const filteredProducts = useMemo(() => selectedProducts.filter((product) => {
     const productKeyword = form.productKeyword.trim();
     const productId = form.productId.trim();
-    const hasUnpricedSpec = product.specs.some((spec) => spec.status === "active" && !String(spec.flashPrice || "").trim());
+    const hasUnpricedSpec = !hasUnifiedFlashPrice(product) && product.specs.some((spec) => spec.status === "active" && !String(spec.flashPrice || "").trim());
 
     if (productKeyword && !product.name.includes(productKeyword)) return false;
     if (productId && !product.id.includes(productId)) return false;
@@ -995,7 +1019,6 @@ function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, 
           <label className="create-field"><span><em>*</em> 活动分类:</span><div className="create-input-wrap"><select value={form.category} onChange={(e) => onFormChange("category", e.target.value)}><option value="">请选择活动分类</option>{activityCategories.map((item) => <option key={item} value={item}>{item}</option>)}</select></div></label>
           <label className="create-field"><span><em>*</em> 开始时间:</span><div className={`create-input-wrap with-icon ${isEditMode ? "is-disabled" : ""}`}><input placeholder="请选择开始时间" value={form.startTime} onChange={(e) => onFormChange("startTime", e.target.value)} disabled={isEditMode} /><i>◴</i></div></label>
           <label className="create-field"><span><em>*</em> 结束时间:</span><div className="create-input-wrap with-icon"><input placeholder="请选择结束时间" value={form.endTime} onChange={(e) => onFormChange("endTime", e.target.value)} /><i>◴</i></div></label>
-          <div className="create-field create-field-rule"><span>限购数量规则:</span><div className="radio-group">{limitRules.map((rule) => <label key={rule} className="radio-item"><input type="radio" name="rule" checked={form.rule === rule} onChange={() => onFormChange("rule", rule)} /><span>{rule}</span></label>)}</div></div>
           <div className="create-field"><span><em>*</em> 活动商品:</span><div className="create-actions-row"><button className="btn btn-create picker-btn" type="button" onClick={onOpenPicker} disabled={isEditMode}>+ 选择商品</button></div></div>
         </div>
 
@@ -1006,7 +1029,7 @@ function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, 
             <>
               <div className="goods-filter-bar"><label className="mini-field"><span>商品名称:</span><input value={form.productKeyword} onChange={(e) => onFormChange("productKeyword", e.target.value)} /></label><label className="mini-field"><span>商品ID:</span><input value={form.productId} onChange={(e) => onFormChange("productId", e.target.value)} /></label>{showUnpricedFilter ? <label className="check-item goods-filter-check"><input type="checkbox" checked={form.onlyUnpricedProducts} onChange={(e) => onFormChange("onlyUnpricedProducts", e.target.checked)} /><span>筛选未配限时价商品</span></label> : null}<button className="btn btn-reset" type="button" onClick={onResetFilters}>重置</button><button className="btn btn-search" type="button">搜索</button></div>
               {showSelectionControls ? <div className="goods-toolbar"><button className="btn btn-reset" type="button" onClick={onBatchRemoveProducts}>批量删除</button></div> : null}
-              <div className="goods-table-shell"><table className={`goods-table activity-goods-table ${showSelectionControls ? "has-selection" : "no-selection"}`}><thead><tr>{showSelectionControls ? <th><input type="checkbox" checked={allFilteredSelected} onChange={(e) => onToggleGoodsSelection(e.target.checked ? filteredProducts.map((item) => item.id) : [])} /></th> : null}<th>商品</th><th>商城价</th><th>限时价</th><th>总限购数量</th><th>库存</th><th>规格数量</th><th>操作</th></tr></thead><tbody>{filteredProducts.map((item) => <tr key={item.id}>{showSelectionControls ? <td><input type="checkbox" checked={selectedGoodsIds.includes(item.id)} onChange={() => onToggleGoodsSelection(item.id)} /></td> : null}<td><div className="product-cell"><div className="product-image">{item.image}</div><div className="product-meta"><div className="product-name">{item.name}</div><div className="product-id">商品ID： {item.id}</div></div>{showSelectionControls ? <button className="delete-link" type="button" onClick={() => onRemoveProduct(item.id)}>删除商品</button> : null}</div></td><td>{item.marketPrice}</td><td>{item.flashPrice || "-"}</td><td><input className={`limit-input ${!isUnified ? "is-disabled" : ""}`} value={getTotalLimitDisplay(item)} readOnly={!isUnified} disabled={!isUnified} onChange={(e) => onUpdateProductLimit(item.id, e.target.value.replace(/[^\d]/g, ""))} /></td><td>{item.stock}</td><td>共 {item.specs.length} 个 规格</td><td><div className="spec-action"><button type="button" className="spec-open-btn" onClick={() => onOpenSpecPicker(item.id)}>已选 {item.specs.filter((spec) => spec.status === "active").length} 个 规格 <span>编辑</span></button></div></td></tr>)}</tbody></table></div>
+              <div className="goods-table-shell"><table className={`goods-table activity-goods-table ${showSelectionControls ? "has-selection" : "no-selection"}`}><thead><tr>{showSelectionControls ? <th><input type="checkbox" checked={allFilteredSelected} onChange={(e) => onToggleGoodsSelection(e.target.checked ? filteredProducts.map((item) => item.id) : [])} /></th> : null}<th>商品</th><th>商城价</th><th>限时价</th><th>总限购数量</th><th>总活动库存</th><th>规格数量</th><th>操作</th></tr></thead><tbody>{filteredProducts.map((item) => <tr key={item.id}>{showSelectionControls ? <td><input type="checkbox" checked={selectedGoodsIds.includes(item.id)} onChange={() => onToggleGoodsSelection(item.id)} /></td> : null}<td><div className="product-cell"><div className="product-image">{item.image}</div><div className="product-meta"><div className="product-name">{item.name}</div><div className="product-id">商品ID： {item.id}</div></div>{showSelectionControls ? <button className="delete-link" type="button" onClick={() => onRemoveProduct(item.id)}>删除商品</button> : null}</div></td><td>{item.marketPrice}</td><td><input className="limit-input" value={item.flashPrice} onChange={(e) => onUpdateProductFlashPrice(item.id, e.target.value)} placeholder="请输入" /></td><td><input className="limit-input" value={getTotalLimitDisplay(item)} onChange={(e) => onUpdateProductLimit(item.id, e.target.value.replace(/[^\d]/g, ""))} /></td><td><input className="limit-input" value={getProductActivityStockDisplay(item)} onChange={(e) => onUpdateProductActivityStock(item.id, e.target.value.replace(/[^\d]/g, ""))} /></td><td>共 {item.specs.length} 个 规格</td><td><div className="spec-action"><button type="button" className="spec-open-btn" onClick={() => onOpenSpecPicker(item.id)}>已选 {item.specs.filter((spec) => spec.status === "active").length} 个 规格 <span>编辑</span></button></div></td></tr>)}</tbody></table></div>
               <div className="goods-pagination"><span>共 125 条</span><select><option>10 条/页</option></select><button className="page-btn" type="button" disabled>‹</button><button className="page-btn is-current" type="button">1</button><button className="page-btn" type="button">2</button><button className="page-btn" type="button">3</button><button className="page-btn" type="button">4</button><button className="page-btn" type="button">5</button><span>...</span><button className="page-btn" type="button">13</button><button className="page-btn" type="button">›</button><span>到第</span><input className="page-input" placeholder="请输入" /><span>页</span><button className="btn btn-jump" type="button">跳转</button></div>
             </>
           ) : (
@@ -1156,9 +1179,20 @@ export default function App() {
     updateSelectedProduct(productId, (product) => ({ ...product, totalLimit: value }));
   };
 
+  const handleUpdateProductFlashPrice = (productId, value) => {
+    updateSelectedProduct(productId, (product) => ({ ...product, flashPrice: value }));
+  };
+
+  const handleUpdateProductActivityStock = (productId, value) => {
+    updateSelectedProduct(productId, (product) => syncProductActivityStock(product, value));
+  };
+
   const handleUpdateSpecField = (productId, specId, field, value) => {
     updateSelectedProduct(productId, (product) => ({
       ...product,
+      flashPrice: field === "flashPrice" ? "" : product.flashPrice,
+      totalLimit: field === "limitCount" ? "" : product.totalLimit,
+      activityStock: field === "activityStock" ? "" : product.activityStock,
       specs: product.specs.map((spec) => (spec.id === specId ? { ...spec, [field]: value } : spec))
     }));
   };
@@ -1223,9 +1257,20 @@ export default function App() {
     updateBatchDraftProduct(productId, (product) => ({ ...product, totalLimit: value }));
   };
 
+  const handleBatchDraftProductActivityStock = (productId, value) => {
+    updateBatchDraftProduct(productId, (product) => syncProductActivityStock(product, value));
+  };
+
+  const handleBatchDraftProductFlashPrice = (productId, value) => {
+    updateBatchDraftProduct(productId, (product) => ({ ...product, flashPrice: value }));
+  };
+
   const handleBatchDraftSpecField = (productId, specId, field, value) => {
     updateBatchDraftProduct(productId, (product) => ({
       ...product,
+      flashPrice: field === "flashPrice" ? "" : product.flashPrice,
+      totalLimit: field === "limitCount" ? "" : product.totalLimit,
+      activityStock: field === "activityStock" ? "" : product.activityStock,
       specs: product.specs.map((spec) => (spec.id === specId ? { ...spec, [field]: value } : spec))
     }));
   };
@@ -1445,7 +1490,7 @@ export default function App() {
   };
 
   const handleCreateSave = () => {
-    const hasEmptyFlashPrice = selectedProducts.some((product) => product.specs.some((spec) => spec.status === "active" && !String(spec.flashPrice || "").trim()));
+    const hasEmptyFlashPrice = selectedProducts.some((product) => !hasUnifiedFlashPrice(product) && product.specs.some((spec) => spec.status === "active" && !String(spec.flashPrice || "").trim()));
 
     if (hasEmptyFlashPrice) {
       setToastMessage("部分规格未配限时价，请先完善");
@@ -1515,13 +1560,13 @@ export default function App() {
         <Header currentMarketingPage={currentMarketingPage} />
         <main className="workspace-main">
           <TabSection creating={isCreating} detailing={!isCreating && !!detailActivity} currentMarketingPage={currentMarketingPage} onSwitchToList={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); updateCurrentField("detailActivity", null); }} />
-          {isCreating ? <CreatePage pageName={currentMarketingPage} form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} onToggleGoodsSelection={handleToggleGoodsSelection} onRemoveProduct={handleRemoveProduct} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onUpdateProductLimit={handleUpdateProductLimit} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} /> : detailActivity ? <DetailPage detailActivity={detailActivity} page={detailPage} setPage={(value) => updateCurrentField("detailPage", typeof value === "function" ? value(detailPage) : value)} pageSize={detailPageSize} setPageSize={(value) => updateCurrentField("detailPageSize", value)} onShowSpecDetail={setDetailSpecProduct} /> : <ListPage filters={filters} setFilters={(value) => updateCurrentField("filters", value)} page={page} setPage={(value) => updateCurrentField("page", typeof value === "function" ? value(page) : value)} pageSize={pageSize} setPageSize={(value) => updateCurrentField("pageSize", value)} onCreate={() => { resetCreateState(); setIsCreating(true); updateCurrentField("detailActivity", null); }} onAction={handleActivityAction} activities={activities} />}
+          {isCreating ? <CreatePage pageName={currentMarketingPage} form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} onToggleGoodsSelection={handleToggleGoodsSelection} onRemoveProduct={handleRemoveProduct} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} /> : detailActivity ? <DetailPage detailActivity={detailActivity} page={detailPage} setPage={(value) => updateCurrentField("detailPage", typeof value === "function" ? value(detailPage) : value)} pageSize={detailPageSize} setPageSize={(value) => updateCurrentField("detailPageSize", value)} onShowSpecDetail={setDetailSpecProduct} /> : <ListPage filters={filters} setFilters={(value) => updateCurrentField("filters", value)} page={page} setPage={(value) => updateCurrentField("page", typeof value === "function" ? value(page) : value)} pageSize={pageSize} setPageSize={(value) => updateCurrentField("pageSize", value)} onCreate={() => { resetCreateState(); setIsCreating(true); updateCurrentField("detailActivity", null); }} onAction={handleActivityAction} activities={activities} />}
         </main>
       </section>
 
       {isCreating && isPickerOpen ? <ProductPickerModal filters={pickerFilters} setFilters={(value) => updateCurrentField("pickerFilters", value)} selectedProductIds={selectedPickerProductIds} onToggleProduct={handleTogglePickerProduct} onSave={handleSavePicker} onClose={() => setIsPickerOpen(false)} confirmText={currentMarketingPage === "限时购" ? "下一步" : "保存"} /> : null}
-      {isCreating && isSpecOpen ? <SpecPickerModal product={activeSpecProduct} rule={createForm.rule} selectedSpecIds={activeSpecSelectedIds} onToggleSpecSelection={handleToggleSpecSelection} onToggleAllSpecs={handleToggleAllSpecSelections} onBatchToggleSpecs={handleBatchToggleSpecs} onClose={() => { setIsSpecOpen(false); setActiveSpecProductId(""); }} onUpdateSpecField={handleUpdateSpecField} onToggleSpecStatus={handleToggleSpecStatus} onShowToast={setToastMessage} /> : null}
-      {isCreating && isBatchSpecOpen && currentMarketingPage === "限时购" ? <BatchSpecStepModal products={batchSpecDraftProducts} rule={createForm.rule} selectedSpecIdsByProduct={batchSpecSelectedIdsByProduct} onToggleSpecSelection={handleBatchDraftToggleSpecSelection} onToggleAllSpecs={handleBatchDraftToggleAllSpecs} onBatchToggleSpecs={handleBatchDraftToggleSpecs} onClose={handleCloseBatchSpec} onSave={handleBatchSpecSave} onUpdateProductLimit={handleBatchDraftProductLimit} onUpdateSpecField={handleBatchDraftSpecField} onToggleSpecStatus={handleBatchDraftToggleSpecStatus} onShowToast={setToastMessage} /> : null}
+      {isCreating && isSpecOpen ? <SpecPickerModal product={activeSpecProduct} selectedSpecIds={activeSpecSelectedIds} onToggleSpecSelection={handleToggleSpecSelection} onToggleAllSpecs={handleToggleAllSpecSelections} onBatchToggleSpecs={handleBatchToggleSpecs} onClose={() => { setIsSpecOpen(false); setActiveSpecProductId(""); }} onUpdateSpecField={handleUpdateSpecField} onToggleSpecStatus={handleToggleSpecStatus} onShowToast={setToastMessage} /> : null}
+      {isCreating && isBatchSpecOpen && currentMarketingPage === "限时购" ? <BatchSpecStepModal products={batchSpecDraftProducts} selectedSpecIdsByProduct={batchSpecSelectedIdsByProduct} onToggleSpecSelection={handleBatchDraftToggleSpecSelection} onToggleAllSpecs={handleBatchDraftToggleAllSpecs} onBatchToggleSpecs={handleBatchDraftToggleSpecs} onClose={handleCloseBatchSpec} onSave={handleBatchSpecSave} onUpdateProductLimit={handleBatchDraftProductLimit} onUpdateProductActivityStock={handleBatchDraftProductActivityStock} onUpdateSpecField={handleBatchDraftSpecField} onToggleSpecStatus={handleBatchDraftToggleSpecStatus} onShowToast={setToastMessage} /> : null}
       {!isCreating && detailSpecProduct ? <DetailSpecModal product={detailSpecProduct} onClose={() => setDetailSpecProduct(null)} /> : null}
       {toastMessage ? <div className="page-toast">{toastMessage}</div> : null}
     </div>
