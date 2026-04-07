@@ -89,6 +89,7 @@ const getProductStockDisplay = (product) => {
 };
 const initialProductFieldEditModes = { flashPrice: false, totalLimit: false, activityStock: false };
 const editHeaderIcon = "data:image/svg+xml,%3Csvg%20t%3D%221775524476153%22%20class%3D%22icon%22%20viewBox%3D%220%200%201024%201024%22%20version%3D%221.1%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20p-id%3D%224620%22%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3Axlink%3D%22http%3A//www.w3.org/1999/xlink%22%3E%3Cpath%20d%3D%22M598.8864%20153.6v51.2H256a51.2%2051.2%200%200%200-51.2%2051.2v512a51.2%2051.2%200%200%200%2051.2%2051.2h512a51.2%2051.2%200%200%200%2051.2-51.2V435.6608h51.2V768a102.4%20102.4%200%200%201-102.4%20102.4H256a102.4%20102.4%200%200%201-102.4-102.4V256a102.4%20102.4%200%200%201%20102.4-102.4h342.8864zM460.8%20551.8336L859.0336%20153.6l36.1984%2036.1984-398.2336%20398.2336L460.8%20551.8336z%22%20fill%3D%22%23707070%22%20p-id%3D%224621%22%3E%3C/path%3E%3C/svg%3E";
+const questionHeaderIcon = "data:image/svg+xml,%3Csvg%20t%3D%221775542653160%22%20class%3D%22icon%22%20viewBox%3D%220%200%201024%201024%22%20version%3D%221.1%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20p-id%3D%224947%22%20width%3D%2216%22%20height%3D%2216%22%20xmlns%3Axlink%3D%22http%3A//www.w3.org/1999/xlink%22%3E%3Cpath%20d%3D%22M512%200C227.555556%200%200%20227.555556%200%20512s227.555556%20512%20512%20512%20512-227.555556%20512-512-227.555556-512-512-512z%20m45.511111%20853.333333c-17.066667%2011.377778-28.444444%2017.066667-51.2%2017.066667-17.066667%200-34.133333-5.688889-51.2-17.066667-17.066667-11.377778-22.755556-28.444444-22.755555-51.2s5.688889-34.133333%2022.755555-51.2c11.377778-11.377778%2028.444444-22.755556%2051.2-22.755555s34.133333%205.688889%2051.2%2022.755555c11.377778%2011.377778%2022.755556%2028.444444%2022.755556%2051.2s-11.377778%2039.822222-22.755556%2051.2z%20m176.355556-443.733333c-11.377778%2022.755556-22.755556%2039.822222-39.822223%2051.2-17.066667%2017.066667-39.822222%2039.822222-79.644444%2073.955556l-28.444444%2028.444444c-5.688889%205.688889-11.377778%2017.066667-17.066667%2022.755556v17.066666c0%205.688889-5.688889%2017.066667-5.688889%2034.133334-5.688889%2034.133333-22.755556%2051.2-56.888889%2051.2-17.066667%200-28.444444-5.688889-39.822222-17.066667-11.377778-11.377778-17.066667-28.444444-17.066667-45.511111%200-28.444444%205.688889-51.2%2011.377778-68.266667%205.688889-17.066667%2017.066667-34.133333%2034.133333-51.2%2011.377778-17.066667%2034.133333-34.133333%2056.888889-51.2%2022.755556-17.066667%2034.133333-28.444444%2045.511111-39.822222s17.066667-17.066667%2022.755556-28.444445c5.688889-11.377778%2011.377778-22.755556%2011.377778-34.133333%200-22.755556-11.377778-45.511111-28.444445-62.577778-17.066667-17.066667-45.511111-28.444444-73.955555-28.444444-45.511111-11.377778-73.955556%200-85.333334%2017.066667-17.066667%2017.066667-34.133333%2045.511111-45.511111%2079.644444-11.377778%2034.133333-28.444444%2051.2-62.577778%2051.2-17.066667%200-34.133333-5.688889-45.511111-17.066667-11.377778-11.377778-17.066667-28.444444-17.066666-39.822222%200-28.444444%2011.377778-62.577778%2028.444444-91.022222s45.511111-56.888889%2085.333333-79.644445c39.822222-22.755556%2079.644444-28.444444%20130.844445-28.444444%2045.511111%200%2085.333333%205.688889%20119.466667%2022.755556%2034.133333%2017.066667%2062.577778%2039.822222%2079.644444%2068.266666%2022.755556%2028.444444%2034.133333%2062.577778%2034.133333%2096.711111%200%2028.444444-5.688889%2051.2-17.066666%2068.266667z%22%20fill%3D%22%23707070%22%20p-id%3D%224948%22%3E%3C/path%3E%3C/svg%3E";
 const syncProductActivityStock = (product, nextTotalValue) => {
   return {
     ...product,
@@ -96,10 +97,18 @@ const syncProductActivityStock = (product, nextTotalValue) => {
   };
 };
 
-function EditableHeader({ label }) {
+function EditableHeader({ label, suffixIcon, suffixTooltip }) {
   return (
     <span className="editable-th-content">
-      <span>{label}</span>
+      <span className="editable-th-label">
+        <span>{label}</span>
+        {suffixIcon ? (
+          <span className="header-suffix-wrap">
+            <img className="header-suffix-icon" src={suffixIcon} alt="" aria-hidden="true" />
+            {suffixTooltip ? <span className="header-suffix-tooltip">{suffixTooltip}</span> : null}
+          </span>
+        ) : null}
+      </span>
     </span>
   );
 }
@@ -121,21 +130,30 @@ function HeaderWithIcon({ label, onIconClick, isActive = false }) {
   );
 }
 
-function EditableCellInput({ label, value, onChange, placeholder, locked, isEditMode, onToggleEdit, inputMode = "text", hasError = false }) {
+function EditableCellInput({ label, value, onChange, placeholder, locked, lockedDisplay, showEditWhenLocked = false, isEditMode, onToggleEdit, inputMode = "text", hasError = false }) {
+  const displayValue = locked && hasValue(lockedDisplay) ? lockedDisplay : value;
+  const showEditButton = locked && (hasValue(lockedDisplay) || showEditWhenLocked);
+
   return (
     <span className="editable-cell-input">
-      <input
-        className={`limit-input ${locked ? "is-locked" : ""} ${hasError ? "is-error" : ""}`}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        readOnly={locked}
-        tabIndex={locked ? -1 : 0}
-        inputMode={inputMode}
-      />
-      <button type="button" className={`editable-th-icon ${isEditMode ? "is-active" : ""}`} onClick={onToggleEdit} aria-label={`编辑${label}`}>
-        <img src={editHeaderIcon} alt="" />
-      </button>
+      {locked && hasValue(lockedDisplay) ? (
+        <span className="limit-locked-message">{lockedDisplay}</span>
+      ) : (
+        <input
+          className={`limit-input ${locked ? "is-locked" : ""} ${hasError ? "is-error" : ""}`}
+          value={displayValue}
+          onChange={onChange}
+          placeholder={placeholder}
+          readOnly={locked}
+          tabIndex={locked ? -1 : 0}
+          inputMode={inputMode}
+        />
+      )}
+      {showEditButton ? (
+        <button type="button" className={`editable-th-icon ${isEditMode ? "is-active" : ""}`} onClick={onToggleEdit} aria-label={`编辑${label}`}>
+          <img src={editHeaderIcon} alt="" />
+        </button>
+      ) : null}
     </span>
   );
 }
@@ -147,7 +165,7 @@ function createInitialProducts() {
       name: "百岁山天然矿泉水570m",
       marketPrice: "￥30~50",
       flashPrice: "￥20~40",
-      totalLimit: "",
+      totalLimit: "0",
       activityStock: "",
       stock: 100,
       image: "百",
@@ -165,7 +183,7 @@ function createInitialProducts() {
       name: "景田饮用纯净水560ml",
       marketPrice: "￥30",
       flashPrice: "",
-      totalLimit: "",
+      totalLimit: "0",
       activityStock: "",
       stock: 100,
       image: "景",
@@ -883,10 +901,10 @@ function BatchSpecStepModal({ products, selectedSpecIdsByProduct, onToggleSpecSe
                               </div>
                             </td>
                             <td>{row.marketPrice}</td>
-                            <td>{useUnifiedFlashPrice ? <span className="spec-unified-label">按商品统一限时价</span> : <input className="spec-inline-input" value={row.flashPrice} onChange={(e) => onUpdateSpecField(product.id, row.id, "flashPrice", e.target.value)} />}</td>
+                            <td>{useUnifiedFlashPrice ? <span className="spec-unified-label">{product.flashPrice}</span> : <input className="spec-inline-input" value={row.flashPrice} onChange={(e) => onUpdateSpecField(product.id, row.id, "flashPrice", e.target.value)} />}</td>
                             <td>{row.stock}</td>
-                            <td>{useUnifiedTotalLimit ? <span className="spec-unified-label">按商品统一总限购数量</span> : <input className="spec-inline-input" value={row.limitCount} onChange={(e) => onUpdateSpecField(product.id, row.id, "limitCount", e.target.value.replace(/[^\d]/g, ""))} />}</td>
-                            <td>{useUnifiedActivityStock ? <span className="spec-unified-label">按商品统一活动库存</span> : <input className="spec-inline-input" value={row.activityStock} onChange={(e) => onUpdateSpecField(product.id, row.id, "activityStock", e.target.value.replace(/[^\d]/g, ""))} />}</td>
+                            <td>{useUnifiedTotalLimit ? <span className="spec-unified-label">按商品维度生效</span> : <input className="spec-inline-input" value={row.limitCount} onChange={(e) => onUpdateSpecField(product.id, row.id, "limitCount", e.target.value.replace(/[^\d]/g, ""))} />}</td>
+                            <td>{useUnifiedActivityStock ? <span className="spec-unified-label">按商品维度生效</span> : <input className="spec-inline-input" value={row.activityStock} onChange={(e) => onUpdateSpecField(product.id, row.id, "activityStock", e.target.value.replace(/[^\d]/g, ""))} />}</td>
                             <td><button className="spec-link spec-remove" type="button" onClick={() => onToggleSpecStatus(product.id, row.id, "available")}>撤出活动</button></td>
                           </tr>
                         );
@@ -1111,11 +1129,11 @@ function SpecPickerModal({ product, selectedSpecIds, onToggleSpecSelection, onTo
                     </td>
                     <td>{row.stock}</td>
                     <td>{row.marketPrice}</td>
-                    <td>{allowSpecFlashPriceEdit ? <input className={`spec-inline-input ${invalidSpecFields[row.id]?.flashPrice ? "is-error" : ""}`} value={row.flashPrice} onChange={(e) => handleSpecFieldChange(row.id, "flashPrice", e.target.value)} /> : <span className="spec-unified-label">按商品统一限时价</span>}</td>
+                    <td>{allowSpecFlashPriceEdit ? <input className={`spec-inline-input ${invalidSpecFields[row.id]?.flashPrice ? "is-error" : ""}`} value={row.flashPrice} onChange={(e) => handleSpecFieldChange(row.id, "flashPrice", e.target.value)} /> : <span className="spec-unified-label">{product.flashPrice}</span>}</td>
                     <td>
-                      {allowSpecTotalLimitEdit ? <input className={`spec-inline-input ${invalidSpecFields[row.id]?.limitCount ? "is-error" : ""}`} value={row.limitCount} onChange={(e) => handleSpecFieldChange(row.id, "limitCount", e.target.value.replace(/[^\d]/g, ""))} /> : <span className="spec-unified-label">按商品统一总限购数量</span>}
+                      {allowSpecTotalLimitEdit ? <input className={`spec-inline-input ${invalidSpecFields[row.id]?.limitCount ? "is-error" : ""}`} value={row.limitCount} onChange={(e) => handleSpecFieldChange(row.id, "limitCount", e.target.value.replace(/[^\d]/g, ""))} /> : <span className="spec-unified-label">按商品维度生效</span>}
                     </td>
-                    <td>{allowSpecActivityStockEdit ? <input className={`spec-inline-input ${invalidSpecFields[row.id]?.activityStock ? "is-error" : ""}`} value={row.activityStock} onChange={(e) => handleSpecFieldChange(row.id, "activityStock", e.target.value.replace(/[^\d]/g, ""))} /> : <span className="spec-unified-label">按商品统一活动库存</span>}</td>
+                    <td>{allowSpecActivityStockEdit ? <input className={`spec-inline-input ${invalidSpecFields[row.id]?.activityStock ? "is-error" : ""}`} value={row.activityStock} onChange={(e) => handleSpecFieldChange(row.id, "activityStock", e.target.value.replace(/[^\d]/g, ""))} /> : <span className="spec-unified-label">按商品维度生效</span>}</td>
                     <td><button className="spec-link spec-remove" type="button" onClick={() => onToggleSpecStatus(product.id, row.id, "available")}>撤出活动</button></td>
                   </tr>
                 );
@@ -1174,7 +1192,7 @@ function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, 
             <>
               <div className="goods-filter-bar"><label className="mini-field"><span>商品名称:</span><input value={form.productKeyword} onChange={(e) => onFormChange("productKeyword", e.target.value)} /></label><label className="mini-field"><span>商品ID:</span><input value={form.productId} onChange={(e) => onFormChange("productId", e.target.value)} /></label>{showUnpricedFilter ? <label className="check-item goods-filter-check"><input type="checkbox" checked={form.onlyUnpricedProducts} onChange={(e) => onFormChange("onlyUnpricedProducts", e.target.checked)} /><span>筛选未配限时价商品</span></label> : null}<button className="btn btn-reset" type="button" onClick={onResetFilters}>重置</button><button className="btn btn-search" type="button">搜索</button></div>
               {showSelectionControls ? <div className="goods-toolbar"><button className="btn btn-reset" type="button" onClick={onBatchRemoveProducts}>批量删除</button></div> : null}
-              <div className="goods-table-shell"><table className={`goods-table activity-goods-table ${showSelectionControls ? "has-selection" : "no-selection"}`}><thead><tr>{showSelectionControls ? <th><input type="checkbox" checked={allFilteredSelected} onChange={(e) => onToggleGoodsSelection(e.target.checked ? filteredProducts.map((item) => item.id) : [])} /></th> : null}<th>商品</th><th>商城价</th><th>商品库存</th><th><EditableHeader label="限时价" /></th><th><EditableHeader label="总限购数量" /></th><th><EditableHeader label="总活动库存" /></th><th>规格数量</th><th>操作</th></tr></thead><tbody>{filteredProducts.map((item) => {
+              <div className="goods-table-shell"><table className={`goods-table activity-goods-table ${showSelectionControls ? "has-selection" : "no-selection"}`}><thead><tr>{showSelectionControls ? <th><input type="checkbox" checked={allFilteredSelected} onChange={(e) => onToggleGoodsSelection(e.target.checked ? filteredProducts.map((item) => item.id) : [])} /></th> : null}<th>商品</th><th>商城价</th><th>商品库存</th><th><EditableHeader label="限时价" /></th><th><EditableHeader label="总限购数量" suffixIcon={questionHeaderIcon} suffixTooltip="单个买家ID最多购买数量，0代表不做限制" /></th><th><EditableHeader label="总活动库存" /></th><th>规格数量</th><th>操作</th></tr></thead><tbody>{filteredProducts.map((item) => {
                 const productFieldEditModes = productFieldEditModesByProduct[item.id] || initialProductFieldEditModes;
                 const productFieldErrors = productFieldErrorsByProduct[item.id] || {};
                 const flashPriceLocked = hasSpecLevelFlashPrice(item) && !productFieldEditModes.flashPrice;
@@ -1190,9 +1208,9 @@ function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, 
                     <td><div className="product-cell"><div className="product-image">{item.image}</div><div className="product-meta"><div className="product-name">{item.name}</div><div className="product-id">商品ID： {item.id}</div></div>{showSelectionControls ? <button className="delete-link" type="button" onClick={() => onRemoveProduct(item.id)}>删除商品</button> : null}</div></td>
                     <td>{item.marketPrice}</td>
                     <td>{getProductStockDisplay(item)}</td>
-                    <td><EditableCellInput label="限时价" value={flashPriceDisplay} onChange={(e) => onUpdateProductFlashPrice(item.id, e.target.value)} placeholder="请输入" locked={flashPriceLocked} isEditMode={productFieldEditModes.flashPrice} onToggleEdit={() => onToggleProductFieldEditMode(item.id, "flashPrice")} hasError={productFieldErrors.flashPrice} /></td>
-                    <td><EditableCellInput label="总限购数量" value={totalLimitDisplay} onChange={(e) => onUpdateProductLimit(item.id, e.target.value.replace(/[^\d]/g, ""))} placeholder="请输入" locked={totalLimitLocked} isEditMode={productFieldEditModes.totalLimit} onToggleEdit={() => onToggleProductFieldEditMode(item.id, "totalLimit")} inputMode="numeric" hasError={productFieldErrors.totalLimit} /></td>
-                    <td><EditableCellInput label="总活动库存" value={activityStockDisplay} onChange={(e) => onUpdateProductActivityStock(item.id, e.target.value.replace(/[^\d]/g, ""))} placeholder="请输入" locked={activityStockLocked} isEditMode={productFieldEditModes.activityStock} onToggleEdit={() => onToggleProductFieldEditMode(item.id, "activityStock")} inputMode="numeric" hasError={productFieldErrors.activityStock} /></td>
+                    <td><EditableCellInput label="限时价" value={flashPriceDisplay} onChange={(e) => onUpdateProductFlashPrice(item.id, e.target.value)} placeholder="请输入" locked={flashPriceLocked} showEditWhenLocked={flashPriceLocked} isEditMode={productFieldEditModes.flashPrice} onToggleEdit={() => onToggleProductFieldEditMode(item.id, "flashPrice")} hasError={productFieldErrors.flashPrice} /></td>
+                    <td><EditableCellInput label="总限购数量" value={totalLimitDisplay} onChange={(e) => onUpdateProductLimit(item.id, e.target.value.replace(/[^\d]/g, ""))} placeholder="请输入" locked={totalLimitLocked} lockedDisplay="按规格维度生效" isEditMode={productFieldEditModes.totalLimit} onToggleEdit={() => onToggleProductFieldEditMode(item.id, "totalLimit")} inputMode="numeric" hasError={productFieldErrors.totalLimit} /></td>
+                    <td><EditableCellInput label="总活动库存" value={activityStockDisplay} onChange={(e) => onUpdateProductActivityStock(item.id, e.target.value.replace(/[^\d]/g, ""))} placeholder="请输入" locked={activityStockLocked} lockedDisplay="按规格维度生效" isEditMode={productFieldEditModes.activityStock} onToggleEdit={() => onToggleProductFieldEditMode(item.id, "activityStock")} inputMode="numeric" hasError={productFieldErrors.activityStock} /></td>
                     <td>共 {item.specs.length} 个 规格</td>
                     <td><div className="spec-action"><button type="button" className="spec-open-btn" onClick={() => onOpenSpecPicker(item.id)}>已选 {item.specs.filter((spec) => spec.status === "active").length} 个 规格 <span>编辑</span></button></div></td>
                   </tr>
