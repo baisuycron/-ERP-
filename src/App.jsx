@@ -45,21 +45,100 @@ const getActiveSpecs = (product) => product.specs.filter((spec) => spec.status =
 const hasUnifiedFlashPrice = (product) => String(product.flashPrice || "").trim() !== "";
 const hasUnifiedTotalLimit = (product) => String(product.totalLimit || "").trim() !== "";
 const hasUnifiedActivityStock = (product) => String(product.activityStock || "").trim() !== "";
+const hasValue = (value) => String(value || "").trim() !== "";
+const hasSpecLevelFlashPrice = (product) => getActiveSpecs(product).some((spec) => hasValue(spec.flashPrice));
+const hasSpecLevelLimitCount = (product) => getActiveSpecs(product).some((spec) => hasValue(spec.limitCount));
+const hasSpecLevelActivityStock = (product) => getActiveSpecs(product).some((spec) => hasValue(spec.activityStock));
 const getNumericStockValue = (value) => {
   const numericValue = Number(value || 0);
   return Number.isFinite(numericValue) ? numericValue : 0;
+};
+const getPriceNumber = (value) => {
+  const numericValue = Number.parseFloat(String(value || "").replace(/[^\d.]/g, ""));
+  return Number.isFinite(numericValue) ? numericValue : null;
+};
+const formatPriceRange = (value) => {
+  if (!Number.isFinite(value)) return "";
+  const normalized = Number.isInteger(value) ? String(value) : String(value).replace(/\.?0+$/, "");
+  return `¥ ${normalized}`;
+};
+const getProductFlashPriceDisplay = (product) => {
+  if (hasUnifiedFlashPrice(product)) return product.flashPrice;
+
+  const specFlashPrices = getActiveSpecs(product).map((spec) => getPriceNumber(spec.flashPrice)).filter((value) => value !== null);
+  if (specFlashPrices.length === 0) return "";
+
+  const minPrice = Math.min(...specFlashPrices);
+  const maxPrice = Math.max(...specFlashPrices);
+  if (minPrice === maxPrice) return formatPriceRange(minPrice);
+  return `${formatPriceRange(minPrice)}~${Number.isInteger(maxPrice) ? String(maxPrice) : String(maxPrice).replace(/\.?0+$/, "")}`;
+};
+const getProductTotalLimitDisplay = (product) => {
+  if (hasUnifiedTotalLimit(product)) return product.totalLimit;
+  const total = getActiveSpecs(product).reduce((sum, spec) => sum + getNumericStockValue(spec.limitCount), 0);
+  return total > 0 ? String(total) : "";
 };
 const getProductActivityStockDisplay = (product) => {
   if (hasUnifiedActivityStock(product)) return product.activityStock;
   const total = getActiveSpecs(product).reduce((sum, spec) => sum + getNumericStockValue(spec.activityStock), 0);
   return total > 0 ? String(total) : "";
 };
+const getProductStockDisplay = (product) => {
+  const total = getActiveSpecs(product).reduce((sum, spec) => sum + getNumericStockValue(spec.stock), 0);
+  return total > 0 ? String(total) : "";
+};
+const initialProductFieldEditModes = { flashPrice: false, totalLimit: false, activityStock: false };
+const editHeaderIcon = "data:image/svg+xml,%3Csvg%20t%3D%221775524476153%22%20class%3D%22icon%22%20viewBox%3D%220%200%201024%201024%22%20version%3D%221.1%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20p-id%3D%224620%22%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3Axlink%3D%22http%3A//www.w3.org/1999/xlink%22%3E%3Cpath%20d%3D%22M598.8864%20153.6v51.2H256a51.2%2051.2%200%200%200-51.2%2051.2v512a51.2%2051.2%200%200%200%2051.2%2051.2h512a51.2%2051.2%200%200%200%2051.2-51.2V435.6608h51.2V768a102.4%20102.4%200%200%201-102.4%20102.4H256a102.4%20102.4%200%200%201-102.4-102.4V256a102.4%20102.4%200%200%201%20102.4-102.4h342.8864zM460.8%20551.8336L859.0336%20153.6l36.1984%2036.1984-398.2336%20398.2336L460.8%20551.8336z%22%20fill%3D%22%23707070%22%20p-id%3D%224621%22%3E%3C/path%3E%3C/svg%3E";
 const syncProductActivityStock = (product, nextTotalValue) => {
   return {
     ...product,
     activityStock: nextTotalValue
   };
 };
+
+function EditableHeader({ label }) {
+  return (
+    <span className="editable-th-content">
+      <span>{label}</span>
+    </span>
+  );
+}
+
+function HeaderWithIcon({ label, onIconClick, isActive = false }) {
+  return (
+    <span className="editable-th-content">
+      <span>{label}</span>
+      {onIconClick ? (
+        <button type="button" className={`editable-th-icon ${isActive ? "is-active" : ""}`} onClick={onIconClick} aria-label={`编辑${label}`}>
+          <img src={editHeaderIcon} alt="" />
+        </button>
+      ) : (
+        <span className="editable-th-icon" aria-hidden="true">
+          <img src={editHeaderIcon} alt="" />
+        </span>
+      )}
+    </span>
+  );
+}
+
+function EditableCellInput({ label, value, onChange, placeholder, locked, isEditMode, onToggleEdit, inputMode = "text", hasError = false }) {
+  return (
+    <span className="editable-cell-input">
+      <input
+        className={`limit-input ${locked ? "is-locked" : ""} ${hasError ? "is-error" : ""}`}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        readOnly={locked}
+        tabIndex={locked ? -1 : 0}
+        inputMode={inputMode}
+      />
+      <button type="button" className={`editable-th-icon ${isEditMode ? "is-active" : ""}`} onClick={onToggleEdit} aria-label={`编辑${label}`}>
+        <img src={editHeaderIcon} alt="" />
+      </button>
+    </span>
+  );
+}
 
 function createInitialProducts() {
   return [
@@ -330,6 +409,8 @@ function createInitialMarketingPageState(pageName) {
     selectedGoodsIds: [],
     selectedPickerProductIds: [],
     selectedSpecIdsByProduct: {},
+    productFieldEditModesByProduct: {},
+    productFieldErrorsByProduct: {},
     detailActivity: null,
     activities: [...(seedActivitiesByPage[pageName] || [])]
   };
@@ -829,7 +910,9 @@ function SpecPickerModal({ product, selectedSpecIds, onToggleSpecSelection, onTo
   const useUnifiedFlashPrice = hasUnifiedFlashPrice(product);
   const useUnifiedTotalLimit = hasUnifiedTotalLimit(product);
   const useUnifiedActivityStock = hasUnifiedActivityStock(product);
+  const [specFieldEditModes, setSpecFieldEditModes] = useState(initialProductFieldEditModes);
   const [batchFields, setBatchFields] = useState({ flashPrice: "", limitCount: "", activityStock: "" });
+  const [invalidSpecFields, setInvalidSpecFields] = useState({});
   const selectableSpecs = product.specs.filter((spec) => spec.status !== "merged");
   const sortedSpecs = [...product.specs].sort((left, right) => {
     const getSpecOrder = (spec) => {
@@ -842,12 +925,80 @@ function SpecPickerModal({ product, selectedSpecIds, onToggleSpecSelection, onTo
   });
   const allSelectableSelected = selectableSpecs.length > 0 && selectableSpecs.every((spec) => selectedSpecIds.includes(spec.id));
   const hasAnySelected = selectedSpecIds.length > 0;
+  const allowSpecFlashPriceEdit = !useUnifiedFlashPrice || specFieldEditModes.flashPrice;
+  const allowSpecTotalLimitEdit = !useUnifiedTotalLimit || specFieldEditModes.totalLimit;
+  const allowSpecActivityStockEdit = !useUnifiedActivityStock || specFieldEditModes.activityStock;
+
+  const clearInvalidSpecField = (specId, field) => {
+    setInvalidSpecFields((current) => {
+      if (!current[specId]?.[field]) return current;
+
+      const nextSpecFields = { ...current[specId], [field]: false };
+      const hasAnyInvalid = Object.values(nextSpecFields).some(Boolean);
+      if (!hasAnyInvalid) {
+        const { [specId]: _removed, ...rest } = current;
+        return rest;
+      }
+
+      return {
+        ...current,
+        [specId]: nextSpecFields
+      };
+    });
+  };
+
+  const handleSpecFieldChange = (specId, field, value) => {
+    clearInvalidSpecField(specId, field);
+    onUpdateSpecField(product.id, specId, field, value);
+  };
 
   const handleBatchFieldChange = (field, value) => {
     setBatchFields((current) => ({
       ...current,
       [field]: field === "flashPrice" ? value : value.replace(/[^\d]/g, "")
     }));
+  };
+
+  const handleToggleSpecFieldEditMode = (field) => {
+    setSpecFieldEditModes((current) => ({
+      ...current,
+      [field]: !current[field]
+    }));
+  };
+
+  const handleSave = () => {
+    const activeSpecs = product.specs.filter((spec) => spec.status === "active");
+    const nextInvalidSpecFields = {};
+    const missingLabels = [];
+
+    const validateField = (field, label, isEditable) => {
+      if (!isEditable) return;
+
+      let hasMissing = false;
+      activeSpecs.forEach((spec) => {
+        if (hasValue(spec[field])) return;
+        hasMissing = true;
+        nextInvalidSpecFields[spec.id] = {
+          ...(nextInvalidSpecFields[spec.id] || {}),
+          [field]: true
+        };
+      });
+
+      if (hasMissing) missingLabels.push(label);
+    };
+
+    validateField("flashPrice", "限时价", allowSpecFlashPriceEdit);
+    validateField("limitCount", "限购数量", allowSpecTotalLimitEdit);
+    validateField("activityStock", "活动库存", allowSpecActivityStockEdit);
+
+    if (missingLabels.length > 0) {
+      setInvalidSpecFields(nextInvalidSpecFields);
+      onShowToast(`${missingLabels.join("、")}为空，请检查`);
+      return;
+    }
+
+    setInvalidSpecFields({});
+    onClose();
   };
 
   const handleApplyBatchFields = () => {
@@ -895,9 +1046,9 @@ function SpecPickerModal({ product, selectedSpecIds, onToggleSpecSelection, onTo
         <div className="spec-batch-bar">
           <div className="spec-batch-left">
             <span>批量设置:</span>
-            <input placeholder="限时价" value={batchFields.flashPrice} onChange={(e) => handleBatchFieldChange("flashPrice", e.target.value)} disabled={useUnifiedFlashPrice} className={useUnifiedFlashPrice ? "is-disabled" : ""} />
-            <input placeholder="限购数量" value={batchFields.limitCount} onChange={(e) => handleBatchFieldChange("limitCount", e.target.value)} disabled={useUnifiedTotalLimit} className={useUnifiedTotalLimit ? "is-disabled" : ""} />
-            <input placeholder="活动库存" value={batchFields.activityStock} onChange={(e) => handleBatchFieldChange("activityStock", e.target.value)} disabled={useUnifiedActivityStock} className={useUnifiedActivityStock ? "is-disabled" : ""} />
+            <input placeholder="限时价" value={batchFields.flashPrice} onChange={(e) => handleBatchFieldChange("flashPrice", e.target.value)} disabled={!allowSpecFlashPriceEdit} className={!allowSpecFlashPriceEdit ? "is-disabled" : ""} />
+            <input placeholder="限购数量" value={batchFields.limitCount} onChange={(e) => handleBatchFieldChange("limitCount", e.target.value)} disabled={!allowSpecTotalLimitEdit} className={!allowSpecTotalLimitEdit ? "is-disabled" : ""} />
+            <input placeholder="活动库存" value={batchFields.activityStock} onChange={(e) => handleBatchFieldChange("activityStock", e.target.value)} disabled={!allowSpecActivityStockEdit} className={!allowSpecActivityStockEdit ? "is-disabled" : ""} />
             <button className="btn btn-search" type="button" onClick={handleApplyBatchFields}>确定</button>
           </div>
         </div>
@@ -910,9 +1061,9 @@ function SpecPickerModal({ product, selectedSpecIds, onToggleSpecSelection, onTo
                 <th>规格信息</th>
                 <th>库存</th>
                 <th>商城价</th>
-                <th>限时价</th>
-                <th>限购数量</th>
-                <th>活动库存</th>
+                <th><HeaderWithIcon label="限时价" onIconClick={() => handleToggleSpecFieldEditMode("flashPrice")} isActive={specFieldEditModes.flashPrice} /></th>
+                <th><HeaderWithIcon label="限购数量" onIconClick={() => handleToggleSpecFieldEditMode("totalLimit")} isActive={specFieldEditModes.totalLimit} /></th>
+                <th><HeaderWithIcon label="活动库存" onIconClick={() => handleToggleSpecFieldEditMode("activityStock")} isActive={specFieldEditModes.activityStock} /></th>
                 <th>操作</th>
               </tr>
             </thead>
@@ -960,11 +1111,11 @@ function SpecPickerModal({ product, selectedSpecIds, onToggleSpecSelection, onTo
                     </td>
                     <td>{row.stock}</td>
                     <td>{row.marketPrice}</td>
-                    <td>{useUnifiedFlashPrice ? <span className="spec-unified-label">按商品统一限时价</span> : <input className="spec-inline-input" value={row.flashPrice} onChange={(e) => onUpdateSpecField(product.id, row.id, "flashPrice", e.target.value)} />}</td>
+                    <td>{allowSpecFlashPriceEdit ? <input className={`spec-inline-input ${invalidSpecFields[row.id]?.flashPrice ? "is-error" : ""}`} value={row.flashPrice} onChange={(e) => handleSpecFieldChange(row.id, "flashPrice", e.target.value)} /> : <span className="spec-unified-label">按商品统一限时价</span>}</td>
                     <td>
-                      {useUnifiedTotalLimit ? <span className="spec-unified-label">按商品统一总限购数量</span> : <input className="spec-inline-input" value={row.limitCount} onChange={(e) => onUpdateSpecField(product.id, row.id, "limitCount", e.target.value.replace(/[^\d]/g, ""))} />}
+                      {allowSpecTotalLimitEdit ? <input className={`spec-inline-input ${invalidSpecFields[row.id]?.limitCount ? "is-error" : ""}`} value={row.limitCount} onChange={(e) => handleSpecFieldChange(row.id, "limitCount", e.target.value.replace(/[^\d]/g, ""))} /> : <span className="spec-unified-label">按商品统一总限购数量</span>}
                     </td>
-                    <td>{useUnifiedActivityStock ? <span className="spec-unified-label">按商品统一活动库存</span> : <input className="spec-inline-input" value={row.activityStock} onChange={(e) => onUpdateSpecField(product.id, row.id, "activityStock", e.target.value.replace(/[^\d]/g, ""))} />}</td>
+                    <td>{allowSpecActivityStockEdit ? <input className={`spec-inline-input ${invalidSpecFields[row.id]?.activityStock ? "is-error" : ""}`} value={row.activityStock} onChange={(e) => handleSpecFieldChange(row.id, "activityStock", e.target.value.replace(/[^\d]/g, ""))} /> : <span className="spec-unified-label">按商品统一活动库存</span>}</td>
                     <td><button className="spec-link spec-remove" type="button" onClick={() => onToggleSpecStatus(product.id, row.id, "available")}>撤出活动</button></td>
                   </tr>
                 );
@@ -980,21 +1131,15 @@ function SpecPickerModal({ product, selectedSpecIds, onToggleSpecSelection, onTo
               <button type="button" className={hasAnySelected ? "is-active" : ""} disabled={!hasAnySelected} onClick={() => onBatchToggleSpecs(product.id, "available")}>批量撤出活动</button>
             </div>
           </div>
-          <button className="btn btn-create" type="button" onClick={onClose}>保存</button>
+          <button className="btn btn-create" type="button" onClick={handleSave}>保存</button>
         </div>
       </div>
     </div>
   );
 }
 
-function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, selectedProducts, selectedGoodsIds, onToggleGoodsSelection, onRemoveProduct, onBatchRemoveProducts, onBack, onOpenPicker, onOpenSpecPicker, onUpdateProductFlashPrice, onUpdateProductLimit, onUpdateProductActivityStock, onSave, modalOpen }) {
+function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, selectedProducts, selectedGoodsIds, productFieldEditModesByProduct, productFieldErrorsByProduct, onToggleProductFieldEditMode, onToggleGoodsSelection, onRemoveProduct, onBatchRemoveProducts, onBack, onOpenPicker, onOpenSpecPicker, onUpdateProductFlashPrice, onUpdateProductLimit, onUpdateProductActivityStock, onSave, modalOpen }) {
   const showUnpricedFilter = pageName === "限时购1" || pageName === "限时购";
-
-  const getTotalLimitDisplay = (product) => {
-    if (hasUnifiedTotalLimit(product)) return product.totalLimit;
-    const total = product.specs.filter((item) => item.status === "active").reduce((sum, item) => sum + Number(item.limitCount || 0), 0);
-    return total ? String(total) : "";
-  };
 
   const filteredProducts = useMemo(() => selectedProducts.filter((product) => {
     const productKeyword = form.productKeyword.trim();
@@ -1029,7 +1174,30 @@ function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, 
             <>
               <div className="goods-filter-bar"><label className="mini-field"><span>商品名称:</span><input value={form.productKeyword} onChange={(e) => onFormChange("productKeyword", e.target.value)} /></label><label className="mini-field"><span>商品ID:</span><input value={form.productId} onChange={(e) => onFormChange("productId", e.target.value)} /></label>{showUnpricedFilter ? <label className="check-item goods-filter-check"><input type="checkbox" checked={form.onlyUnpricedProducts} onChange={(e) => onFormChange("onlyUnpricedProducts", e.target.checked)} /><span>筛选未配限时价商品</span></label> : null}<button className="btn btn-reset" type="button" onClick={onResetFilters}>重置</button><button className="btn btn-search" type="button">搜索</button></div>
               {showSelectionControls ? <div className="goods-toolbar"><button className="btn btn-reset" type="button" onClick={onBatchRemoveProducts}>批量删除</button></div> : null}
-              <div className="goods-table-shell"><table className={`goods-table activity-goods-table ${showSelectionControls ? "has-selection" : "no-selection"}`}><thead><tr>{showSelectionControls ? <th><input type="checkbox" checked={allFilteredSelected} onChange={(e) => onToggleGoodsSelection(e.target.checked ? filteredProducts.map((item) => item.id) : [])} /></th> : null}<th>商品</th><th>商城价</th><th>限时价</th><th>总限购数量</th><th>总活动库存</th><th>规格数量</th><th>操作</th></tr></thead><tbody>{filteredProducts.map((item) => <tr key={item.id}>{showSelectionControls ? <td><input type="checkbox" checked={selectedGoodsIds.includes(item.id)} onChange={() => onToggleGoodsSelection(item.id)} /></td> : null}<td><div className="product-cell"><div className="product-image">{item.image}</div><div className="product-meta"><div className="product-name">{item.name}</div><div className="product-id">商品ID： {item.id}</div></div>{showSelectionControls ? <button className="delete-link" type="button" onClick={() => onRemoveProduct(item.id)}>删除商品</button> : null}</div></td><td>{item.marketPrice}</td><td><input className="limit-input" value={item.flashPrice} onChange={(e) => onUpdateProductFlashPrice(item.id, e.target.value)} placeholder="请输入" /></td><td><input className="limit-input" value={getTotalLimitDisplay(item)} onChange={(e) => onUpdateProductLimit(item.id, e.target.value.replace(/[^\d]/g, ""))} /></td><td><input className="limit-input" value={getProductActivityStockDisplay(item)} onChange={(e) => onUpdateProductActivityStock(item.id, e.target.value.replace(/[^\d]/g, ""))} /></td><td>共 {item.specs.length} 个 规格</td><td><div className="spec-action"><button type="button" className="spec-open-btn" onClick={() => onOpenSpecPicker(item.id)}>已选 {item.specs.filter((spec) => spec.status === "active").length} 个 规格 <span>编辑</span></button></div></td></tr>)}</tbody></table></div>
+              <div className="goods-table-shell"><table className={`goods-table activity-goods-table ${showSelectionControls ? "has-selection" : "no-selection"}`}><thead><tr>{showSelectionControls ? <th><input type="checkbox" checked={allFilteredSelected} onChange={(e) => onToggleGoodsSelection(e.target.checked ? filteredProducts.map((item) => item.id) : [])} /></th> : null}<th>商品</th><th>商城价</th><th>商品库存</th><th><EditableHeader label="限时价" /></th><th><EditableHeader label="总限购数量" /></th><th><EditableHeader label="总活动库存" /></th><th>规格数量</th><th>操作</th></tr></thead><tbody>{filteredProducts.map((item) => {
+                const productFieldEditModes = productFieldEditModesByProduct[item.id] || initialProductFieldEditModes;
+                const productFieldErrors = productFieldErrorsByProduct[item.id] || {};
+                const flashPriceLocked = hasSpecLevelFlashPrice(item) && !productFieldEditModes.flashPrice;
+                const totalLimitLocked = hasSpecLevelLimitCount(item) && !productFieldEditModes.totalLimit;
+                const activityStockLocked = hasSpecLevelActivityStock(item) && !productFieldEditModes.activityStock;
+                const flashPriceDisplay = productFieldEditModes.flashPrice && hasSpecLevelFlashPrice(item) ? item.flashPrice : getProductFlashPriceDisplay(item);
+                const totalLimitDisplay = hasSpecLevelLimitCount(item) ? getProductTotalLimitDisplay(item) : item.totalLimit;
+                const activityStockDisplay = hasSpecLevelActivityStock(item) ? getProductActivityStockDisplay(item) : item.activityStock;
+
+                return (
+                  <tr key={item.id}>
+                    {showSelectionControls ? <td><input type="checkbox" checked={selectedGoodsIds.includes(item.id)} onChange={() => onToggleGoodsSelection(item.id)} /></td> : null}
+                    <td><div className="product-cell"><div className="product-image">{item.image}</div><div className="product-meta"><div className="product-name">{item.name}</div><div className="product-id">商品ID： {item.id}</div></div>{showSelectionControls ? <button className="delete-link" type="button" onClick={() => onRemoveProduct(item.id)}>删除商品</button> : null}</div></td>
+                    <td>{item.marketPrice}</td>
+                    <td>{getProductStockDisplay(item)}</td>
+                    <td><EditableCellInput label="限时价" value={flashPriceDisplay} onChange={(e) => onUpdateProductFlashPrice(item.id, e.target.value)} placeholder="请输入" locked={flashPriceLocked} isEditMode={productFieldEditModes.flashPrice} onToggleEdit={() => onToggleProductFieldEditMode(item.id, "flashPrice")} hasError={productFieldErrors.flashPrice} /></td>
+                    <td><EditableCellInput label="总限购数量" value={totalLimitDisplay} onChange={(e) => onUpdateProductLimit(item.id, e.target.value.replace(/[^\d]/g, ""))} placeholder="请输入" locked={totalLimitLocked} isEditMode={productFieldEditModes.totalLimit} onToggleEdit={() => onToggleProductFieldEditMode(item.id, "totalLimit")} inputMode="numeric" hasError={productFieldErrors.totalLimit} /></td>
+                    <td><EditableCellInput label="总活动库存" value={activityStockDisplay} onChange={(e) => onUpdateProductActivityStock(item.id, e.target.value.replace(/[^\d]/g, ""))} placeholder="请输入" locked={activityStockLocked} isEditMode={productFieldEditModes.activityStock} onToggleEdit={() => onToggleProductFieldEditMode(item.id, "activityStock")} inputMode="numeric" hasError={productFieldErrors.activityStock} /></td>
+                    <td>共 {item.specs.length} 个 规格</td>
+                    <td><div className="spec-action"><button type="button" className="spec-open-btn" onClick={() => onOpenSpecPicker(item.id)}>已选 {item.specs.filter((spec) => spec.status === "active").length} 个 规格 <span>编辑</span></button></div></td>
+                  </tr>
+                );
+              })}</tbody></table></div>
               <div className="goods-pagination"><span>共 125 条</span><select><option>10 条/页</option></select><button className="page-btn" type="button" disabled>‹</button><button className="page-btn is-current" type="button">1</button><button className="page-btn" type="button">2</button><button className="page-btn" type="button">3</button><button className="page-btn" type="button">4</button><button className="page-btn" type="button">5</button><span>...</span><button className="page-btn" type="button">13</button><button className="page-btn" type="button">›</button><span>到第</span><input className="page-input" placeholder="请输入" /><span>页</span><button className="btn btn-jump" type="button">跳转</button></div>
             </>
           ) : (
@@ -1075,6 +1243,8 @@ export default function App() {
     selectedGoodsIds,
     selectedPickerProductIds,
     selectedSpecIdsByProduct,
+    productFieldEditModesByProduct,
+    productFieldErrorsByProduct,
     detailActivity,
     activities
   } = currentPageState;
@@ -1113,7 +1283,9 @@ export default function App() {
       selectedProducts: [],
       selectedGoodsIds: [],
       selectedPickerProductIds: [],
-      selectedSpecIdsByProduct: {}
+      selectedSpecIdsByProduct: {},
+      productFieldEditModesByProduct: {},
+      productFieldErrorsByProduct: {}
     }));
   };
 
@@ -1140,8 +1312,11 @@ export default function App() {
     const selectedMap = new Map(selectedProducts.map((item) => [item.id, item]));
 
     return selectedPickerProductIds.map((productId) => {
-      const source = selectedMap.get(productId) || catalogMap.get(productId);
-      return source ? JSON.parse(JSON.stringify(source)) : null;
+      const existingProduct = selectedMap.get(productId);
+      if (existingProduct) return JSON.parse(JSON.stringify(existingProduct));
+
+      const catalogProduct = catalogMap.get(productId);
+      return catalogProduct ? { ...JSON.parse(JSON.stringify(catalogProduct)), flashPrice: "" } : null;
     }).filter(Boolean);
   };
 
@@ -1175,25 +1350,81 @@ export default function App() {
     }));
   };
 
+  const handleToggleProductFieldEditMode = (productId, field) => {
+    updateCurrentMarketingState((current) => ({
+      ...current,
+      productFieldEditModesByProduct: {
+        ...(current.productFieldEditModesByProduct || {}),
+        [productId]: {
+          ...(current.productFieldEditModesByProduct?.[productId] || initialProductFieldEditModes),
+          [field]: !(current.productFieldEditModesByProduct?.[productId] || initialProductFieldEditModes)[field]
+        }
+      },
+      productFieldErrorsByProduct: {
+        ...(current.productFieldErrorsByProduct || {}),
+        [productId]: {
+          ...(current.productFieldErrorsByProduct?.[productId] || {}),
+          [field]: false
+        }
+      }
+    }));
+  };
+
+  const clearProductFieldError = (productId, field) => {
+    updateCurrentMarketingState((current) => {
+      if (!current.productFieldErrorsByProduct?.[productId]?.[field]) return current;
+
+      return {
+        ...current,
+        productFieldErrorsByProduct: {
+          ...(current.productFieldErrorsByProduct || {}),
+          [productId]: {
+            ...(current.productFieldErrorsByProduct?.[productId] || {}),
+            [field]: false
+          }
+        }
+      };
+    });
+  };
+
   const handleUpdateProductLimit = (productId, value) => {
+    clearProductFieldError(productId, "totalLimit");
     updateSelectedProduct(productId, (product) => ({ ...product, totalLimit: value }));
   };
 
   const handleUpdateProductFlashPrice = (productId, value) => {
+    clearProductFieldError(productId, "flashPrice");
     updateSelectedProduct(productId, (product) => ({ ...product, flashPrice: value }));
   };
 
   const handleUpdateProductActivityStock = (productId, value) => {
+    clearProductFieldError(productId, "activityStock");
     updateSelectedProduct(productId, (product) => syncProductActivityStock(product, value));
   };
 
   const handleUpdateSpecField = (productId, specId, field, value) => {
-    updateSelectedProduct(productId, (product) => ({
-      ...product,
-      flashPrice: field === "flashPrice" ? "" : product.flashPrice,
-      totalLimit: field === "limitCount" ? "" : product.totalLimit,
-      activityStock: field === "activityStock" ? "" : product.activityStock,
-      specs: product.specs.map((spec) => (spec.id === specId ? { ...spec, [field]: value } : spec))
+    updateCurrentMarketingState((current) => ({
+      ...current,
+      selectedProducts: current.selectedProducts.map((product) => {
+        if (product.id !== productId) return product;
+
+        return {
+          ...product,
+          flashPrice: field === "flashPrice" ? "" : product.flashPrice,
+          totalLimit: field === "limitCount" ? "" : product.totalLimit,
+          activityStock: field === "activityStock" ? "" : product.activityStock,
+          specs: product.specs.map((spec) => (spec.id === specId ? { ...spec, [field]: value } : spec))
+        };
+      }),
+      productFieldEditModesByProduct: {
+        ...(current.productFieldEditModesByProduct || {}),
+        [productId]: {
+          ...(current.productFieldEditModesByProduct?.[productId] || initialProductFieldEditModes),
+          flashPrice: field === "flashPrice" ? false : (current.productFieldEditModesByProduct?.[productId] || initialProductFieldEditModes).flashPrice,
+          totalLimit: field === "limitCount" ? false : (current.productFieldEditModesByProduct?.[productId] || initialProductFieldEditModes).totalLimit,
+          activityStock: field === "activityStock" ? false : (current.productFieldEditModesByProduct?.[productId] || initialProductFieldEditModes).activityStock
+        }
+      }
     }));
   };
 
@@ -1226,7 +1457,9 @@ export default function App() {
     }
 
     const catalogProducts = createInitialProducts();
-    const selectedCatalogProducts = catalogProducts.filter((item) => selectedPickerProductIds.includes(item.id));
+    const selectedCatalogProducts = catalogProducts
+      .filter((item) => selectedPickerProductIds.includes(item.id))
+      .map((item) => ({ ...JSON.parse(JSON.stringify(item)), flashPrice: "" }));
 
     updateCurrentMarketingState((current) => {
       const existingIds = new Set(current.selectedProducts.map((item) => item.id));
@@ -1402,7 +1635,9 @@ export default function App() {
       selectedProducts: current.selectedProducts.filter((item) => item.id !== productId),
       selectedGoodsIds: current.selectedGoodsIds.filter((item) => item !== productId),
       selectedPickerProductIds: current.selectedPickerProductIds.filter((item) => item !== productId),
-      selectedSpecIdsByProduct: Object.fromEntries(Object.entries(current.selectedSpecIdsByProduct).filter(([key]) => key !== productId))
+      selectedSpecIdsByProduct: Object.fromEntries(Object.entries(current.selectedSpecIdsByProduct).filter(([key]) => key !== productId)),
+      productFieldEditModesByProduct: Object.fromEntries(Object.entries(current.productFieldEditModesByProduct || {}).filter(([key]) => key !== productId)),
+      productFieldErrorsByProduct: Object.fromEntries(Object.entries(current.productFieldErrorsByProduct || {}).filter(([key]) => key !== productId))
     }));
 
     if (activeSpecProductId === productId) {
@@ -1422,6 +1657,8 @@ export default function App() {
       selectedProducts: current.selectedProducts.filter((item) => !selectedIdSet.has(item.id)),
       selectedPickerProductIds: current.selectedPickerProductIds.filter((item) => !selectedIdSet.has(item)),
       selectedSpecIdsByProduct: Object.fromEntries(Object.entries(current.selectedSpecIdsByProduct).filter(([key]) => !selectedIdSet.has(key))),
+      productFieldEditModesByProduct: Object.fromEntries(Object.entries(current.productFieldEditModesByProduct || {}).filter(([key]) => !selectedIdSet.has(key))),
+      productFieldErrorsByProduct: Object.fromEntries(Object.entries(current.productFieldErrorsByProduct || {}).filter(([key]) => !selectedIdSet.has(key))),
       selectedGoodsIds: []
     }));
 
@@ -1490,12 +1727,54 @@ export default function App() {
   };
 
   const handleCreateSave = () => {
-    const hasEmptyFlashPrice = selectedProducts.some((product) => !hasUnifiedFlashPrice(product) && product.specs.some((spec) => spec.status === "active" && !String(spec.flashPrice || "").trim()));
+    const nextProductFieldErrorsByProduct = {};
+    const missingLabels = [];
+    let hasMissingFlashPrice = false;
+    let hasMissingTotalLimit = false;
+    let hasMissingActivityStock = false;
 
-    if (hasEmptyFlashPrice) {
-      setToastMessage("部分规格未配限时价，请先完善");
+    selectedProducts.forEach((product) => {
+      const productFieldEditModes = productFieldEditModesByProduct?.[product.id] || initialProductFieldEditModes;
+      const flashPriceDisplay = productFieldEditModes.flashPrice && hasSpecLevelFlashPrice(product) ? product.flashPrice : getProductFlashPriceDisplay(product);
+      const totalLimitDisplay = hasSpecLevelLimitCount(product) ? getProductTotalLimitDisplay(product) : product.totalLimit;
+      const activityStockDisplay = hasSpecLevelActivityStock(product) ? getProductActivityStockDisplay(product) : product.activityStock;
+
+      if (!hasValue(flashPriceDisplay)) {
+        hasMissingFlashPrice = true;
+        nextProductFieldErrorsByProduct[product.id] = {
+          ...(nextProductFieldErrorsByProduct[product.id] || {}),
+          flashPrice: true
+        };
+      }
+
+      if (!hasValue(totalLimitDisplay)) {
+        hasMissingTotalLimit = true;
+        nextProductFieldErrorsByProduct[product.id] = {
+          ...(nextProductFieldErrorsByProduct[product.id] || {}),
+          totalLimit: true
+        };
+      }
+
+      if (!hasValue(activityStockDisplay)) {
+        hasMissingActivityStock = true;
+        nextProductFieldErrorsByProduct[product.id] = {
+          ...(nextProductFieldErrorsByProduct[product.id] || {}),
+          activityStock: true
+        };
+      }
+    });
+
+    if (hasMissingFlashPrice) missingLabels.push("商品限时价");
+    if (hasMissingTotalLimit) missingLabels.push("总限购数量");
+    if (hasMissingActivityStock) missingLabels.push("总活动库存");
+
+    if (missingLabels.length > 0) {
+      updateCurrentField("productFieldErrorsByProduct", nextProductFieldErrorsByProduct);
+      setToastMessage(`${missingLabels.join("、")}为空，请检查`);
       return;
     }
+
+    updateCurrentField("productFieldErrorsByProduct", {});
   };
 
   const handleActivityAction = (action, activity) => {
@@ -1516,7 +1795,9 @@ export default function App() {
         selectedProducts: createEditProducts(activity),
         selectedGoodsIds: [],
         selectedPickerProductIds: [],
-        selectedSpecIdsByProduct: {}
+        selectedSpecIdsByProduct: {},
+        productFieldEditModesByProduct: {},
+        productFieldErrorsByProduct: {}
       }));
       setIsCreating(true);
       return;
@@ -1560,7 +1841,7 @@ export default function App() {
         <Header currentMarketingPage={currentMarketingPage} />
         <main className="workspace-main">
           <TabSection creating={isCreating} detailing={!isCreating && !!detailActivity} currentMarketingPage={currentMarketingPage} onSwitchToList={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); updateCurrentField("detailActivity", null); }} />
-          {isCreating ? <CreatePage pageName={currentMarketingPage} form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} onToggleGoodsSelection={handleToggleGoodsSelection} onRemoveProduct={handleRemoveProduct} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} /> : detailActivity ? <DetailPage detailActivity={detailActivity} page={detailPage} setPage={(value) => updateCurrentField("detailPage", typeof value === "function" ? value(detailPage) : value)} pageSize={detailPageSize} setPageSize={(value) => updateCurrentField("detailPageSize", value)} onShowSpecDetail={setDetailSpecProduct} /> : <ListPage filters={filters} setFilters={(value) => updateCurrentField("filters", value)} page={page} setPage={(value) => updateCurrentField("page", typeof value === "function" ? value(page) : value)} pageSize={pageSize} setPageSize={(value) => updateCurrentField("pageSize", value)} onCreate={() => { resetCreateState(); setIsCreating(true); updateCurrentField("detailActivity", null); }} onAction={handleActivityAction} activities={activities} />}
+          {isCreating ? <CreatePage pageName={currentMarketingPage} form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} productFieldEditModesByProduct={productFieldEditModesByProduct || {}} productFieldErrorsByProduct={productFieldErrorsByProduct || {}} onToggleProductFieldEditMode={handleToggleProductFieldEditMode} onToggleGoodsSelection={handleToggleGoodsSelection} onRemoveProduct={handleRemoveProduct} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} /> : detailActivity ? <DetailPage detailActivity={detailActivity} page={detailPage} setPage={(value) => updateCurrentField("detailPage", typeof value === "function" ? value(detailPage) : value)} pageSize={detailPageSize} setPageSize={(value) => updateCurrentField("detailPageSize", value)} onShowSpecDetail={setDetailSpecProduct} /> : <ListPage filters={filters} setFilters={(value) => updateCurrentField("filters", value)} page={page} setPage={(value) => updateCurrentField("page", typeof value === "function" ? value(page) : value)} pageSize={pageSize} setPageSize={(value) => updateCurrentField("pageSize", value)} onCreate={() => { resetCreateState(); setIsCreating(true); updateCurrentField("detailActivity", null); }} onAction={handleActivityAction} activities={activities} />}
         </main>
       </section>
 
