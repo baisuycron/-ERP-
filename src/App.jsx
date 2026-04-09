@@ -1,14 +1,18 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 
+import { useRef } from "react";
+import * as XLSX from "xlsx";
+
+const buyerPageNames = ["买家列表"];
 const menuItems = [
   { label: "首页", icon: "home" },
   { label: "商品", icon: "goods" },
   { label: "交易", icon: "trade" },
-  { label: "买家", icon: "buyer" },
+  { label: "买家", icon: "buyer", children: buyerPageNames },
   { label: "店铺", icon: "shop", badge: "2" },
   { label: "系统", icon: "system" },
   { label: "统计", icon: "stats" },
-  { label: "营销", icon: "marketing", children: ["限时购1", "限时购"] },
+  { label: "营销", icon: "marketing", children: ["专享价", "限时购1", "限时购"] },
   { label: "小程序", icon: "miniapp" },
   { label: "客服", icon: "service" }
 ];
@@ -17,8 +21,35 @@ const statuses = ["全部", "未开始", "进行中", "已结束"];
 const activityCategories = ["常规活动", "节日活动", "品牌活动"];
 const productCategories = ["饮料酒水", "休闲食品", "日化用品"];
 
-const marketingPageNames = ["限时购1", "限时购"];
+const marketingPageNames = ["专享价", "限时购1", "限时购"];
+const buyerAccountTypes = ["总部账号", "授权账号", "子账号", "自主认证账号", "默认账号"];
+const buyerGroups = [
+  { id: "1", name: "北京分组" },
+  { id: "2", name: "黑龙江分组" },
+  { id: "3", name: "四川分组" }
+];
+const buyerGroupNameById = buyerGroups.reduce((result, item) => {
+  result[item.id] = item.name;
+  return result;
+}, {});
+const buyerSeedRows = [
+  { id: "18166", account: "Shawnee003", accountType: "总部账号", identity: "", group: "1", discount: "", createdAt: "2026-03-16 14:41:24", status: "正常" },
+  { id: "19346", account: "tianxuekui", accountType: "授权账号", identity: "", group: "2", discount: "", createdAt: "2026-03-11 17:16:23", status: "正常" },
+  { id: "13641", account: "NFSQ369", accountType: "子账号", identity: "", group: "3", discount: "", createdAt: "2026-02-09 15:02:06", status: "正常" },
+  { id: "19069", account: "lgq01", accountType: "默认账号", identity: "", group: "", discount: "", createdAt: "2026-01-28 15:19:21", status: "正常" }
+];
+const buyerGroupOptions = buyerGroups;
+const initialBuyerFilters = { id: "", account: "", accountType: "", identity: "" };
+const initialNewBuyerForm = { buyerIds: "", group: "", discount: "" };
+const partialBuyerDiscountPattern = /^(\d{0,2}(\.\d{0,2})?)?$/;
+const finalBuyerDiscountPattern = /^(5(\.\d{1,2})?|[6-9](\.\d{1,2})?|10(\.0{1,2})?|10)$/;
 const seedActivitiesByPage = {
+  专享价: [
+    { id: "844", name: "四川分组专享价", buyerGroup: "四川分组", buyerId: "-", goodsCount: 1, startTime: "2026-04-10 00:00:00", endTime: "2026-04-12 23:59:59", status: "未开始", actions: ["查看", "提前结束", "编辑", "复制"] },
+    { id: "843", name: "北京分组买家专享价", buyerGroup: "四川分组", buyerId: "2083059433", goodsCount: 3, startTime: "2026-04-09 00:00:00", endTime: "2026-04-30 23:59:59", status: "进行中", actions: ["查看", "提前结束", "编辑", "复制"] },
+    { id: "829", name: "鼠标【有多规格，无阶梯价】", buyerGroup: "四川分组", buyerId: "-", goodsCount: 8, startTime: "2026-03-18 00:00:00", endTime: "2026-03-20 23:59:59", status: "已结束", actions: ["查看", "复制"] },
+    { id: "828", name: "2083059433", buyerGroup: "四川分组", buyerId: "2083059433", goodsCount: 125, goodsFlag: "部分已失效", startTime: "2026-03-18 00:00:00", endTime: "2026-03-20 23:59:59", status: "已结束", actions: ["查看", "复制"] }
+  ],
   限时购1: [
     { id: "1111", name: "双11限时购1活动", goodsCount: 12, startTime: "2026-11-01 00:00:00", endTime: "2026-11-11 23:59:59", status: "未开始", actions: ["查看", "编辑", "提前结束"] },
     { id: "0001", name: "国庆节限时购1活动", goodsCount: 2, startTime: "2026-10-01 00:00:00", endTime: "2026-10-08 23:59:59", status: "未开始", actions: ["查看", "编辑", "提前结束"] },
@@ -38,6 +69,28 @@ const pickerRows = [
 ];
 
 const emptyFilters = { status: "全部", dateRange: "", activityName: "", activityId: "", productId: "", specId: "", productName: "" };
+const marketingPageConfigs = {
+  专享价: {
+    createLabel: "新增专享价",
+    defaultCategory: "专享活动",
+    initialFilters: { status: "", activityName: "", startTime: "2026-03-18 00:00:00", endTime: "", activityId: "", buyerGroup: "", buyerId: "" },
+    tipLines: [
+      "同一个商品规格同一个买家分组在同一个时间段内只能有一个未结束的专享价活动；",
+      "专享价不可与其他优惠活动叠加使用；",
+      "专享价活动未单独设置运费，则运费按普通商品运费规则收取。"
+    ]
+  },
+  限时购1: {
+    createLabel: "新增限时购",
+    defaultCategory: "常规活动",
+    initialFilters: { ...emptyFilters }
+  },
+  限时购: {
+    createLabel: "新增限时购",
+    defaultCategory: "店铺专属",
+    initialFilters: { ...emptyFilters }
+  }
+};
 const initialCreateForm = { activityName: "", category: "", startTime: "", endTime: "", productKeyword: "", productId: "", onlyUnpricedProducts: false };
 const initialPickerFilters = { category: "", productName: "", productId: "" };
 const cloneProducts = (products) => JSON.parse(JSON.stringify(products));
@@ -62,6 +115,87 @@ const formatPriceRange = (value) => {
   const normalized = Number.isInteger(value) ? String(value) : String(value).replace(/\.?0+$/, "");
   return `¥ ${normalized}`;
 };
+const sanitizeBuyerDiscountInput = (value, previousValue = "") => {
+  let normalizedValue = String(value || "").replace(/[^\d.]/g, "");
+  if (!normalizedValue) return "";
+
+  const firstDotIndex = normalizedValue.indexOf(".");
+  if (firstDotIndex >= 0) {
+    const integerPart = normalizedValue.slice(0, firstDotIndex);
+    const decimalPart = normalizedValue.slice(firstDotIndex + 1).replace(/\./g, "").slice(0, 2);
+    normalizedValue = `${integerPart}.${decimalPart}`;
+  }
+
+  if (normalizedValue.startsWith(".")) return previousValue;
+  if (partialBuyerDiscountPattern.test(normalizedValue)) return normalizedValue;
+  return previousValue;
+};
+const isValidBuyerDiscount = (value) => !String(value || "").trim() || finalBuyerDiscountPattern.test(String(value).trim());
+const isBuyerDiscountInvalid = (value) => {
+  const normalizedValue = String(value || "").trim();
+  if (!normalizedValue) return false;
+  return !finalBuyerDiscountPattern.test(normalizedValue);
+};
+const buyerImportHeaderRowIndex = 2;
+const buyerImportColumns = {
+  buyerId: 0,
+  groupIds: 1,
+  identity: 2,
+  discount: 3
+};
+const getBuyerImportCellValue = (row, index) => String(row?.[index] ?? "").trim();
+const isBuyerImportRowEmpty = (row) => (
+  !hasValue(getBuyerImportCellValue(row, buyerImportColumns.buyerId))
+  && !hasValue(getBuyerImportCellValue(row, buyerImportColumns.groupIds))
+  && !hasValue(getBuyerImportCellValue(row, buyerImportColumns.identity))
+  && !hasValue(getBuyerImportCellValue(row, buyerImportColumns.discount))
+);
+const parseBuyerImportGroupIds = (value) => String(value || "").split(/[，,]+/).map((item) => item.trim()).filter(Boolean);
+const formatBuyerGroupNames = (value) => {
+  const groupIds = parseBuyerImportGroupIds(value);
+  return groupIds.map((item) => buyerGroupNameById[item] || item).join("、");
+};
+const validateBuyerImportRow = (row, existingIds, importedIds) => {
+  const buyerId = getBuyerImportCellValue(row, buyerImportColumns.buyerId);
+  const groupValue = getBuyerImportCellValue(row, buyerImportColumns.groupIds);
+  const identity = getBuyerImportCellValue(row, buyerImportColumns.identity);
+  const discount = getBuyerImportCellValue(row, buyerImportColumns.discount);
+  const groupIds = parseBuyerImportGroupIds(groupValue);
+  const errors = [];
+
+  if (!buyerId) {
+    errors.push("买家ID必填");
+  } else if (!/^\d+$/.test(buyerId)) {
+    errors.push("买家ID只能为数字");
+  } else if (existingIds.has(buyerId) || importedIds.has(buyerId)) {
+    errors.push("买家ID重复");
+  }
+
+  if (!groupValue) {
+    errors.push("买家分组必填");
+  } else if (groupIds.length === 0 || groupIds.some((item) => !/^\d+$/.test(item))) {
+    errors.push("买家分组只能为数字");
+  } else if (groupIds.some((item) => !buyerGroupNameById[item])) {
+    errors.push(`买家分组仅支持${buyerGroups.map((item) => item.id).join("、")}`);
+  }
+
+  if (identity.length > 100) {
+    errors.push("买家身份超过100字符");
+  }
+
+  if (hasValue(discount) && !isValidBuyerDiscount(discount)) {
+    errors.push("买家折扣不在5.00~10之间");
+  }
+
+  return {
+    buyerId,
+    group: groupIds.join(","),
+    identity,
+    discount,
+    isValid: errors.length === 0,
+    errors
+  };
+};
 const getProductFlashPriceDisplay = (product) => {
   if (hasUnifiedFlashPrice(product)) return product.flashPrice;
 
@@ -77,6 +211,10 @@ const getProductTotalLimitDisplay = (product) => {
   if (hasUnifiedTotalLimit(product)) return product.totalLimit;
   const total = getActiveSpecs(product).reduce((sum, spec) => sum + getNumericStockValue(spec.limitCount), 0);
   return total > 0 ? String(total) : "";
+};
+const getProductTotalLimitInputValue = (product, isSpecialPricePage = false) => {
+  if (!hasSpecLevelLimitCount(product)) return product.totalLimit;
+  return isSpecialPricePage ? product.totalLimit : getProductTotalLimitDisplay(product);
 };
 const getProductActivityStockDisplay = (product) => {
   if (hasUnifiedActivityStock(product)) return product.activityStock;
@@ -158,14 +296,14 @@ function EditableCellInput({ label, value, onChange, placeholder, locked, locked
   );
 }
 
-function createInitialProducts() {
+function createInitialProducts(defaultTotalLimit = "0") {
   return [
     {
       id: "123456",
       name: "百岁山天然矿泉水570m",
       marketPrice: "￥30~50",
       flashPrice: "￥20~40",
-      totalLimit: "0",
+      totalLimit: defaultTotalLimit,
       activityStock: "",
       stock: 100,
       image: "百",
@@ -183,7 +321,7 @@ function createInitialProducts() {
       name: "景田饮用纯净水560ml",
       marketPrice: "￥30",
       flashPrice: "",
-      totalLimit: "0",
+      totalLimit: defaultTotalLimit,
       activityStock: "",
       stock: 100,
       image: "景",
@@ -194,8 +332,8 @@ function createInitialProducts() {
   ];
 }
 
-function createEditProducts(activity) {
-  const products = cloneProducts(createInitialProducts());
+function createEditProducts(activity, pageName) {
+  const products = cloneProducts(createInitialProducts(pageName === "专享价" ? "1" : "0"));
   const targetCount = Math.max(1, Math.min(products.length, activity.goodsCount || products.length));
 
   return products.slice(0, targetCount);
@@ -415,8 +553,9 @@ const detailActivityConfigs = {
 };
 
 function createInitialMarketingPageState(pageName) {
+  const pageConfig = marketingPageConfigs[pageName] || marketingPageConfigs.限时购1;
   return {
-    filters: { ...emptyFilters },
+    filters: { ...(pageConfig.initialFilters || emptyFilters) },
     page: 1,
     pageSize: 20,
     detailPage: 1,
@@ -446,7 +585,7 @@ function createDetailActivity(pageName, activity) {
 
   return {
     ...activity,
-    category: config?.category || (pageName === "限时购" ? "店铺专属" : "常规活动"),
+    category: config?.category || marketingPageConfigs[pageName]?.defaultCategory || (pageName === "限时购" ? "店铺专属" : "常规活动"),
     rule: config?.rule || "按商品限购",
     rows
   };
@@ -487,18 +626,20 @@ function SidebarIcon({ type }) {
       return null;
   }
 }
-function Header({ currentMarketingPage }) {
+function Header({ currentMarketingPage, specialCreateTab }) {
+  const pendingCount = 24;
   return (
     <header className="workspace-topbar">
       <div className="page-tabs">
         <div className="page-tab">首页-控制台 <span>×</span></div>
         <div className="page-tab is-current">{currentMarketingPage} <span>×</span></div>
+        {specialCreateTab ? <div className="page-tab is-current">{specialCreateTab} <span>×</span></div> : null}
       </div>
       <div className="top-actions">
-        <a href="#">在线客服</a>
-        <a href="#">我的待办</a>
-        <a href="#">导出记录</a>
-        <a href="#">退出登录</a>
+        <a href="#"><span className="top-action-icon">☺</span>在线客服</a>
+        <a href="#" className="top-action-with-badge"><span className="top-action-icon">▣</span>我的待办<em>{pendingCount}</em></a>
+        <a href="#"><span className="top-action-icon">⌁</span>导出记录</a>
+        <a href="#"><span className="top-action-icon">◦</span>退出登录</a>
       </div>
     </header>
   );
@@ -523,7 +664,97 @@ function TabSection({ creating, detailing, onSwitchToList, currentMarketingPage 
   );
 }
 
-function ListPage({ filters, setFilters, page, setPage, pageSize, setPageSize, onCreate, onAction, activities }) {
+function SpecialPriceListPage({ filters, setFilters, page, setPage, pageSize, setPageSize, onCreate, onAction, activities }) {
+  const filteredActivities = useMemo(() => activities.filter((item) => {
+    if (filters.status && item.status !== filters.status) return false;
+    if (filters.activityId && !item.id.includes(filters.activityId.trim())) return false;
+    if (filters.activityName && !item.name.includes(filters.activityName.trim())) return false;
+    if (filters.buyerGroup && !item.buyerGroup.includes(filters.buyerGroup.trim())) return false;
+    if (filters.buyerId && String(item.buyerId || "").indexOf(filters.buyerId.trim()) === -1) return false;
+    if (filters.startTime && item.startTime < filters.startTime) return false;
+    if (filters.endTime && item.endTime > filters.endTime) return false;
+    return true;
+  }), [activities, filters]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredActivities.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const rows = filteredActivities.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const pageConfig = marketingPageConfigs.专享价;
+
+  return (
+    <>
+      <section className="special-tip-card">
+        <div className="special-tip-title">温馨提示:</div>
+        <ol className="special-tip-list">
+          {pageConfig.tipLines.map((item) => <li key={item}>{item}</li>)}
+        </ol>
+      </section>
+
+      <section className="content-card special-filter-card">
+        <div className="special-filter-grid">
+          <label className="filter-field"><span>活动状态</span><select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}><option value="">请选择</option>{statuses.filter((status) => status !== "全部").map((status) => <option key={status} value={status}>{status}</option>)}</select></label>
+          <label className="filter-field"><span>活动名称</span><input value={filters.activityName} onChange={(e) => setFilters({ ...filters, activityName: e.target.value })} /></label>
+          <label className="filter-field"><span>开始时间</span><div className="special-input-with-icon"><input value={filters.startTime} placeholder="请选择时间" onChange={(e) => setFilters({ ...filters, startTime: e.target.value })} /><i>◴</i></div></label>
+          <label className="filter-field"><span>结束时间</span><div className="special-input-with-icon"><input value={filters.endTime} placeholder="请选择时间" onChange={(e) => setFilters({ ...filters, endTime: e.target.value })} /><i>◴</i></div></label>
+          <label className="filter-field"><span>活动ID</span><input value={filters.activityId} onChange={(e) => setFilters({ ...filters, activityId: e.target.value })} /></label>
+          <label className="filter-field"><span>买家分组</span><input value={filters.buyerGroup} placeholder="请选择" onChange={(e) => setFilters({ ...filters, buyerGroup: e.target.value })} /></label>
+          <label className="filter-field"><span>买家ID</span><input value={filters.buyerId} onChange={(e) => setFilters({ ...filters, buyerId: e.target.value })} /></label>
+          <div className="filter-actions special-filter-actions"><button className="btn btn-reset" type="button" onClick={() => setFilters({ ...pageConfig.initialFilters })}>重置</button><button className="btn btn-search" type="button">查询</button></div>
+        </div>
+      </section>
+
+      <section className="content-card special-table-card">
+        <div className="table-toolbar"><button className="btn btn-create" type="button" onClick={onCreate}>{pageConfig.createLabel}</button></div>
+        <div className="table-shell">
+          <table className="data-table special-data-table">
+            <thead>
+              <tr>
+                <th>活动ID</th>
+                <th>活动名称</th>
+                <th>买家分组</th>
+                <th>开始时间</th>
+                <th>结束时间</th>
+                <th>活动状态</th>
+                <th>商品数</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((item) => (
+                <tr key={item.id}>
+                  <td>{item.id}</td>
+                  <td>{item.name}</td>
+                  <td><button className="table-link-button" type="button">{item.buyerGroup}</button></td>
+                  <td>{item.startTime}</td>
+                  <td>{item.endTime}</td>
+                  <td className={`status-cell status-${item.status}`}>{item.status}</td>
+                  <td>
+                    <div className="special-goods-cell">
+                      <span>{item.goodsCount}</span>
+                      {item.goodsFlag ? <em>{item.goodsFlag}</em> : null}
+                    </div>
+                  </td>
+                  <td>
+                    <div className="action-links action-links-stacked">
+                      {item.actions.map((action) => <button key={action} type="button" onClick={() => onAction(action, item)}>{action}</button>)}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="pagination-bar special-pagination"><span>共{filteredActivities.length}条</span><select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}><option value={20}>20 条/页</option><option value={50}>50 条/页</option><option value={100}>100 条/页</option></select><button className="page-btn" type="button" disabled={currentPage === 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>‹</button><button className="page-btn is-current" type="button">{currentPage}</button><button className="page-btn" type="button" disabled={currentPage >= pageCount} onClick={() => setPage((value) => Math.min(pageCount, value + 1))}>›</button><span>到第</span><input className="page-input" placeholder="请输入" /><span>页</span><button className="btn btn-jump" type="button">跳转</button></div>
+      </section>
+    </>
+  );
+}
+
+function ListPage({ pageName, filters, setFilters, page, setPage, pageSize, setPageSize, onCreate, onAction, activities }) {
+  if (pageName === "专享价") {
+    return <SpecialPriceListPage filters={filters} setFilters={setFilters} page={page} setPage={setPage} pageSize={pageSize} setPageSize={setPageSize} onCreate={onCreate} onAction={onAction} activities={activities} />;
+  }
+
   const filteredActivities = useMemo(() => activities.filter((item) => {
     if (filters.status !== "全部" && item.status !== filters.status) return false;
     if (filters.activityId && !item.id.includes(filters.activityId.trim())) return false;
@@ -551,7 +782,7 @@ function ListPage({ filters, setFilters, page, setPage, pageSize, setPageSize, o
       </section>
 
       <section className="content-card table-card">
-        <div className="table-toolbar"><button className="btn btn-create" type="button" onClick={onCreate}>新增限时购</button></div>
+        <div className="table-toolbar"><button className="btn btn-create" type="button" onClick={onCreate}>{marketingPageConfigs[pageName]?.createLabel || "新增活动"}</button></div>
         <div className="table-shell">
           <table className="data-table">
             <thead><tr><th>活动ID</th><th>活动名称</th><th>活动商品数</th><th>开始时间</th><th>结束时间</th><th>状态</th><th>操作</th></tr></thead>
@@ -922,9 +1153,11 @@ function BatchSpecStepModal({ products, selectedSpecIdsByProduct, onToggleSpecSe
   );
 }
 
-function SpecPickerModal({ product, selectedSpecIds, onToggleSpecSelection, onToggleAllSpecs, onBatchToggleSpecs, onClose, onUpdateSpecField, onToggleSpecStatus, onShowToast }) {
+function SpecPickerModal({ pageName, product, productFlashPriceInputMode, selectedSpecIds, onToggleSpecSelection, onToggleAllSpecs, onBatchToggleSpecs, onClose, onUpdateSpecField, onToggleSpecStatus, onShowToast }) {
   if (!product) return null;
 
+  const isSpecialPricePage = pageName === "专享价";
+  const useProductLevelFlashPrice = isSpecialPricePage && productFlashPriceInputMode;
   const useUnifiedFlashPrice = hasUnifiedFlashPrice(product);
   const useUnifiedTotalLimit = hasUnifiedTotalLimit(product);
   const useUnifiedActivityStock = hasUnifiedActivityStock(product);
@@ -940,12 +1173,14 @@ function SpecPickerModal({ product, selectedSpecIds, onToggleSpecSelection, onTo
     };
 
     return getSpecOrder(left) - getSpecOrder(right);
-  });
+  }).filter((spec) => !(isSpecialPricePage && spec.status === "merged"));
   const allSelectableSelected = selectableSpecs.length > 0 && selectableSpecs.every((spec) => selectedSpecIds.includes(spec.id));
   const hasAnySelected = selectedSpecIds.length > 0;
-  const allowSpecFlashPriceEdit = !useUnifiedFlashPrice || specFieldEditModes.flashPrice;
+  const allowSpecFlashPriceEdit = useProductLevelFlashPrice
+    ? specFieldEditModes.flashPrice
+    : (!useUnifiedFlashPrice || specFieldEditModes.flashPrice);
   const allowSpecTotalLimitEdit = !useUnifiedTotalLimit || specFieldEditModes.totalLimit;
-  const allowSpecActivityStockEdit = !useUnifiedActivityStock || specFieldEditModes.activityStock;
+  const allowSpecActivityStockEdit = !isSpecialPricePage && (!useUnifiedActivityStock || specFieldEditModes.activityStock);
 
   const clearInvalidSpecField = (specId, field) => {
     setInvalidSpecFields((current) => {
@@ -1005,8 +1240,8 @@ function SpecPickerModal({ product, selectedSpecIds, onToggleSpecSelection, onTo
       if (hasMissing) missingLabels.push(label);
     };
 
-    validateField("flashPrice", "限时价", allowSpecFlashPriceEdit);
-    validateField("limitCount", "限购数量", allowSpecTotalLimitEdit);
+    validateField("flashPrice", isSpecialPricePage ? "专享价" : "限时价", allowSpecFlashPriceEdit);
+    validateField("limitCount", isSpecialPricePage ? "专享价生效件数" : "限购数量", allowSpecTotalLimitEdit);
     validateField("activityStock", "活动库存", allowSpecActivityStockEdit);
 
     if (missingLabels.length > 0) {
@@ -1031,7 +1266,7 @@ function SpecPickerModal({ product, selectedSpecIds, onToggleSpecSelection, onTo
       ["flashPrice", batchFields.flashPrice.trim()],
       ["limitCount", batchFields.limitCount.trim()],
       ["activityStock", batchFields.activityStock.trim()]
-    ].filter(([, value]) => value);
+    ].filter(([, value]) => value).filter(([field]) => !isSpecialPricePage || field !== "activityStock");
 
     if (updates.length === 0) {
       onShowToast("请先填写批量设置内容");
@@ -1062,11 +1297,11 @@ function SpecPickerModal({ product, selectedSpecIds, onToggleSpecSelection, onTo
         </div>
 
         <div className="spec-batch-bar">
-          <div className="spec-batch-left">
+          <div className={`spec-batch-left ${isSpecialPricePage ? "spec-batch-left-special" : ""}`}>
             <span>批量设置:</span>
-            <input placeholder="限时价" value={batchFields.flashPrice} onChange={(e) => handleBatchFieldChange("flashPrice", e.target.value)} disabled={!allowSpecFlashPriceEdit} className={!allowSpecFlashPriceEdit ? "is-disabled" : ""} />
-            <input placeholder="限购数量" value={batchFields.limitCount} onChange={(e) => handleBatchFieldChange("limitCount", e.target.value)} disabled={!allowSpecTotalLimitEdit} className={!allowSpecTotalLimitEdit ? "is-disabled" : ""} />
-            <input placeholder="活动库存" value={batchFields.activityStock} onChange={(e) => handleBatchFieldChange("activityStock", e.target.value)} disabled={!allowSpecActivityStockEdit} className={!allowSpecActivityStockEdit ? "is-disabled" : ""} />
+            <input placeholder={isSpecialPricePage ? "专享价" : "限时价"} value={batchFields.flashPrice} onChange={(e) => handleBatchFieldChange("flashPrice", e.target.value)} disabled={!allowSpecFlashPriceEdit} className={!allowSpecFlashPriceEdit ? "is-disabled" : ""} />
+            <input placeholder={isSpecialPricePage ? "专享价生效件数" : "限购数量"} value={batchFields.limitCount} onChange={(e) => handleBatchFieldChange("limitCount", e.target.value)} disabled={!allowSpecTotalLimitEdit} className={!allowSpecTotalLimitEdit ? "is-disabled" : ""} />
+            {!isSpecialPricePage ? <input placeholder="活动库存" value={batchFields.activityStock} onChange={(e) => handleBatchFieldChange("activityStock", e.target.value)} disabled={!allowSpecActivityStockEdit} className={!allowSpecActivityStockEdit ? "is-disabled" : ""} /> : null}
             <button className="btn btn-search" type="button" onClick={handleApplyBatchFields}>确定</button>
           </div>
         </div>
@@ -1077,11 +1312,10 @@ function SpecPickerModal({ product, selectedSpecIds, onToggleSpecSelection, onTo
               <tr>
                 <th><input type="checkbox" checked={allSelectableSelected} disabled={selectableSpecs.length === 0} onChange={() => onToggleAllSpecs(product.id)} /></th>
                 <th>规格信息</th>
-                <th>库存</th>
                 <th>商城价</th>
-                <th><HeaderWithIcon label="限时价" onIconClick={() => handleToggleSpecFieldEditMode("flashPrice")} isActive={specFieldEditModes.flashPrice} /></th>
-                <th><HeaderWithIcon label="限购数量" onIconClick={() => handleToggleSpecFieldEditMode("totalLimit")} isActive={specFieldEditModes.totalLimit} /></th>
-                <th><HeaderWithIcon label="活动库存" onIconClick={() => handleToggleSpecFieldEditMode("activityStock")} isActive={specFieldEditModes.activityStock} /></th>
+                <th><HeaderWithIcon label={isSpecialPricePage ? "专享价" : "限时价"} onIconClick={() => handleToggleSpecFieldEditMode("flashPrice")} isActive={specFieldEditModes.flashPrice} /></th>
+                <th><HeaderWithIcon label={isSpecialPricePage ? "专享价生效件数" : "限购数量"} onIconClick={() => handleToggleSpecFieldEditMode("totalLimit")} isActive={specFieldEditModes.totalLimit} /></th>
+                {!isSpecialPricePage ? <th><HeaderWithIcon label="活动库存" onIconClick={() => handleToggleSpecFieldEditMode("activityStock")} isActive={specFieldEditModes.activityStock} /></th> : null}
                 <th>操作</th>
               </tr>
             </thead>
@@ -1097,7 +1331,7 @@ function SpecPickerModal({ product, selectedSpecIds, onToggleSpecSelection, onTo
                           <div className="product-id">规格ID: {row.id}</div>
                         </div>
                       </td>
-                      <td colSpan="6" className="spec-merged-cell">{row.mergedText}</td>
+                      <td colSpan={isSpecialPricePage ? 4 : 6} className="spec-merged-cell">{row.mergedText}</td>
                     </tr>
                   );
                 }
@@ -1112,7 +1346,7 @@ function SpecPickerModal({ product, selectedSpecIds, onToggleSpecSelection, onTo
                           <div className="product-id">规格ID: {row.id}</div>
                         </div>
                       </td>
-                      <td colSpan="5"></td>
+                      <td colSpan={isSpecialPricePage ? 3 : 5}></td>
                       <td><button className="spec-link" type="button" onClick={() => onToggleSpecStatus(product.id, row.id, "active")}>加入活动</button></td>
                     </tr>
                   );
@@ -1127,13 +1361,12 @@ function SpecPickerModal({ product, selectedSpecIds, onToggleSpecSelection, onTo
                         <div className="product-id">规格ID: {row.id}</div>
                       </div>
                     </td>
-                    <td>{row.stock}</td>
                     <td>{row.marketPrice}</td>
-                    <td>{allowSpecFlashPriceEdit ? <input className={`spec-inline-input ${invalidSpecFields[row.id]?.flashPrice ? "is-error" : ""}`} value={row.flashPrice} onChange={(e) => handleSpecFieldChange(row.id, "flashPrice", e.target.value)} /> : <span className="spec-unified-label">{product.flashPrice}</span>}</td>
+                    <td>{allowSpecFlashPriceEdit ? <input className={`spec-inline-input ${invalidSpecFields[row.id]?.flashPrice ? "is-error" : ""}`} value={row.flashPrice} onChange={(e) => handleSpecFieldChange(row.id, "flashPrice", e.target.value)} /> : <span className="spec-unified-label">{isSpecialPricePage ? "按商品维度生效" : product.flashPrice}</span>}</td>
                     <td>
                       {allowSpecTotalLimitEdit ? <input className={`spec-inline-input ${invalidSpecFields[row.id]?.limitCount ? "is-error" : ""}`} value={row.limitCount} onChange={(e) => handleSpecFieldChange(row.id, "limitCount", e.target.value.replace(/[^\d]/g, ""))} /> : <span className="spec-unified-label">按商品维度生效</span>}
                     </td>
-                    <td>{allowSpecActivityStockEdit ? <input className={`spec-inline-input ${invalidSpecFields[row.id]?.activityStock ? "is-error" : ""}`} value={row.activityStock} onChange={(e) => handleSpecFieldChange(row.id, "activityStock", e.target.value.replace(/[^\d]/g, ""))} /> : <span className="spec-unified-label">按商品维度生效</span>}</td>
+                    {!isSpecialPricePage ? <td>{allowSpecActivityStockEdit ? <input className={`spec-inline-input ${invalidSpecFields[row.id]?.activityStock ? "is-error" : ""}`} value={row.activityStock} onChange={(e) => handleSpecFieldChange(row.id, "activityStock", e.target.value.replace(/[^\d]/g, ""))} /> : <span className="spec-unified-label">按商品维度生效</span>}</td> : null}
                     <td><button className="spec-link spec-remove" type="button" onClick={() => onToggleSpecStatus(product.id, row.id, "available")}>撤出活动</button></td>
                   </tr>
                 );
@@ -1156,9 +1389,108 @@ function SpecPickerModal({ product, selectedSpecIds, onToggleSpecSelection, onTo
   );
 }
 
-function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, selectedProducts, selectedGoodsIds, productFieldEditModesByProduct, productFieldErrorsByProduct, onToggleProductFieldEditMode, onToggleGoodsSelection, onRemoveProduct, onBatchRemoveProducts, onBack, onOpenPicker, onOpenSpecPicker, onUpdateProductFlashPrice, onUpdateProductLimit, onUpdateProductActivityStock, onSave, modalOpen }) {
-  const showUnpricedFilter = pageName === "限时购1" || pageName === "限时购";
+function BuyerListPage({ filters, onFiltersChange, rows, page, setPage, pageSize, setPageSize, expanded, onToggleExpanded, onActionClick }) {
+  const filteredRows = useMemo(() => rows.filter((item) => {
+    if (filters.id && !item.id.includes(filters.id.trim())) return false;
+    if (filters.account && !item.account.toLowerCase().includes(filters.account.trim().toLowerCase())) return false;
+    if (filters.accountType && item.accountType !== filters.accountType) return false;
+    if (filters.identity && !String(item.identity || "").includes(filters.identity.trim())) return false;
+    return true;
+  }), [filters, rows]);
 
+  const pageCount = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const pagedRows = filteredRows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  return (
+    <>
+      <section className="content-card buyer-filter-card">
+        <div className="buyer-filter-row">
+          <label className="buyer-filter-field"><span>买家ID</span><input value={filters.id} onChange={(e) => onFiltersChange({ ...filters, id: e.target.value })} /></label>
+          <label className="buyer-filter-field"><span>买家账号</span><input value={filters.account} onChange={(e) => onFiltersChange({ ...filters, account: e.target.value })} /></label>
+          <label className="buyer-filter-field"><span>账号类型</span><select value={filters.accountType} onChange={(e) => onFiltersChange({ ...filters, accountType: e.target.value })}><option value="">请选择</option>{buyerAccountTypes.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
+          <label className="buyer-filter-field"><span>买家身份</span><input value={filters.identity} onChange={(e) => onFiltersChange({ ...filters, identity: e.target.value })} /></label>
+          <div className="buyer-filter-actions">
+            <button className="buyer-expand-btn" type="button" onClick={onToggleExpanded}>{expanded ? "收起" : "展开"} <span>⌄</span></button>
+            <button className="btn btn-reset" type="button" onClick={() => { onFiltersChange(initialBuyerFilters); setPage(1); }}>重置</button>
+            <button className="btn btn-search" type="button" onClick={() => setPage(1)}>查询</button>
+          </div>
+        </div>
+      </section>
+
+      <section className="content-card buyer-table-card">
+        <div className="buyer-toolbar">
+          <div className="buyer-toolbar-left">
+            <button className="btn btn-create" type="button" onClick={() => onActionClick("新增买家")}>新增买家</button>
+            <button className="btn btn-reset buyer-toolbar-btn" type="button" onClick={() => onActionClick("批量导入买家")}>批量导入买家</button>
+            <button className="btn btn-reset buyer-toolbar-btn" type="button" onClick={() => onActionClick("批量删除买家")}>批量删除买家</button>
+          </div>
+          <button className="btn btn-reset buyer-export-btn" type="button" onClick={() => onActionClick("导出查询结果")}>导出查询结果</button>
+        </div>
+
+        <div className="buyer-table-shell">
+          <table className="buyer-table">
+            <thead>
+              <tr>
+                <th><input type="checkbox" /></th>
+                <th>买家ID</th>
+                <th>买家账号</th>
+                <th>账号类型</th>
+                <th>买家身份</th>
+                <th>买家折扣</th>
+                <th>所属分组</th>
+                <th>添加时间 <span className="buyer-sort-icon">↕</span></th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pagedRows.map((item) => (
+                <tr key={item.id}>
+                  <td><input type="checkbox" /></td>
+                  <td>{item.id}</td>
+                  <td>{item.account}</td>
+                  <td>{item.accountType}</td>
+                  <td>{item.identity}</td>
+                  <td>{hasValue(item.discount) ? item.discount : "-"}</td>
+                  <td>{formatBuyerGroupNames(item.group) || "-"}</td>
+                  <td>{item.createdAt}</td>
+                  <td>{item.status}</td>
+                  <td>
+                    <div className="buyer-action-links">
+                      <button type="button" onClick={() => onActionClick("编辑买家", item)}>编辑</button>
+                      <button type="button" onClick={() => onActionClick(`删除买家 ${item.id}`, item)}>删除</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="buyer-pagination">
+          <span>共 {filteredRows.length} 条</span>
+          <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}>
+            <option value={20}>20 条/页</option>
+            <option value={50}>50 条/页</option>
+            <option value={100}>100 条/页</option>
+          </select>
+          <button className="page-btn" type="button" disabled={currentPage === 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>‹</button>
+          <button className="page-btn is-current" type="button">{currentPage}</button>
+          <button className="page-btn" type="button" disabled={currentPage >= pageCount} onClick={() => setPage((value) => Math.min(pageCount, value + 1))}>›</button>
+          <span>到第</span>
+          <input className="page-input" placeholder="请输入" />
+          <span>页</span>
+          <button className="btn btn-jump" type="button">跳转</button>
+        </div>
+      </section>
+    </>
+  );
+}
+
+function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, selectedProducts, selectedGoodsIds, productFieldEditModesByProduct, productFieldErrorsByProduct, onToggleProductFieldEditMode, onToggleGoodsSelection, onRemoveProduct, onBatchRemoveProducts, onBack, onOpenPicker, onOpenSpecPicker, onUpdateProductFlashPrice, onUpdateProductLimit, onUpdateProductActivityStock, onSave, modalOpen }) {
+  const isSpecialPricePage = pageName === "专享价";
+  const showUnpricedFilter = pageName === "限时购1" || pageName === "限时购";
   const filteredProducts = useMemo(() => selectedProducts.filter((product) => {
     const productKeyword = form.productKeyword.trim();
     const productId = form.productId.trim();
@@ -1174,6 +1506,139 @@ function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, 
   const allFilteredSelected = filteredProducts.length > 0 && filteredProducts.every((item) => selectedGoodsIds.includes(item.id));
   const showSelectionControls = !isEditMode;
 
+  const selectedGoodsPanel = (
+    <>
+      <div className="goods-panel-head">已选商品列表 <span>({selectedProducts.length})</span></div>
+      {hasSelectedProducts ? (
+        <>
+          <div className="goods-filter-bar">
+            <label className="mini-field"><span>商品名称:</span><input value={form.productKeyword} onChange={(e) => onFormChange("productKeyword", e.target.value)} /></label>
+            <label className="mini-field"><span>商品ID:</span><input value={form.productId} onChange={(e) => onFormChange("productId", e.target.value)} /></label>
+            {showUnpricedFilter ? <label className="check-item goods-filter-check"><input type="checkbox" checked={form.onlyUnpricedProducts} onChange={(e) => onFormChange("onlyUnpricedProducts", e.target.checked)} /><span>筛选未配限时价商品</span></label> : null}
+            <button className="btn btn-reset" type="button" onClick={onResetFilters}>重置</button>
+            <button className="btn btn-search" type="button">搜索</button>
+          </div>
+          {showSelectionControls ? <div className="goods-toolbar"><button className="btn btn-reset" type="button" onClick={onBatchRemoveProducts}>批量删除</button></div> : null}
+          <div className="goods-table-shell"><table className={`goods-table activity-goods-table ${isSpecialPricePage ? "special-price-goods-table" : ""} ${showSelectionControls ? "has-selection" : "no-selection"}`}><thead><tr>{showSelectionControls ? <th><input type="checkbox" checked={allFilteredSelected} onChange={(e) => onToggleGoodsSelection(e.target.checked ? filteredProducts.map((item) => item.id) : [])} /></th> : null}<th>商品</th><th>商城价</th>{!isSpecialPricePage ? <th>商品库存</th> : null}<th><EditableHeader label={isSpecialPricePage ? "专享价" : "限时价"} /></th><th><EditableHeader label={isSpecialPricePage ? "专享价生效件数" : "总限购数量"} suffixIcon={questionHeaderIcon} suffixTooltip={isSpecialPricePage ? "当前商品在每笔订单的购买量达到对应件数后，当前商品全部按专享价结算；\n未达到时，当前商品不享受专享价。" : "单个买家ID最多购买数量，0代表不做限制"} /></th>{!isSpecialPricePage ? <th><EditableHeader label="总活动库存" /></th> : null}<th>规格数量</th><th>操作</th></tr></thead><tbody>{filteredProducts.map((item) => {
+            const productFieldEditModes = productFieldEditModesByProduct[item.id] || initialProductFieldEditModes;
+            const productFieldErrors = productFieldErrorsByProduct[item.id] || {};
+            const flashPriceLocked = hasSpecLevelFlashPrice(item) && !productFieldEditModes.flashPrice;
+            const totalLimitLocked = hasSpecLevelLimitCount(item) && !productFieldEditModes.totalLimit;
+            const activityStockLocked = hasSpecLevelActivityStock(item) && !productFieldEditModes.activityStock;
+            const flashPriceDisplay = productFieldEditModes.flashPrice && hasSpecLevelFlashPrice(item) ? item.flashPrice : getProductFlashPriceDisplay(item);
+            const totalLimitDisplay = getProductTotalLimitInputValue(item, isSpecialPricePage);
+            const activityStockDisplay = hasSpecLevelActivityStock(item) ? getProductActivityStockDisplay(item) : item.activityStock;
+
+            return (
+              <tr key={item.id}>
+                {showSelectionControls ? <td><input type="checkbox" checked={selectedGoodsIds.includes(item.id)} onChange={() => onToggleGoodsSelection(item.id)} /></td> : null}
+                <td><div className="product-cell"><div className="product-image">{item.image}</div><div className="product-meta"><div className="product-name">{item.name}</div><div className="product-id">商品ID： {item.id}</div></div>{showSelectionControls ? <button className="delete-link" type="button" onClick={() => onRemoveProduct(item.id)}>删除商品</button> : null}</div></td>
+                <td>{item.marketPrice}</td>
+                {!isSpecialPricePage ? <td>{getProductStockDisplay(item)}</td> : null}
+                <td><EditableCellInput label={isSpecialPricePage ? "专享价" : "限时价"} value={flashPriceDisplay} onChange={(e) => onUpdateProductFlashPrice(item.id, e.target.value)} placeholder="请输入" locked={flashPriceLocked} showEditWhenLocked={flashPriceLocked} isEditMode={productFieldEditModes.flashPrice} onToggleEdit={() => onToggleProductFieldEditMode(item.id, "flashPrice")} hasError={productFieldErrors.flashPrice} /></td>
+                <td><EditableCellInput label={isSpecialPricePage ? "专享价生效件数" : "总限购数量"} value={totalLimitDisplay} onChange={(e) => onUpdateProductLimit(item.id, e.target.value.replace(/[^\d]/g, ""))} placeholder="请输入" locked={totalLimitLocked} lockedDisplay="按规格维度生效" isEditMode={productFieldEditModes.totalLimit} onToggleEdit={() => onToggleProductFieldEditMode(item.id, "totalLimit")} inputMode="numeric" hasError={productFieldErrors.totalLimit} /></td>
+                {!isSpecialPricePage ? <td><EditableCellInput label="总活动库存" value={activityStockDisplay} onChange={(e) => onUpdateProductActivityStock(item.id, e.target.value.replace(/[^\d]/g, ""))} placeholder="请输入" locked={activityStockLocked} lockedDisplay="按规格维度生效" isEditMode={productFieldEditModes.activityStock} onToggleEdit={() => onToggleProductFieldEditMode(item.id, "activityStock")} inputMode="numeric" hasError={productFieldErrors.activityStock} /></td> : null}
+                <td>共 {item.specs.length} 个 规格</td>
+                <td><div className="spec-action"><button type="button" className="spec-open-btn" onClick={() => onOpenSpecPicker(item.id)}>已选 {item.specs.filter((spec) => spec.status === "active").length} 个 规格 <span>编辑</span></button></div></td>
+              </tr>
+            );
+          })}</tbody></table></div>
+          <div className="goods-pagination"><span>共 125 条</span><select><option>10 条/页</option></select><button className="page-btn" type="button" disabled>‹</button><button className="page-btn is-current" type="button">1</button><button className="page-btn" type="button">2</button><button className="page-btn" type="button">3</button><button className="page-btn" type="button">4</button><button className="page-btn" type="button">5</button><span>...</span><button className="page-btn" type="button">13</button><button className="page-btn" type="button">›</button><span>到第</span><input className="page-input" placeholder="请输入" /><span>页</span><button className="btn btn-jump" type="button">跳转</button></div>
+        </>
+      ) : (
+        <div className="goods-empty-state">
+          <div className="goods-empty-illustration" aria-hidden="true">
+            <div className="goods-empty-box goods-empty-box-left" />
+            <div className="goods-empty-box goods-empty-box-right" />
+            <div className="goods-empty-tag">+</div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  if (pageName === "专享价") {
+    return (
+      <section className="content-card special-create-card">
+        <div className="special-create-layout">
+          <div className="special-create-form">
+            <label className="special-create-field">
+              <span><em>*</em>活动名称:</span>
+              <div className="special-create-input has-counter">
+                <input placeholder="请输入活动名称" maxLength={20} value={form.activityName} onChange={(e) => onFormChange("activityName", e.target.value)} />
+                <strong>{form.activityName.length}/20</strong>
+              </div>
+            </label>
+
+            <label className="special-create-field">
+              <span><em>*</em>活动时间:</span>
+              <div className="special-create-range">
+                <input placeholder="开始时间" value={form.startTime} onChange={(e) => onFormChange("startTime", e.target.value)} disabled={isEditMode} />
+                <i>-</i>
+                <input placeholder="结束时间" value={form.endTime} onChange={(e) => onFormChange("endTime", e.target.value)} />
+                <b>◴</b>
+              </div>
+            </label>
+
+            <label className="special-create-field">
+              <span><em>*</em>买家分组:</span>
+              <div className="special-create-input special-create-select">
+                <select value={form.buyerGroup || ""} onChange={(e) => onFormChange("buyerGroup", e.target.value)}>
+                  <option value="">请选择买家分组</option>
+                  {buyerGroups.map((item) => <option key={item.id} value={item.name}>{item.name}</option>)}
+                </select>
+              </div>
+            </label>
+
+            <div className="special-create-toggle-row">
+              <span>活动运费:</span>
+              <div className="special-create-toggle-content">
+                <div className="special-create-toggle-main">
+                  <label className="special-switch">
+                    <input type="checkbox" checked={!!form.shippingEnabled} onChange={(e) => onFormChange("shippingEnabled", e.target.checked)} />
+                    <i />
+                  </label>
+                </div>
+                <p>开启后专享价活动可单独设置运费规则，关闭后则按照普通商品运费规则计算</p>
+              </div>
+            </div>
+
+            <div className="special-create-toggle-row special-tax-row">
+              <span>专享价增值税加收税点:</span>
+              <div className="special-create-toggle-content">
+                <div className="special-create-toggle-main">
+                  <label className="special-switch">
+                    <input type="checkbox" checked={!!form.taxEnabled} onChange={(e) => onFormChange("taxEnabled", e.target.checked)} />
+                    <i />
+                  </label>
+                </div>
+                <p>设置“专享价增值税加收税点”会优先按此税点计算税费；(增值税税费 = 商品支付金额(不含运费) * 专享价增值税加收税点)</p>
+              </div>
+            </div>
+
+            <div className="special-create-field special-create-field-top">
+              <span><em>*</em>参与活动商品:</span>
+              <div className="special-create-product-entry">
+                <label className="special-radio"><input type="radio" name="special-goods-source" checked={!form.importMode} onChange={() => onFormChange("importMode", false)} /><i />在线选择</label>
+                <label className="special-radio"><input type="radio" name="special-goods-source" checked={!!form.importMode} onChange={() => onFormChange("importMode", true)} /><i />excel导入</label>
+                <div className="special-create-action-row">
+                  <button className="btn btn-reset special-pick-btn" type="button" onClick={onOpenPicker} disabled={isEditMode}>选择商品</button>
+                </div>
+                <div className="special-create-hint">活动商品数量限制在5000以内</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="goods-panel special-goods-panel">{selectedGoodsPanel}</div>
+
+          <div className="special-create-footer">
+            <button className="btn btn-create" type="button" onClick={onSave}>保存</button>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className={`content-card create-card ${modalOpen ? "is-dimmed" : ""}`}>
       <div className="create-layout">
@@ -1186,58 +1651,236 @@ function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, 
         </div>
 
         <div className="goods-detail-title">商品详情:</div>
-        <div className="goods-panel">
-          <div className="goods-panel-head">已选商品列表 <span>({selectedProducts.length})</span></div>
-          {hasSelectedProducts ? (
-            <>
-              <div className="goods-filter-bar"><label className="mini-field"><span>商品名称:</span><input value={form.productKeyword} onChange={(e) => onFormChange("productKeyword", e.target.value)} /></label><label className="mini-field"><span>商品ID:</span><input value={form.productId} onChange={(e) => onFormChange("productId", e.target.value)} /></label>{showUnpricedFilter ? <label className="check-item goods-filter-check"><input type="checkbox" checked={form.onlyUnpricedProducts} onChange={(e) => onFormChange("onlyUnpricedProducts", e.target.checked)} /><span>筛选未配限时价商品</span></label> : null}<button className="btn btn-reset" type="button" onClick={onResetFilters}>重置</button><button className="btn btn-search" type="button">搜索</button></div>
-              {showSelectionControls ? <div className="goods-toolbar"><button className="btn btn-reset" type="button" onClick={onBatchRemoveProducts}>批量删除</button></div> : null}
-              <div className="goods-table-shell"><table className={`goods-table activity-goods-table ${showSelectionControls ? "has-selection" : "no-selection"}`}><thead><tr>{showSelectionControls ? <th><input type="checkbox" checked={allFilteredSelected} onChange={(e) => onToggleGoodsSelection(e.target.checked ? filteredProducts.map((item) => item.id) : [])} /></th> : null}<th>商品</th><th>商城价</th><th>商品库存</th><th><EditableHeader label="限时价" /></th><th><EditableHeader label="总限购数量" suffixIcon={questionHeaderIcon} suffixTooltip="单个买家ID最多购买数量，0代表不做限制" /></th><th><EditableHeader label="总活动库存" /></th><th>规格数量</th><th>操作</th></tr></thead><tbody>{filteredProducts.map((item) => {
-                const productFieldEditModes = productFieldEditModesByProduct[item.id] || initialProductFieldEditModes;
-                const productFieldErrors = productFieldErrorsByProduct[item.id] || {};
-                const flashPriceLocked = hasSpecLevelFlashPrice(item) && !productFieldEditModes.flashPrice;
-                const totalLimitLocked = hasSpecLevelLimitCount(item) && !productFieldEditModes.totalLimit;
-                const activityStockLocked = hasSpecLevelActivityStock(item) && !productFieldEditModes.activityStock;
-                const flashPriceDisplay = productFieldEditModes.flashPrice && hasSpecLevelFlashPrice(item) ? item.flashPrice : getProductFlashPriceDisplay(item);
-                const totalLimitDisplay = hasSpecLevelLimitCount(item) ? getProductTotalLimitDisplay(item) : item.totalLimit;
-                const activityStockDisplay = hasSpecLevelActivityStock(item) ? getProductActivityStockDisplay(item) : item.activityStock;
-
-                return (
-                  <tr key={item.id}>
-                    {showSelectionControls ? <td><input type="checkbox" checked={selectedGoodsIds.includes(item.id)} onChange={() => onToggleGoodsSelection(item.id)} /></td> : null}
-                    <td><div className="product-cell"><div className="product-image">{item.image}</div><div className="product-meta"><div className="product-name">{item.name}</div><div className="product-id">商品ID： {item.id}</div></div>{showSelectionControls ? <button className="delete-link" type="button" onClick={() => onRemoveProduct(item.id)}>删除商品</button> : null}</div></td>
-                    <td>{item.marketPrice}</td>
-                    <td>{getProductStockDisplay(item)}</td>
-                    <td><EditableCellInput label="限时价" value={flashPriceDisplay} onChange={(e) => onUpdateProductFlashPrice(item.id, e.target.value)} placeholder="请输入" locked={flashPriceLocked} showEditWhenLocked={flashPriceLocked} isEditMode={productFieldEditModes.flashPrice} onToggleEdit={() => onToggleProductFieldEditMode(item.id, "flashPrice")} hasError={productFieldErrors.flashPrice} /></td>
-                    <td><EditableCellInput label="总限购数量" value={totalLimitDisplay} onChange={(e) => onUpdateProductLimit(item.id, e.target.value.replace(/[^\d]/g, ""))} placeholder="请输入" locked={totalLimitLocked} lockedDisplay="按规格维度生效" isEditMode={productFieldEditModes.totalLimit} onToggleEdit={() => onToggleProductFieldEditMode(item.id, "totalLimit")} inputMode="numeric" hasError={productFieldErrors.totalLimit} /></td>
-                    <td><EditableCellInput label="总活动库存" value={activityStockDisplay} onChange={(e) => onUpdateProductActivityStock(item.id, e.target.value.replace(/[^\d]/g, ""))} placeholder="请输入" locked={activityStockLocked} lockedDisplay="按规格维度生效" isEditMode={productFieldEditModes.activityStock} onToggleEdit={() => onToggleProductFieldEditMode(item.id, "activityStock")} inputMode="numeric" hasError={productFieldErrors.activityStock} /></td>
-                    <td>共 {item.specs.length} 个 规格</td>
-                    <td><div className="spec-action"><button type="button" className="spec-open-btn" onClick={() => onOpenSpecPicker(item.id)}>已选 {item.specs.filter((spec) => spec.status === "active").length} 个 规格 <span>编辑</span></button></div></td>
-                  </tr>
-                );
-              })}</tbody></table></div>
-              <div className="goods-pagination"><span>共 125 条</span><select><option>10 条/页</option></select><button className="page-btn" type="button" disabled>‹</button><button className="page-btn is-current" type="button">1</button><button className="page-btn" type="button">2</button><button className="page-btn" type="button">3</button><button className="page-btn" type="button">4</button><button className="page-btn" type="button">5</button><span>...</span><button className="page-btn" type="button">13</button><button className="page-btn" type="button">›</button><span>到第</span><input className="page-input" placeholder="请输入" /><span>页</span><button className="btn btn-jump" type="button">跳转</button></div>
-            </>
-          ) : (
-            <div className="goods-empty-state">
-              <div className="goods-empty-illustration" aria-hidden="true">
-                <div className="goods-empty-box goods-empty-box-left" />
-                <div className="goods-empty-box goods-empty-box-right" />
-                <div className="goods-empty-tag">+</div>
-              </div>
-            </div>
-          )}
-        </div>
+        <div className="goods-panel">{selectedGoodsPanel}</div>
         <div className="create-footer"><button className="btn btn-create" type="button" onClick={onSave}>保存</button></div>
       </div>
     </section>
   );
 }
 
+function BuyerImportPage({ onBack, fileName, fileInputRef, onChooseFile, onFileChange, onImport }) {
+  return (
+    <section className="buyer-import-page">
+      <div className="content-card buyer-import-card">
+        <div className="buyer-import-tip">
+          <div className="buyer-import-tip-head">
+            <span className="buyer-import-tip-icon">!</span>
+            <strong>温馨提示</strong>
+          </div>
+          <div className="buyer-import-steps">
+            <div className="buyer-import-step">
+              <span className="buyer-import-step-index">1</span>
+              <div className="buyer-import-step-title">第一步</div>
+              <a className="buyer-import-link" href="/买家导入模板.xlsx" download="买家导入模板.xlsx">下载模板</a>
+            </div>
+            <div className="buyer-import-step buyer-import-step-middle">
+              <span className="buyer-import-step-index">2</span>
+              <div className="buyer-import-step-title">第二步</div>
+              <div className="buyer-import-step-text">导入模板中的买家信息</div>
+            </div>
+            <div className="buyer-import-step buyer-import-step-last">
+              <span className="buyer-import-step-index">3</span>
+              <div className="buyer-import-step-title">第三步</div>
+              <div className="buyer-import-step-text">上传模板文件，点击导入。如有导入失败的数据，系统会自动下载到 excel 文件并显示失败原因</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="buyer-import-form">
+          <label className="buyer-import-field">
+            <span><i>*</i> excel文件:</span>
+            <div className="buyer-import-upload">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                className="buyer-import-file-input"
+                onChange={onFileChange}
+              />
+              <button type="button" className="buyer-import-upload-btn" onClick={onChooseFile}>
+                <span>⇪</span>
+                选择文件
+              </button>
+              <div className="buyer-import-upload-tip">{fileName || "一次最多导入1000条数据"}</div>
+            </div>
+          </label>
+
+          <div className="buyer-import-actions">
+            <button type="button" className="btn btn-create" onClick={onImport}>导入</button>
+            <button type="button" className="btn btn-reset" onClick={onBack}>返回列表</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function BuyerImportResultModal({ result, onClose, onConfirm }) {
+  if (!result) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-mask" onClick={onClose} />
+      <div className="buyer-import-result-modal">
+        <div className="buyer-import-result-header">
+          <h3>消息</h3>
+          <button type="button" className="buyer-edit-close" onClick={onClose}>×</button>
+        </div>
+        <div className="buyer-import-result-body">
+          成功导入【{result.successCount}】条，失败【{result.failureCount}】条
+        </div>
+        <div className="buyer-import-result-footer">
+          <button className="btn btn-search" type="button" onClick={onConfirm}>确定</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EditBuyerModal({ buyer, groupOptions, form, discountInvalid, onFormChange, onClose, onSave }) {
+  if (!buyer) return null;
+
+  const identityLength = form.identity.length;
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-mask" onClick={onClose} />
+      <div className="buyer-edit-modal">
+        <div className="buyer-edit-header">
+          <h3>编辑买家</h3>
+          <button type="button" className="buyer-edit-close" onClick={onClose}>×</button>
+        </div>
+
+        <div className="buyer-edit-body">
+          <label className="buyer-edit-field">
+            <span>买家身份:</span>
+            <div className="buyer-edit-input-wrap">
+              <input
+                value={form.identity}
+                maxLength={100}
+                placeholder="请输入买家身份"
+                onChange={(e) => onFormChange((current) => ({ ...current, identity: e.target.value }))}
+              />
+              <em>{identityLength}/100</em>
+            </div>
+          </label>
+
+          <label className="buyer-edit-field">
+            <span><i>*</i>买家分组:</span>
+            <div className="buyer-edit-select-wrap">
+              <select value={form.group} onChange={(e) => onFormChange((current) => ({ ...current, group: e.target.value }))}>
+                <option value="">请选择买家分组</option>
+                {groupOptions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+              </select>
+              {form.group ? <div className="buyer-edit-tag">{formatBuyerGroupNames(form.group)}<button type="button" onClick={() => onFormChange((current) => ({ ...current, group: "" }))}>×</button></div> : null}
+            </div>
+          </label>
+
+          <label className="buyer-edit-field">
+            <span>买家折扣:</span>
+              <div className="buyer-add-discount-block">
+              <div className={`buyer-edit-input-wrap buyer-add-discount-wrap ${discountInvalid ? "is-error" : ""}`}>
+                <input
+                  value={form.discount}
+                  placeholder="请输入买家折扣"
+                  onChange={(e) => onFormChange((current) => ({ ...current, discount: sanitizeBuyerDiscountInput(e.target.value, current.discount) }))}
+                />
+                <em>折</em>
+              </div>
+              <p className="buyer-add-discount-tip">折扣范围：请填写5.00~10折之间的折扣值；5.00代表5折，10代表无折扣</p>
+            </div>
+          </label>
+        </div>
+
+        <div className="buyer-edit-footer">
+          <button className="btn btn-reset" type="button" onClick={onClose}>取消</button>
+          <button className="btn btn-search" type="button" onClick={onSave}>确定</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AddBuyerModal({ open, groupOptions, form, discountInvalid, onFormChange, onClose, onSave }) {
+  if (!open) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-mask" onClick={onClose} />
+      <div className="buyer-edit-modal buyer-add-modal">
+        <div className="buyer-edit-header">
+          <h3>新增买家</h3>
+          <button type="button" className="buyer-edit-close" onClick={onClose}>×</button>
+        </div>
+
+        <div className="buyer-edit-body">
+          <label className="buyer-edit-field buyer-add-field">
+            <span><i>*</i>买家ID:</span>
+            <div className="buyer-add-textarea-wrap">
+              <textarea
+                value={form.buyerIds}
+                placeholder="请输入买家ID，多个用逗号隔开，一次最多添加1000个ID"
+                onChange={(e) => onFormChange((current) => ({ ...current, buyerIds: e.target.value }))}
+              />
+            </div>
+          </label>
+
+          <label className="buyer-edit-field">
+            <span><i>*</i>所属分组:</span>
+            <div className="buyer-edit-select-wrap">
+              <select value={form.group} onChange={(e) => onFormChange((current) => ({ ...current, group: e.target.value }))}>
+                <option value="">请选择所属分组</option>
+                {groupOptions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+              </select>
+            </div>
+          </label>
+
+          <label className="buyer-edit-field">
+            <span>买家折扣:</span>
+            <div className="buyer-add-discount-block">
+              <div className={`buyer-edit-input-wrap buyer-add-discount-wrap ${discountInvalid ? "is-error" : ""}`}>
+                <input
+                  value={form.discount}
+                  placeholder="请输入买家折扣"
+                  onChange={(e) => onFormChange((current) => ({ ...current, discount: sanitizeBuyerDiscountInput(e.target.value, current.discount) }))}
+                />
+                <em>折</em>
+              </div>
+              <p className="buyer-add-discount-tip">折扣范围：请填写5.00~10折之间的折扣值；5.00代表5折，10代表无折扣</p>
+            </div>
+          </label>
+        </div>
+
+        <div className="buyer-edit-footer">
+          <button className="btn btn-reset" type="button" onClick={onClose}>取消</button>
+          <button className="btn btn-search" type="button" onClick={onSave}>确定</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
+  const [activeSection, setActiveSection] = useState("marketing");
+  const [activeBuyerPage, setActiveBuyerPage] = useState("买家列表");
+  const [buyerRows, setBuyerRows] = useState(buyerSeedRows);
+  const [buyerFilters, setBuyerFilters] = useState(initialBuyerFilters);
+  const [buyerPage, setBuyerPage] = useState(1);
+  const [buyerPageSize, setBuyerPageSize] = useState(20);
+  const [buyerExpanded, setBuyerExpanded] = useState(true);
+  const [buyerImportFileName, setBuyerImportFileName] = useState("");
+  const [buyerImportFile, setBuyerImportFile] = useState(null);
+  const [buyerImportResult, setBuyerImportResult] = useState(null);
+  const buyerImportInputRef = useRef(null);
+  const [editingBuyer, setEditingBuyer] = useState(null);
+  const [buyerEditForm, setBuyerEditForm] = useState({ identity: "", group: "", discount: "" });
+  const [buyerEditDiscountInvalid, setBuyerEditDiscountInvalid] = useState(false);
+  const [isAddBuyerOpen, setIsAddBuyerOpen] = useState(false);
+  const [newBuyerForm, setNewBuyerForm] = useState(initialNewBuyerForm);
+  const [newBuyerDiscountInvalid, setNewBuyerDiscountInvalid] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [currentMarketingPage, setCurrentMarketingPage] = useState("限时购1");
+  const [currentMarketingPage, setCurrentMarketingPage] = useState("专享价");
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [isSpecOpen, setIsSpecOpen] = useState(false);
   const [isBatchSpecOpen, setIsBatchSpecOpen] = useState(false);
@@ -1247,6 +1890,9 @@ export default function App() {
   const [batchSpecSelectedIdsByProduct, setBatchSpecSelectedIdsByProduct] = useState({});
   const [marketingStates, setMarketingStates] = useState(createInitialMarketingStates);
   const [toastMessage, setToastMessage] = useState("");
+  const isBuyerSection = activeSection === "buyer";
+  const currentPageTitle = isBuyerSection ? activeBuyerPage : currentMarketingPage;
+  const buyerGroupOptions = useMemo(() => buyerGroups, []);
 
   const currentPageState = marketingStates[currentMarketingPage] || createInitialMarketingPageState(currentMarketingPage);
   const {
@@ -1269,6 +1915,8 @@ export default function App() {
 
   const activeSpecProduct = selectedProducts.find((item) => item.id === activeSpecProductId) || selectedProducts[0];
   const activeSpecSelectedIds = selectedSpecIdsByProduct[activeSpecProductId] || [];
+  const activeSpecProductFieldEditModes = productFieldEditModesByProduct?.[activeSpecProductId] || initialProductFieldEditModes;
+  const activeSpecProductFlashPriceInputMode = !!activeSpecProduct && (!hasSpecLevelFlashPrice(activeSpecProduct) || activeSpecProductFieldEditModes.flashPrice);
 
   const updateCurrentMarketingState = (updater) => {
     setMarketingStates((current) => ({
@@ -1325,7 +1973,7 @@ export default function App() {
   };
 
   const createPickerDraftProducts = () => {
-    const catalogProducts = createInitialProducts();
+    const catalogProducts = createInitialProducts(currentMarketingPage === "专享价" ? "1" : "0");
     const catalogMap = new Map(catalogProducts.map((item) => [item.id, item]));
     const selectedMap = new Map(selectedProducts.map((item) => [item.id, item]));
 
@@ -1474,7 +2122,7 @@ export default function App() {
       return;
     }
 
-    const catalogProducts = createInitialProducts();
+    const catalogProducts = createInitialProducts(currentMarketingPage === "专享价" ? "1" : "0");
     const selectedCatalogProducts = catalogProducts
       .filter((item) => selectedPickerProductIds.includes(item.id))
       .map((item) => ({ ...JSON.parse(JSON.stringify(item)), flashPrice: "" }));
@@ -1754,7 +2402,7 @@ export default function App() {
     selectedProducts.forEach((product) => {
       const productFieldEditModes = productFieldEditModesByProduct?.[product.id] || initialProductFieldEditModes;
       const flashPriceDisplay = productFieldEditModes.flashPrice && hasSpecLevelFlashPrice(product) ? product.flashPrice : getProductFlashPriceDisplay(product);
-      const totalLimitDisplay = hasSpecLevelLimitCount(product) ? getProductTotalLimitDisplay(product) : product.totalLimit;
+      const totalLimitDisplay = getProductTotalLimitInputValue(product, currentMarketingPage === "专享价");
       const activityStockDisplay = hasSpecLevelActivityStock(product) ? getProductActivityStockDisplay(product) : product.activityStock;
 
       if (!hasValue(flashPriceDisplay)) {
@@ -1810,7 +2458,7 @@ export default function App() {
           endTime: activity.endTime
         },
         pickerFilters: { ...initialPickerFilters },
-        selectedProducts: createEditProducts(activity),
+        selectedProducts: createEditProducts(activity, currentMarketingPage),
         selectedGoodsIds: [],
         selectedPickerProductIds: [],
         selectedSpecIdsByProduct: {},
@@ -1832,6 +2480,7 @@ export default function App() {
   };
 
   const handleSwitchMarketingPage = (pageName) => {
+    setActiveSection("marketing");
     setCurrentMarketingPage(pageName);
     setIsCreating(false);
     setIsEditMode(false);
@@ -1848,25 +2497,321 @@ export default function App() {
     }));
   };
 
+  const handleSwitchBuyerPage = (pageName) => {
+    setActiveSection("buyer");
+    setActiveBuyerPage(pageName);
+    setBuyerPage(1);
+    setEditingBuyer(null);
+    setIsAddBuyerOpen(false);
+    setIsCreating(false);
+    setIsEditMode(false);
+    setDetailSpecProduct(null);
+    setToastMessage("");
+    closeAllCreateOverlays();
+  };
+
+  const handleBuyerActionClick = (actionLabel, buyer) => {
+    if (actionLabel === "新增买家") {
+      setEditingBuyer(null);
+      setNewBuyerForm(initialNewBuyerForm);
+      setNewBuyerDiscountInvalid(false);
+      setIsAddBuyerOpen(true);
+      return;
+    }
+
+    if (actionLabel === "批量导入买家") {
+      setEditingBuyer(null);
+      setIsAddBuyerOpen(false);
+      setActiveBuyerPage("导入买家");
+      setToastMessage("");
+      return;
+    }
+
+    if (actionLabel === "编辑买家" && buyer) {
+      setIsAddBuyerOpen(false);
+      setEditingBuyer(buyer);
+      setBuyerEditForm({
+        identity: buyer.identity || "",
+        group: buyer.group || "",
+        discount: buyer.discount || ""
+      });
+      setBuyerEditDiscountInvalid(false);
+      return;
+    }
+
+    setToastMessage(`${actionLabel}功能已按截图位置复刻，后续可继续接真实接口。`);
+  };
+
+  const handleSaveBuyerEdit = () => {
+    if (!editingBuyer) return;
+    if (!buyerEditForm.group.trim()) {
+      setToastMessage("请选择买家分组");
+      return;
+    }
+    if (!isValidBuyerDiscount(buyerEditForm.discount)) {
+      setBuyerEditDiscountInvalid(true);
+      setToastMessage("买家折扣仅支持 5~10 之间的数字，最多保留两位小数");
+      return;
+    }
+
+    setBuyerEditDiscountInvalid(false);
+    setBuyerRows((current) => current.map((item) => (
+      item.id === editingBuyer.id
+        ? { ...item, identity: buyerEditForm.identity, group: buyerEditForm.group, discount: buyerEditForm.discount }
+        : item
+    )));
+    setEditingBuyer(null);
+    setToastMessage("");
+  };
+
+  const handleSaveNewBuyer = () => {
+    const buyerIds = newBuyerForm.buyerIds
+      .split(/[,\n，]+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    if (buyerIds.length === 0) {
+      setToastMessage("请输入买家ID");
+      return;
+    }
+
+    if (!newBuyerForm.group.trim()) {
+      setToastMessage("请选择所属分组");
+      return;
+    }
+    if (!isValidBuyerDiscount(newBuyerForm.discount)) {
+      setNewBuyerDiscountInvalid(true);
+      setToastMessage("买家折扣仅支持 5~10 之间的数字，最多保留两位小数");
+      return;
+    }
+
+    setNewBuyerDiscountInvalid(false);
+    const createdAt = new Date().toLocaleString("sv-SE", { hour12: false }).replace(" ", " ");
+    const existingIds = new Set(buyerRows.map((item) => item.id));
+    const nextRows = buyerIds
+      .filter((id) => !existingIds.has(id))
+      .map((id, index) => ({
+        id,
+        account: `buyer_${id}`,
+        accountType: "默认账号",
+        identity: "",
+        group: newBuyerForm.group,
+        discount: newBuyerForm.discount,
+        createdAt,
+        status: "正常",
+        sortKey: `${createdAt}-${index}`
+      }));
+
+    if (nextRows.length === 0) {
+      setToastMessage("输入的买家ID已存在");
+      return;
+    }
+
+    setBuyerRows((current) => [...nextRows, ...current]);
+    setIsAddBuyerOpen(false);
+    setNewBuyerForm(initialNewBuyerForm);
+    setBuyerPage(1);
+    setToastMessage("");
+  };
+
+  const handleBuyerImportFileChange = (event) => {
+    const [file] = event.target.files || [];
+    setBuyerImportResult(null);
+    setBuyerImportFile(file || null);
+    setBuyerImportFileName(file ? file.name : "");
+  };
+
+  const handleChooseBuyerImportFile = async () => {
+    const supportsNativePicker = typeof window !== "undefined" && typeof window.showOpenFilePicker === "function";
+
+    if (supportsNativePicker) {
+      try {
+        const [handle] = await window.showOpenFilePicker({
+          multiple: false,
+          excludeAcceptAllOption: true,
+          startIn: "desktop",
+          types: [
+            {
+              description: "Excel 文件",
+              accept: {
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"]
+              }
+            }
+          ]
+        });
+        const file = await handle.getFile();
+        setBuyerImportResult(null);
+        setBuyerImportFile(file || null);
+        setBuyerImportFileName(file?.name || "");
+        return;
+      } catch (error) {
+        if (error?.name === "AbortError") return;
+      }
+    }
+
+    if (buyerImportInputRef.current) {
+      buyerImportInputRef.current.value = "";
+      buyerImportInputRef.current.click();
+    }
+  };
+
+  const handleImportBuyers = async () => {
+    if (!buyerImportFile) {
+      setToastMessage("请先选择xlsx文件");
+      return;
+    }
+
+    try {
+      const fileBuffer = await buyerImportFile.arrayBuffer();
+      const workbook = XLSX.read(fileBuffer, { type: "array" });
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+
+      if (!worksheet) {
+        setToastMessage("导入文件解析失败，请确认模板内容");
+        return;
+      }
+
+      const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "", raw: false });
+      const dataRows = rows.slice(buyerImportHeaderRowIndex).filter((row) => !isBuyerImportRowEmpty(row));
+      const existingIds = new Set(buyerRows.map((item) => String(item.id)));
+      const importedIds = new Set();
+      const createdAt = new Date().toLocaleString("sv-SE", { hour12: false }).replace(" ", " ");
+      const successRows = [];
+      let failureCount = 0;
+
+      dataRows.forEach((row, index) => {
+        const result = validateBuyerImportRow(row, existingIds, importedIds);
+        if (!result.isValid) {
+          failureCount += 1;
+          return;
+        }
+
+        importedIds.add(result.buyerId);
+        successRows.push({
+          id: result.buyerId,
+          account: `buyer_${result.buyerId}`,
+          accountType: "默认账号",
+          identity: result.identity,
+          group: result.group,
+          discount: result.discount,
+          createdAt,
+          status: "正常",
+          sortKey: `${createdAt}-import-${index}`
+        });
+      });
+
+      if (successRows.length > 0) {
+        setBuyerRows((current) => [...successRows, ...current]);
+        setBuyerPage(1);
+      }
+
+      setBuyerImportResult({
+        successCount: successRows.length,
+        failureCount
+      });
+      setToastMessage("");
+    } catch (error) {
+      setToastMessage("导入文件解析失败，请上传正确的xlsx模板");
+    }
+  };
+
+  const handleCloseBuyerImportResult = () => {
+    setBuyerImportResult(null);
+  };
+
+  const handleConfirmBuyerImportResult = () => {
+    if (buyerImportResult?.successCount > 0) {
+      setActiveBuyerPage("买家列表");
+    }
+    setBuyerImportResult(null);
+  };
+
   return (
     <div className="admin-shell">
       <aside className="sidebar">
         <div className="logo-card"><div className="logo-thumb" /><div className="logo-meta"><div className="logo-title">闪电帮帮</div><div className="logo-tag">供应商后台</div></div></div>
-        <nav className="sidebar-nav">{menuItems.map((item) => item.children ? <div className="sidebar-group is-active" key={item.label}><a className="sidebar-link is-active" href="#"><span className="sidebar-icon"><SidebarIcon type={item.icon} /></span><span className="sidebar-text">{item.label}</span></a><div className="sidebar-subnav">{item.children.map((child) => <button className={`sidebar-sublink ${currentMarketingPage === child ? "is-active" : ""}`} key={child} type="button" onClick={() => handleSwitchMarketingPage(child)}>{child}</button>)}</div></div> : <a className="sidebar-link" href="#" key={item.label}><span className="sidebar-icon"><SidebarIcon type={item.icon} /></span><span className="sidebar-text">{item.label}</span>{item.badge ? <span className="sidebar-badge">{item.badge}</span> : null}</a>)}</nav>
+        <nav className="sidebar-nav">
+          {menuItems.map((item) => {
+            if (!item.children) {
+              return (
+                <a className="sidebar-link" href="#" key={item.label}>
+                  <span className="sidebar-icon"><SidebarIcon type={item.icon} /></span>
+                  <span className="sidebar-text">{item.label}</span>
+                  {item.badge ? <span className="sidebar-badge">{item.badge}</span> : null}
+                </a>
+              );
+            }
+
+            const isBuyerMenu = item.label === "买家";
+            const activeParent = isBuyerMenu ? isBuyerSection : !isBuyerSection && item.label === "营销";
+
+            return (
+              <div className={`sidebar-group ${activeParent ? "is-active" : ""}`} key={item.label}>
+                <a className={`sidebar-link ${activeParent ? "is-active" : ""}`} href="#">
+                  <span className="sidebar-icon"><SidebarIcon type={item.icon} /></span>
+                  <span className="sidebar-text">{item.label}</span>
+                </a>
+                <div className="sidebar-subnav">
+                  {item.children.map((child) => {
+                    const isActiveChild = isBuyerMenu ? activeBuyerPage === child && isBuyerSection : currentMarketingPage === child && !isBuyerSection;
+                    const handleClick = isBuyerMenu ? () => handleSwitchBuyerPage(child) : () => handleSwitchMarketingPage(child);
+
+                    return (
+                      <button className={`sidebar-sublink ${isActiveChild ? "is-active" : ""}`} key={child} type="button" onClick={handleClick}>
+                        {child}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </nav>
       </aside>
 
       <section className="workspace">
-        <Header currentMarketingPage={currentMarketingPage} />
+        <Header currentMarketingPage={currentPageTitle} specialCreateTab={!isBuyerSection && isCreating && currentMarketingPage === "专享价" ? "新增专享价" : ""} />
         <main className="workspace-main">
-          <TabSection creating={isCreating} detailing={!isCreating && !!detailActivity} currentMarketingPage={currentMarketingPage} onSwitchToList={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); updateCurrentField("detailActivity", null); }} />
-          {isCreating ? <CreatePage pageName={currentMarketingPage} form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} productFieldEditModesByProduct={productFieldEditModesByProduct || {}} productFieldErrorsByProduct={productFieldErrorsByProduct || {}} onToggleProductFieldEditMode={handleToggleProductFieldEditMode} onToggleGoodsSelection={handleToggleGoodsSelection} onRemoveProduct={handleRemoveProduct} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} /> : detailActivity ? <DetailPage detailActivity={detailActivity} page={detailPage} setPage={(value) => updateCurrentField("detailPage", typeof value === "function" ? value(detailPage) : value)} pageSize={detailPageSize} setPageSize={(value) => updateCurrentField("detailPageSize", value)} onShowSpecDetail={setDetailSpecProduct} /> : <ListPage filters={filters} setFilters={(value) => updateCurrentField("filters", value)} page={page} setPage={(value) => updateCurrentField("page", typeof value === "function" ? value(page) : value)} pageSize={pageSize} setPageSize={(value) => updateCurrentField("pageSize", value)} onCreate={() => { resetCreateState(); setIsCreating(true); updateCurrentField("detailActivity", null); }} onAction={handleActivityAction} activities={activities} />}
+          {isBuyerSection ? (
+            activeBuyerPage === "导入买家" ? (
+              <BuyerImportPage
+                onBack={() => setActiveBuyerPage("买家列表")}
+                fileName={buyerImportFileName}
+                fileInputRef={buyerImportInputRef}
+                onChooseFile={handleChooseBuyerImportFile}
+                onFileChange={handleBuyerImportFileChange}
+                onImport={handleImportBuyers}
+              />
+            ) : (
+              <BuyerListPage
+                filters={buyerFilters}
+                onFiltersChange={setBuyerFilters}
+                rows={buyerRows}
+                page={buyerPage}
+                setPage={setBuyerPage}
+                pageSize={buyerPageSize}
+                setPageSize={setBuyerPageSize}
+                expanded={buyerExpanded}
+                onToggleExpanded={() => setBuyerExpanded((value) => !value)}
+                onActionClick={handleBuyerActionClick}
+              />
+            )
+          ) : (
+            <>
+              {(currentMarketingPage !== "专享价") ? <TabSection creating={isCreating} detailing={!isCreating && !!detailActivity} currentMarketingPage={currentMarketingPage} onSwitchToList={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); updateCurrentField("detailActivity", null); }} /> : null}
+              {isCreating ? <CreatePage pageName={currentMarketingPage} form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} productFieldEditModesByProduct={productFieldEditModesByProduct || {}} productFieldErrorsByProduct={productFieldErrorsByProduct || {}} onToggleProductFieldEditMode={handleToggleProductFieldEditMode} onToggleGoodsSelection={handleToggleGoodsSelection} onRemoveProduct={handleRemoveProduct} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} /> : detailActivity ? <DetailPage detailActivity={detailActivity} page={detailPage} setPage={(value) => updateCurrentField("detailPage", typeof value === "function" ? value(detailPage) : value)} pageSize={detailPageSize} setPageSize={(value) => updateCurrentField("detailPageSize", value)} onShowSpecDetail={setDetailSpecProduct} /> : <ListPage pageName={currentMarketingPage} filters={filters} setFilters={(value) => updateCurrentField("filters", value)} page={page} setPage={(value) => updateCurrentField("page", typeof value === "function" ? value(page) : value)} pageSize={pageSize} setPageSize={(value) => updateCurrentField("pageSize", value)} onCreate={() => { resetCreateState(); setIsCreating(true); updateCurrentField("detailActivity", null); }} onAction={handleActivityAction} activities={activities} />}
+            </>
+          )}
         </main>
       </section>
 
-      {isCreating && isPickerOpen ? <ProductPickerModal filters={pickerFilters} setFilters={(value) => updateCurrentField("pickerFilters", value)} selectedProductIds={selectedPickerProductIds} onToggleProduct={handleTogglePickerProduct} onSave={handleSavePicker} onClose={() => setIsPickerOpen(false)} confirmText={currentMarketingPage === "限时购" ? "下一步" : "保存"} /> : null}
-      {isCreating && isSpecOpen ? <SpecPickerModal product={activeSpecProduct} selectedSpecIds={activeSpecSelectedIds} onToggleSpecSelection={handleToggleSpecSelection} onToggleAllSpecs={handleToggleAllSpecSelections} onBatchToggleSpecs={handleBatchToggleSpecs} onClose={() => { setIsSpecOpen(false); setActiveSpecProductId(""); }} onUpdateSpecField={handleUpdateSpecField} onToggleSpecStatus={handleToggleSpecStatus} onShowToast={setToastMessage} /> : null}
-      {isCreating && isBatchSpecOpen && currentMarketingPage === "限时购" ? <BatchSpecStepModal products={batchSpecDraftProducts} selectedSpecIdsByProduct={batchSpecSelectedIdsByProduct} onToggleSpecSelection={handleBatchDraftToggleSpecSelection} onToggleAllSpecs={handleBatchDraftToggleAllSpecs} onBatchToggleSpecs={handleBatchDraftToggleSpecs} onClose={handleCloseBatchSpec} onSave={handleBatchSpecSave} onUpdateProductLimit={handleBatchDraftProductLimit} onUpdateProductActivityStock={handleBatchDraftProductActivityStock} onUpdateSpecField={handleBatchDraftSpecField} onToggleSpecStatus={handleBatchDraftToggleSpecStatus} onShowToast={setToastMessage} /> : null}
-      {!isCreating && detailSpecProduct ? <DetailSpecModal product={detailSpecProduct} onClose={() => setDetailSpecProduct(null)} /> : null}
+      {!isBuyerSection && isCreating && isPickerOpen ? <ProductPickerModal filters={pickerFilters} setFilters={(value) => updateCurrentField("pickerFilters", value)} selectedProductIds={selectedPickerProductIds} onToggleProduct={handleTogglePickerProduct} onSave={handleSavePicker} onClose={() => setIsPickerOpen(false)} confirmText={currentMarketingPage === "限时购" ? "下一步" : "保存"} /> : null}
+      {!isBuyerSection && isCreating && isSpecOpen ? <SpecPickerModal pageName={currentMarketingPage} product={activeSpecProduct} productFlashPriceInputMode={activeSpecProductFlashPriceInputMode} selectedSpecIds={activeSpecSelectedIds} onToggleSpecSelection={handleToggleSpecSelection} onToggleAllSpecs={handleToggleAllSpecSelections} onBatchToggleSpecs={handleBatchToggleSpecs} onClose={() => { setIsSpecOpen(false); setActiveSpecProductId(""); }} onUpdateSpecField={handleUpdateSpecField} onToggleSpecStatus={handleToggleSpecStatus} onShowToast={setToastMessage} /> : null}
+      {!isBuyerSection && isCreating && isBatchSpecOpen && currentMarketingPage === "限时购" ? <BatchSpecStepModal products={batchSpecDraftProducts} selectedSpecIdsByProduct={batchSpecSelectedIdsByProduct} onToggleSpecSelection={handleBatchDraftToggleSpecSelection} onToggleAllSpecs={handleBatchDraftToggleAllSpecs} onBatchToggleSpecs={handleBatchDraftToggleSpecs} onClose={handleCloseBatchSpec} onSave={handleBatchSpecSave} onUpdateProductLimit={handleBatchDraftProductLimit} onUpdateProductActivityStock={handleBatchDraftProductActivityStock} onUpdateSpecField={handleBatchDraftSpecField} onToggleSpecStatus={handleBatchDraftToggleSpecStatus} onShowToast={setToastMessage} /> : null}
+      {!isBuyerSection && !isCreating && detailSpecProduct ? <DetailSpecModal product={detailSpecProduct} onClose={() => setDetailSpecProduct(null)} /> : null}
+      {isBuyerSection ? <AddBuyerModal open={isAddBuyerOpen} groupOptions={buyerGroupOptions} form={newBuyerForm} discountInvalid={newBuyerDiscountInvalid || isBuyerDiscountInvalid(newBuyerForm.discount)} onFormChange={(updater) => { setNewBuyerDiscountInvalid(false); setNewBuyerForm(updater); }} onClose={() => { setIsAddBuyerOpen(false); setNewBuyerDiscountInvalid(false); }} onSave={handleSaveNewBuyer} /> : null}
+      {isBuyerSection ? <EditBuyerModal buyer={editingBuyer} groupOptions={buyerGroupOptions} form={buyerEditForm} discountInvalid={buyerEditDiscountInvalid || isBuyerDiscountInvalid(buyerEditForm.discount)} onFormChange={(updater) => { setBuyerEditDiscountInvalid(false); setBuyerEditForm(updater); }} onClose={() => { setEditingBuyer(null); setBuyerEditDiscountInvalid(false); }} onSave={handleSaveBuyerEdit} /> : null}
+      {isBuyerSection ? <BuyerImportResultModal result={buyerImportResult} onClose={handleCloseBuyerImportResult} onConfirm={handleConfirmBuyerImportResult} /> : null}
       {toastMessage ? <div className="page-toast">{toastMessage}</div> : null}
     </div>
   );
