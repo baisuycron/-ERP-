@@ -129,6 +129,8 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .pc-mall-brand-account { color: #9ca3af; font-size: 12px; }
 .pc-mall-toplink { border: none; padding: 0; background: transparent; color: #c9d1d9; font-size: 12px; }
 .pc-mall-toplink:hover { color: #fff; }
+.pc-mall-portal-entry { height: 24px; padding: 0 10px; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 6px; background: rgba(255, 255, 255, 0.04); color: #eef2f7; font-size: 12px; }
+.pc-mall-portal-entry:hover { border-color: rgba(255, 203, 23, 0.45); color: #ffcb17; }
 .pc-mall-cart { color: #ffc629; }
 .pc-mall-main { width: min(1520px, calc(100vw - 48px)); margin: 16px auto 0; display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 16px; }
 .pc-mall-sidebar { background: #fff; border-right: 1px solid #eef1f4; }

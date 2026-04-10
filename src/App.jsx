@@ -911,7 +911,7 @@ function PcMallMultiSelect({ options, values, onChange, placeholder = "请选择
   );
 }
 
-function BuyerPcMallPage() {
+function BuyerPcMallPage({ onPortalActionClick }) {
   const [activeTab, setActiveTab] = useState(buyerPcMallOrderTabs[0]);
   const [selectedInvoiceOrderNos, setSelectedInvoiceOrderNos] = useState([buyerPcMallInvoiceRows[0].orderNo]);
   const [selectedAppliedInvoiceOrderNos, setSelectedAppliedInvoiceOrderNos] = useState([]);
@@ -979,6 +979,9 @@ function BuyerPcMallPage() {
             <button className="pc-mall-toplink" type="button">退出</button>
           </div>
           <div className="pc-mall-toplinks">
+            <button className="pc-mall-toplink pc-mall-portal-entry" type="button" onClick={() => onPortalActionClick?.("operations-admin")}>运营后台</button>
+            <button className="pc-mall-toplink pc-mall-portal-entry" type="button" onClick={() => onPortalActionClick?.("supplier-admin")}>供应商后台</button>
+            <button className="pc-mall-toplink pc-mall-portal-entry" type="button" onClick={() => onPortalActionClick?.("miniapp-mall")}>买家小程序商城</button>
             <button className="pc-mall-toplink" type="button">我的美团闪电帮帮</button>
             <button className="pc-mall-toplink pc-mall-cart" type="button">购物车(24)</button>
             <button className="pc-mall-toplink" type="button">微信小程序</button>
@@ -3410,6 +3413,22 @@ export default function App() {
       return;
     }
 
+    if (actionKey === "operations-admin") {
+      setActivePortalPage("admin");
+      setActiveSection("marketing");
+      setToastMessage("");
+      return;
+    }
+
+    if (actionKey === "supplier-admin") {
+      setActivePortalPage("admin");
+      setActiveSection("buyer");
+      setActiveBuyerPage("买家列表");
+      setBuyerPage(1);
+      setToastMessage("");
+      return;
+    }
+
     if (actionKey === "miniapp-mall") {
       setToastMessage("买家小程序商城页面入口已预留，后续可继续按截图补齐。");
       return;
@@ -3422,7 +3441,7 @@ export default function App() {
   };
 
   if (activePortalPage === "buyer-pc-mall") {
-    return <BuyerPcMallPage />;
+    return <BuyerPcMallPage onPortalActionClick={handleTopActionClick} />;
   }
 
   return (
