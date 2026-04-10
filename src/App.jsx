@@ -930,6 +930,16 @@ function BuyerPcMallPage() {
       totalAmount
     };
   }, [selectedInvoiceOrderNos]);
+  const selectedAppliedInvoiceSummary = useMemo(() => {
+    const selectedOrderSet = new Set(selectedAppliedInvoiceOrderNos);
+    const selectedRows = buyerPcMallAppliedInvoiceRows.filter((item) => selectedOrderSet.has(item.orderNo));
+    const totalAmount = selectedRows.reduce((sum, item) => sum + (getPriceNumber(item.amount) || 0), 0);
+
+    return {
+      count: selectedRows.length,
+      totalAmount
+    };
+  }, [selectedAppliedInvoiceOrderNos]);
 
   const handleToggleAllInvoiceRows = (checked) => {
     setSelectedInvoiceOrderNos(checked ? buyerPcMallInvoiceRows.map((item) => item.orderNo) : []);
@@ -1164,6 +1174,7 @@ function BuyerPcMallPage() {
                   <div className="pc-mall-toolbar-left">
                     <button className="pc-mall-btn pc-mall-toolbar-btn" type="button">批量修改</button>
                     <button className="pc-mall-btn pc-mall-toolbar-btn" type="button">批量撤销</button>
+                    <div className="pc-mall-toolbar-summary">已选中 {selectedAppliedInvoiceSummary.count} 笔订单，申请开票金额合计： <strong>{`￥${selectedAppliedInvoiceSummary.totalAmount.toFixed(2)}`}</strong></div>
                   </div>
                   <button className="pc-mall-btn pc-mall-export-btn" type="button">导出数据</button>
                 </div>
