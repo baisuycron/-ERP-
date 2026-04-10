@@ -12,7 +12,7 @@ const menuItems = [
   { label: "店铺", icon: "shop", badge: "2" },
   { label: "系统", icon: "system" },
   { label: "统计", icon: "stats" },
-  { label: "营销", icon: "marketing", children: ["专享价", "限时购1", "限时购"] },
+  { label: "营销", icon: "marketing", children: ["专享价", "专享价2", "限时购1", "限时购"] },
   { label: "小程序", icon: "miniapp" },
   { label: "客服", icon: "service" }
 ];
@@ -21,7 +21,7 @@ const statuses = ["全部", "未开始", "进行中", "已结束"];
 const activityCategories = ["常规活动", "节日活动", "品牌活动"];
 const productCategories = ["饮料酒水", "休闲食品", "日化用品"];
 
-const marketingPageNames = ["专享价", "限时购1", "限时购"];
+const marketingPageNames = ["专享价", "专享价2", "限时购1", "限时购"];
 const buyerAccountTypes = ["总部账号", "授权账号", "子账号", "自主认证账号", "默认账号"];
 const buyerGroups = [
   { id: "1", name: "北京分组" },
@@ -43,13 +43,15 @@ const initialBuyerFilters = { id: "", account: "", accountType: "", identity: ""
 const initialNewBuyerForm = { buyerIds: "", group: "", discount: "" };
 const partialBuyerDiscountPattern = /^(\d{0,2}(\.\d{0,2})?)?$/;
 const finalBuyerDiscountPattern = /^(5(\.\d{1,2})?|[6-9](\.\d{1,2})?|10(\.0{1,2})?|10)$/;
+const createSpecialPriceSeedActivities = () => ([
+  { id: "844", name: "四川分组专享价", buyerGroup: "四川分组", buyerId: "-", goodsCount: 1, startTime: "2026-04-10 00:00:00", endTime: "2026-04-12 23:59:59", status: "未开始", actions: ["查看", "提前结束", "编辑", "复制"] },
+  { id: "843", name: "北京分组买家专享价", buyerGroup: "四川分组", buyerId: "2083059433", goodsCount: 3, startTime: "2026-04-09 00:00:00", endTime: "2026-04-30 23:59:59", status: "进行中", actions: ["查看", "提前结束", "编辑", "复制"] },
+  { id: "829", name: "鼠标【有多规格，无阶梯价】", buyerGroup: "四川分组", buyerId: "-", goodsCount: 8, startTime: "2026-03-18 00:00:00", endTime: "2026-03-20 23:59:59", status: "已结束", actions: ["查看", "复制"] },
+  { id: "828", name: "2083059433", buyerGroup: "四川分组", buyerId: "2083059433", goodsCount: 125, goodsFlag: "部分已失效", startTime: "2026-03-18 00:00:00", endTime: "2026-03-20 23:59:59", status: "已结束", actions: ["查看", "复制"] }
+]);
 const seedActivitiesByPage = {
-  专享价: [
-    { id: "844", name: "四川分组专享价", buyerGroup: "四川分组", buyerId: "-", goodsCount: 1, startTime: "2026-04-10 00:00:00", endTime: "2026-04-12 23:59:59", status: "未开始", actions: ["查看", "提前结束", "编辑", "复制"] },
-    { id: "843", name: "北京分组买家专享价", buyerGroup: "四川分组", buyerId: "2083059433", goodsCount: 3, startTime: "2026-04-09 00:00:00", endTime: "2026-04-30 23:59:59", status: "进行中", actions: ["查看", "提前结束", "编辑", "复制"] },
-    { id: "829", name: "鼠标【有多规格，无阶梯价】", buyerGroup: "四川分组", buyerId: "-", goodsCount: 8, startTime: "2026-03-18 00:00:00", endTime: "2026-03-20 23:59:59", status: "已结束", actions: ["查看", "复制"] },
-    { id: "828", name: "2083059433", buyerGroup: "四川分组", buyerId: "2083059433", goodsCount: 125, goodsFlag: "部分已失效", startTime: "2026-03-18 00:00:00", endTime: "2026-03-20 23:59:59", status: "已结束", actions: ["查看", "复制"] }
-  ],
+  专享价: createSpecialPriceSeedActivities(),
+  专享价2: createSpecialPriceSeedActivities(),
   限时购1: [
     { id: "1111", name: "双11限时购1活动", goodsCount: 12, startTime: "2026-11-01 00:00:00", endTime: "2026-11-11 23:59:59", status: "未开始", actions: ["查看", "编辑", "提前结束"] },
     { id: "0001", name: "国庆节限时购1活动", goodsCount: 2, startTime: "2026-10-01 00:00:00", endTime: "2026-10-08 23:59:59", status: "未开始", actions: ["查看", "编辑", "提前结束"] },
@@ -69,17 +71,19 @@ const pickerRows = [
 ];
 
 const emptyFilters = { status: "全部", dateRange: "", activityName: "", activityId: "", productId: "", specId: "", productName: "" };
+const createSpecialPricePageConfig = () => ({
+  createLabel: "新增专享价",
+  defaultCategory: "专享活动",
+  initialFilters: { status: "", activityName: "", startTime: "2026-03-18 00:00:00", endTime: "", activityId: "", buyerGroup: "", buyerId: "" },
+  tipLines: [
+    "同一个商品规格同一个买家分组在同一个时间段内只能有一个未结束的专享价活动；",
+    "专享价不可与其他优惠活动叠加使用；",
+    "专享价活动未单独设置运费，则运费按普通商品运费规则收取。"
+  ]
+});
 const marketingPageConfigs = {
-  专享价: {
-    createLabel: "新增专享价",
-    defaultCategory: "专享活动",
-    initialFilters: { status: "", activityName: "", startTime: "2026-03-18 00:00:00", endTime: "", activityId: "", buyerGroup: "", buyerId: "" },
-    tipLines: [
-      "同一个商品规格同一个买家分组在同一个时间段内只能有一个未结束的专享价活动；",
-      "专享价不可与其他优惠活动叠加使用；",
-      "专享价活动未单独设置运费，则运费按普通商品运费规则收取。"
-    ]
-  },
+  专享价: createSpecialPricePageConfig(),
+  专享价2: createSpecialPricePageConfig(),
   限时购1: {
     createLabel: "新增限时购",
     defaultCategory: "常规活动",
@@ -94,6 +98,9 @@ const marketingPageConfigs = {
 const initialCreateForm = { activityName: "", category: "", startTime: "", endTime: "", productKeyword: "", productId: "", onlyUnpricedProducts: false };
 const initialPickerFilters = { category: "", productName: "", productId: "" };
 const cloneProducts = (products) => JSON.parse(JSON.stringify(products));
+const isPrimarySpecialPricePage = (pageName) => pageName === "专享价";
+const isSecondarySpecialPricePage = (pageName) => pageName === "专享价2";
+const isAnySpecialPricePage = (pageName) => isPrimarySpecialPricePage(pageName) || isSecondarySpecialPricePage(pageName);
 const getActiveSpecs = (product) => product.specs.filter((spec) => spec.status === "active");
 const hasUnifiedFlashPrice = (product) => String(product.flashPrice || "").trim() !== "";
 const hasUnifiedTotalLimit = (product) => String(product.totalLimit || "").trim() !== "";
@@ -333,7 +340,7 @@ function createInitialProducts(defaultTotalLimit = "0") {
 }
 
 function createEditProducts(activity, pageName) {
-  const products = cloneProducts(createInitialProducts(pageName === "专享价" ? "1" : "0"));
+  const products = cloneProducts(createInitialProducts(isAnySpecialPricePage(pageName) ? "1" : "0"));
   const targetCount = Math.max(1, Math.min(products.length, activity.goodsCount || products.length));
 
   return products.slice(0, targetCount);
@@ -664,7 +671,7 @@ function TabSection({ creating, detailing, onSwitchToList, currentMarketingPage 
   );
 }
 
-function SpecialPriceListPage({ filters, setFilters, page, setPage, pageSize, setPageSize, onCreate, onAction, activities }) {
+function SpecialPriceListLayout({ pageConfig, filters, setFilters, page, setPage, pageSize, setPageSize, onCreate, onAction, activities }) {
   const filteredActivities = useMemo(() => activities.filter((item) => {
     if (filters.status && item.status !== filters.status) return false;
     if (filters.activityId && !item.id.includes(filters.activityId.trim())) return false;
@@ -679,7 +686,6 @@ function SpecialPriceListPage({ filters, setFilters, page, setPage, pageSize, se
   const pageCount = Math.max(1, Math.ceil(filteredActivities.length / pageSize));
   const currentPage = Math.min(page, pageCount);
   const rows = filteredActivities.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-  const pageConfig = marketingPageConfigs.专享价;
 
   return (
     <>
@@ -750,9 +756,21 @@ function SpecialPriceListPage({ filters, setFilters, page, setPage, pageSize, se
   );
 }
 
+function SpecialPriceListPage(props) {
+  return <SpecialPriceListLayout {...props} pageConfig={marketingPageConfigs.专享价} />;
+}
+
+function SpecialPrice2ListPage(props) {
+  return <SpecialPriceListLayout {...props} pageConfig={marketingPageConfigs.专享价2} />;
+}
+
 function ListPage({ pageName, filters, setFilters, page, setPage, pageSize, setPageSize, onCreate, onAction, activities }) {
-  if (pageName === "专享价") {
+  if (isPrimarySpecialPricePage(pageName)) {
     return <SpecialPriceListPage filters={filters} setFilters={setFilters} page={page} setPage={setPage} pageSize={pageSize} setPageSize={setPageSize} onCreate={onCreate} onAction={onAction} activities={activities} />;
+  }
+
+  if (isSecondarySpecialPricePage(pageName)) {
+    return <SpecialPrice2ListPage filters={filters} setFilters={setFilters} page={page} setPage={setPage} pageSize={pageSize} setPageSize={setPageSize} onCreate={onCreate} onAction={onAction} activities={activities} />;
   }
 
   const filteredActivities = useMemo(() => activities.filter((item) => {
@@ -1156,7 +1174,7 @@ function BatchSpecStepModal({ products, selectedSpecIdsByProduct, onToggleSpecSe
 function SpecPickerModal({ pageName, product, productFlashPriceInputMode, selectedSpecIds, onToggleSpecSelection, onToggleAllSpecs, onBatchToggleSpecs, onClose, onUpdateSpecField, onToggleSpecStatus, onShowToast }) {
   if (!product) return null;
 
-  const isSpecialPricePage = pageName === "专享价";
+  const isSpecialPricePage = isAnySpecialPricePage(pageName);
   const useProductLevelFlashPrice = isSpecialPricePage && productFlashPriceInputMode;
   const useUnifiedFlashPrice = hasUnifiedFlashPrice(product);
   const useUnifiedTotalLimit = hasUnifiedTotalLimit(product);
@@ -1285,7 +1303,7 @@ function SpecPickerModal({ pageName, product, productFlashPriceInputMode, select
   return (
     <div className="modal-overlay">
       <div className="modal-mask" onClick={onClose} />
-      <div className="spec-modal">
+      <div className={`spec-modal ${isSpecialPricePage ? "spec-modal-special" : ""}`}>
         <div className="picker-header"><h3>规格选择</h3><button type="button" className="picker-close" onClick={onClose}>×</button></div>
 
         <div className="spec-product-head">
@@ -1307,12 +1325,13 @@ function SpecPickerModal({ pageName, product, productFlashPriceInputMode, select
         </div>
 
         <div className="spec-table-wrap">
-          <table className="spec-table">
+          <table className={`spec-table ${isSpecialPricePage ? "spec-table-special" : ""}`}>
             <thead>
               <tr>
                 <th><input type="checkbox" checked={allSelectableSelected} disabled={selectableSpecs.length === 0} onChange={() => onToggleAllSpecs(product.id)} /></th>
                 <th>规格信息</th>
                 <th>商城价</th>
+                {!isSpecialPricePage ? <th>商品库存</th> : null}
                 <th><HeaderWithIcon label={isSpecialPricePage ? "专享价" : "限时价"} onIconClick={() => handleToggleSpecFieldEditMode("flashPrice")} isActive={specFieldEditModes.flashPrice} /></th>
                 <th><HeaderWithIcon label={isSpecialPricePage ? "专享价生效件数" : "限购数量"} onIconClick={() => handleToggleSpecFieldEditMode("totalLimit")} isActive={specFieldEditModes.totalLimit} /></th>
                 {!isSpecialPricePage ? <th><HeaderWithIcon label="活动库存" onIconClick={() => handleToggleSpecFieldEditMode("activityStock")} isActive={specFieldEditModes.activityStock} /></th> : null}
@@ -1362,7 +1381,8 @@ function SpecPickerModal({ pageName, product, productFlashPriceInputMode, select
                       </div>
                     </td>
                     <td>{row.marketPrice}</td>
-                    <td>{allowSpecFlashPriceEdit ? <input className={`spec-inline-input ${invalidSpecFields[row.id]?.flashPrice ? "is-error" : ""}`} value={row.flashPrice} onChange={(e) => handleSpecFieldChange(row.id, "flashPrice", e.target.value)} /> : <span className="spec-unified-label">{isSpecialPricePage ? "按商品维度生效" : product.flashPrice}</span>}</td>
+                    {!isSpecialPricePage ? <td>{row.stock}</td> : null}
+                    <td>{allowSpecFlashPriceEdit ? <input className={`spec-inline-input ${invalidSpecFields[row.id]?.flashPrice ? "is-error" : ""}`} value={row.flashPrice} onChange={(e) => handleSpecFieldChange(row.id, "flashPrice", e.target.value)} /> : <span className="spec-unified-label">按商品维度生效</span>}</td>
                     <td>
                       {allowSpecTotalLimitEdit ? <input className={`spec-inline-input ${invalidSpecFields[row.id]?.limitCount ? "is-error" : ""}`} value={row.limitCount} onChange={(e) => handleSpecFieldChange(row.id, "limitCount", e.target.value.replace(/[^\d]/g, ""))} /> : <span className="spec-unified-label">按商品维度生效</span>}
                     </td>
@@ -1387,6 +1407,14 @@ function SpecPickerModal({ pageName, product, productFlashPriceInputMode, select
       </div>
     </div>
   );
+}
+
+function SpecialPriceSpecPickerModal(props) {
+  return <SpecPickerModal {...props} pageName="专享价" />;
+}
+
+function SpecialPrice2SpecPickerModal(props) {
+  return <SpecPickerModal {...props} pageName="专享价2" />;
 }
 
 function BuyerListPage({ filters, onFiltersChange, rows, page, setPage, pageSize, setPageSize, expanded, onToggleExpanded, onActionClick }) {
@@ -1489,7 +1517,7 @@ function BuyerListPage({ filters, onFiltersChange, rows, page, setPage, pageSize
 }
 
 function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, selectedProducts, selectedGoodsIds, productFieldEditModesByProduct, productFieldErrorsByProduct, onToggleProductFieldEditMode, onToggleGoodsSelection, onRemoveProduct, onBatchRemoveProducts, onBack, onOpenPicker, onOpenSpecPicker, onUpdateProductFlashPrice, onUpdateProductLimit, onUpdateProductActivityStock, onSave, modalOpen }) {
-  const isSpecialPricePage = pageName === "专享价";
+  const isSpecialPricePage = isAnySpecialPricePage(pageName);
   const showUnpricedFilter = pageName === "限时购1" || pageName === "限时购";
   const filteredProducts = useMemo(() => selectedProducts.filter((product) => {
     const productKeyword = form.productKeyword.trim();
@@ -1557,7 +1585,7 @@ function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, 
     </>
   );
 
-  if (pageName === "专享价") {
+  if (isSpecialPricePage) {
     return (
       <section className="content-card special-create-card">
         <div className="special-create-layout">
@@ -1656,6 +1684,14 @@ function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, 
       </div>
     </section>
   );
+}
+
+function SpecialPriceCreatePage(props) {
+  return <CreatePage {...props} pageName="专享价" />;
+}
+
+function SpecialPrice2CreatePage(props) {
+  return <CreatePage {...props} pageName="专享价2" />;
 }
 
 function BuyerImportPage({ onBack, fileName, fileInputRef, onChooseFile, onFileChange, onImport }) {
@@ -1973,7 +2009,7 @@ export default function App() {
   };
 
   const createPickerDraftProducts = () => {
-    const catalogProducts = createInitialProducts(currentMarketingPage === "专享价" ? "1" : "0");
+    const catalogProducts = createInitialProducts(isAnySpecialPricePage(currentMarketingPage) ? "1" : "0");
     const catalogMap = new Map(catalogProducts.map((item) => [item.id, item]));
     const selectedMap = new Map(selectedProducts.map((item) => [item.id, item]));
 
@@ -2122,7 +2158,7 @@ export default function App() {
       return;
     }
 
-    const catalogProducts = createInitialProducts(currentMarketingPage === "专享价" ? "1" : "0");
+    const catalogProducts = createInitialProducts(isAnySpecialPricePage(currentMarketingPage) ? "1" : "0");
     const selectedCatalogProducts = catalogProducts
       .filter((item) => selectedPickerProductIds.includes(item.id))
       .map((item) => ({ ...JSON.parse(JSON.stringify(item)), flashPrice: "" }));
@@ -2402,7 +2438,7 @@ export default function App() {
     selectedProducts.forEach((product) => {
       const productFieldEditModes = productFieldEditModesByProduct?.[product.id] || initialProductFieldEditModes;
       const flashPriceDisplay = productFieldEditModes.flashPrice && hasSpecLevelFlashPrice(product) ? product.flashPrice : getProductFlashPriceDisplay(product);
-      const totalLimitDisplay = getProductTotalLimitInputValue(product, currentMarketingPage === "专享价");
+      const totalLimitDisplay = getProductTotalLimitInputValue(product, isAnySpecialPricePage(currentMarketingPage));
       const activityStockDisplay = hasSpecLevelActivityStock(product) ? getProductActivityStockDisplay(product) : product.activityStock;
 
       if (!hasValue(flashPriceDisplay)) {
@@ -2770,7 +2806,7 @@ export default function App() {
       </aside>
 
       <section className="workspace">
-        <Header currentMarketingPage={currentPageTitle} specialCreateTab={!isBuyerSection && isCreating && currentMarketingPage === "专享价" ? "新增专享价" : ""} />
+        <Header currentMarketingPage={currentPageTitle} specialCreateTab={!isBuyerSection && isCreating && (isPrimarySpecialPricePage(currentMarketingPage) || isSecondarySpecialPricePage(currentMarketingPage)) ? "新增专享价" : ""} />
         <main className="workspace-main">
           {isBuyerSection ? (
             activeBuyerPage === "导入买家" ? (
@@ -2798,15 +2834,15 @@ export default function App() {
             )
           ) : (
             <>
-              {(currentMarketingPage !== "专享价") ? <TabSection creating={isCreating} detailing={!isCreating && !!detailActivity} currentMarketingPage={currentMarketingPage} onSwitchToList={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); updateCurrentField("detailActivity", null); }} /> : null}
-              {isCreating ? <CreatePage pageName={currentMarketingPage} form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} productFieldEditModesByProduct={productFieldEditModesByProduct || {}} productFieldErrorsByProduct={productFieldErrorsByProduct || {}} onToggleProductFieldEditMode={handleToggleProductFieldEditMode} onToggleGoodsSelection={handleToggleGoodsSelection} onRemoveProduct={handleRemoveProduct} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} /> : detailActivity ? <DetailPage detailActivity={detailActivity} page={detailPage} setPage={(value) => updateCurrentField("detailPage", typeof value === "function" ? value(detailPage) : value)} pageSize={detailPageSize} setPageSize={(value) => updateCurrentField("detailPageSize", value)} onShowSpecDetail={setDetailSpecProduct} /> : <ListPage pageName={currentMarketingPage} filters={filters} setFilters={(value) => updateCurrentField("filters", value)} page={page} setPage={(value) => updateCurrentField("page", typeof value === "function" ? value(page) : value)} pageSize={pageSize} setPageSize={(value) => updateCurrentField("pageSize", value)} onCreate={() => { resetCreateState(); setIsCreating(true); updateCurrentField("detailActivity", null); }} onAction={handleActivityAction} activities={activities} />}
+              {!(isPrimarySpecialPricePage(currentMarketingPage) || isSecondarySpecialPricePage(currentMarketingPage)) ? <TabSection creating={isCreating} detailing={!isCreating && !!detailActivity} currentMarketingPage={currentMarketingPage} onSwitchToList={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); updateCurrentField("detailActivity", null); }} /> : null}
+              {isCreating ? (isPrimarySpecialPricePage(currentMarketingPage) ? <SpecialPriceCreatePage form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} productFieldEditModesByProduct={productFieldEditModesByProduct || {}} productFieldErrorsByProduct={productFieldErrorsByProduct || {}} onToggleProductFieldEditMode={handleToggleProductFieldEditMode} onToggleGoodsSelection={handleToggleGoodsSelection} onRemoveProduct={handleRemoveProduct} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} /> : isSecondarySpecialPricePage(currentMarketingPage) ? <SpecialPrice2CreatePage form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} productFieldEditModesByProduct={productFieldEditModesByProduct || {}} productFieldErrorsByProduct={productFieldErrorsByProduct || {}} onToggleProductFieldEditMode={handleToggleProductFieldEditMode} onToggleGoodsSelection={handleToggleGoodsSelection} onRemoveProduct={handleRemoveProduct} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} /> : <CreatePage pageName={currentMarketingPage} form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} productFieldEditModesByProduct={productFieldEditModesByProduct || {}} productFieldErrorsByProduct={productFieldErrorsByProduct || {}} onToggleProductFieldEditMode={handleToggleProductFieldEditMode} onToggleGoodsSelection={handleToggleGoodsSelection} onRemoveProduct={handleRemoveProduct} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} />) : detailActivity ? <DetailPage detailActivity={detailActivity} page={detailPage} setPage={(value) => updateCurrentField("detailPage", typeof value === "function" ? value(detailPage) : value)} pageSize={detailPageSize} setPageSize={(value) => updateCurrentField("detailPageSize", value)} onShowSpecDetail={setDetailSpecProduct} /> : <ListPage pageName={currentMarketingPage} filters={filters} setFilters={(value) => updateCurrentField("filters", value)} page={page} setPage={(value) => updateCurrentField("page", typeof value === "function" ? value(page) : value)} pageSize={pageSize} setPageSize={(value) => updateCurrentField("pageSize", value)} onCreate={() => { resetCreateState(); setIsCreating(true); updateCurrentField("detailActivity", null); }} onAction={handleActivityAction} activities={activities} />}
             </>
           )}
         </main>
       </section>
 
       {!isBuyerSection && isCreating && isPickerOpen ? <ProductPickerModal filters={pickerFilters} setFilters={(value) => updateCurrentField("pickerFilters", value)} selectedProductIds={selectedPickerProductIds} onToggleProduct={handleTogglePickerProduct} onSave={handleSavePicker} onClose={() => setIsPickerOpen(false)} confirmText={currentMarketingPage === "限时购" ? "下一步" : "保存"} /> : null}
-      {!isBuyerSection && isCreating && isSpecOpen ? <SpecPickerModal pageName={currentMarketingPage} product={activeSpecProduct} productFlashPriceInputMode={activeSpecProductFlashPriceInputMode} selectedSpecIds={activeSpecSelectedIds} onToggleSpecSelection={handleToggleSpecSelection} onToggleAllSpecs={handleToggleAllSpecSelections} onBatchToggleSpecs={handleBatchToggleSpecs} onClose={() => { setIsSpecOpen(false); setActiveSpecProductId(""); }} onUpdateSpecField={handleUpdateSpecField} onToggleSpecStatus={handleToggleSpecStatus} onShowToast={setToastMessage} /> : null}
+      {!isBuyerSection && isCreating && isSpecOpen ? (isPrimarySpecialPricePage(currentMarketingPage) ? <SpecialPriceSpecPickerModal product={activeSpecProduct} productFlashPriceInputMode={activeSpecProductFlashPriceInputMode} selectedSpecIds={activeSpecSelectedIds} onToggleSpecSelection={handleToggleSpecSelection} onToggleAllSpecs={handleToggleAllSpecSelections} onBatchToggleSpecs={handleBatchToggleSpecs} onClose={() => { setIsSpecOpen(false); setActiveSpecProductId(""); }} onUpdateSpecField={handleUpdateSpecField} onToggleSpecStatus={handleToggleSpecStatus} onShowToast={setToastMessage} /> : isSecondarySpecialPricePage(currentMarketingPage) ? <SpecialPrice2SpecPickerModal product={activeSpecProduct} productFlashPriceInputMode={activeSpecProductFlashPriceInputMode} selectedSpecIds={activeSpecSelectedIds} onToggleSpecSelection={handleToggleSpecSelection} onToggleAllSpecs={handleToggleAllSpecSelections} onBatchToggleSpecs={handleBatchToggleSpecs} onClose={() => { setIsSpecOpen(false); setActiveSpecProductId(""); }} onUpdateSpecField={handleUpdateSpecField} onToggleSpecStatus={handleToggleSpecStatus} onShowToast={setToastMessage} /> : <SpecPickerModal pageName={currentMarketingPage} product={activeSpecProduct} productFlashPriceInputMode={activeSpecProductFlashPriceInputMode} selectedSpecIds={activeSpecSelectedIds} onToggleSpecSelection={handleToggleSpecSelection} onToggleAllSpecs={handleToggleAllSpecSelections} onBatchToggleSpecs={handleBatchToggleSpecs} onClose={() => { setIsSpecOpen(false); setActiveSpecProductId(""); }} onUpdateSpecField={handleUpdateSpecField} onToggleSpecStatus={handleToggleSpecStatus} onShowToast={setToastMessage} />) : null}
       {!isBuyerSection && isCreating && isBatchSpecOpen && currentMarketingPage === "限时购" ? <BatchSpecStepModal products={batchSpecDraftProducts} selectedSpecIdsByProduct={batchSpecSelectedIdsByProduct} onToggleSpecSelection={handleBatchDraftToggleSpecSelection} onToggleAllSpecs={handleBatchDraftToggleAllSpecs} onBatchToggleSpecs={handleBatchDraftToggleSpecs} onClose={handleCloseBatchSpec} onSave={handleBatchSpecSave} onUpdateProductLimit={handleBatchDraftProductLimit} onUpdateProductActivityStock={handleBatchDraftProductActivityStock} onUpdateSpecField={handleBatchDraftSpecField} onToggleSpecStatus={handleBatchDraftToggleSpecStatus} onShowToast={setToastMessage} /> : null}
       {!isBuyerSection && !isCreating && detailSpecProduct ? <DetailSpecModal product={detailSpecProduct} onClose={() => setDetailSpecProduct(null)} /> : null}
       {isBuyerSection ? <AddBuyerModal open={isAddBuyerOpen} groupOptions={buyerGroupOptions} form={newBuyerForm} discountInvalid={newBuyerDiscountInvalid || isBuyerDiscountInvalid(newBuyerForm.discount)} onFormChange={(updater) => { setNewBuyerDiscountInvalid(false); setNewBuyerForm(updater); }} onClose={() => { setIsAddBuyerOpen(false); setNewBuyerDiscountInvalid(false); }} onSave={handleSaveNewBuyer} /> : null}
