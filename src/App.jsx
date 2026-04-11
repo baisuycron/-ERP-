@@ -3034,9 +3034,10 @@ function ShopInvoicePage() {
     const visibleLeftColumns = leftZoneColumns.filter((column) => shopInvoiceColumnPrefs[column.key]?.visible !== false);
     const visibleMiddleColumns = middleZoneColumns.filter((column) => shopInvoiceColumnPrefs[column.key]?.visible !== false);
     const visibleRightColumns = rightZoneColumns.filter((column) => shopInvoiceColumnPrefs[column.key]?.visible !== false);
+    const shouldShowSelectColumn = ["全部", "待开票", "已开票"].includes(activeInvoiceStatusTab);
 
-    return [fixedSelectColumn, ...visibleLeftColumns, ...visibleMiddleColumns, ...visibleRightColumns].filter(Boolean);
-  }, [leftZoneColumns, middleZoneColumns, rightZoneColumns, shopInvoiceColumnPrefs]);
+    return [shouldShowSelectColumn ? fixedSelectColumn : null, ...visibleLeftColumns, ...visibleMiddleColumns, ...visibleRightColumns].filter(Boolean);
+  }, [activeInvoiceStatusTab, leftZoneColumns, middleZoneColumns, rightZoneColumns, shopInvoiceColumnPrefs]);
   const rightFrozenColumnKeys = useMemo(() => (
     visibleColumns.filter((column) => shopInvoiceColumnPrefs[column.key]?.freeze === "right").map((column) => column.key)
   ), [shopInvoiceColumnPrefs, visibleColumns]);
@@ -3127,6 +3128,7 @@ function ShopInvoicePage() {
   const showConfirmBatchToolbar = activeInvoiceStatusTab === "全部" || activeInvoiceStatusTab === "待开票";
   const showModifyBatchToolbar = activeInvoiceStatusTab === "已开票";
   const showBatchRejectAction = activeInvoiceStatusTab === "全部" || activeInvoiceStatusTab === "待开票";
+  const showSelectableCheckboxes = showConfirmBatchToolbar || showModifyBatchToolbar;
   const activeSelectableRows = showModifyBatchToolbar
     ? selectableModifyRows
     : isAllInvoiceStatusTab
@@ -4093,7 +4095,9 @@ function ShopInvoicePage() {
                 {visibleColumns.map((column) => (
                   <th className={getColumnClassName(column, "header")} key={column.key} style={getColumnStyle(column)}>
                     {column.key === "select"
-                      ? <input type="checkbox" checked={allSelectableInvoiceRowsSelected} onChange={(e) => handleToggleAllSelectableRows(e.target.checked)} />
+                      ? showSelectableCheckboxes
+                        ? <input type="checkbox" checked={allSelectableInvoiceRowsSelected} onChange={(e) => handleToggleAllSelectableRows(e.target.checked)} />
+                        : null
                       : column.renderHeader ? column.renderHeader() : column.label}
                   </th>
                 ))}
@@ -4105,20 +4109,22 @@ function ShopInvoicePage() {
                   {visibleColumns.map((column) => (
                     <td className={getColumnClassName(column, "cell")} key={column.key} style={getColumnStyle(column)}>
                       {column.key === "select"
-                        ? (
-                          <input
-                            type="checkbox"
-                            checked={activeSelectedOrderNos.includes(item.orderNo)}
-                            disabled={
-                              showModifyBatchToolbar
-                                ? item.invoiceStatus !== "已开票"
-                                : isAllInvoiceStatusTab
-                                  ? !["待开票", "已开票"].includes(item.invoiceStatus)
-                                  : item.invoiceStatus !== "待开票"
-                            }
-                            onChange={() => handleToggleSelectableRow(item.orderNo)}
-                          />
-                        )
+                        ? showSelectableCheckboxes
+                          ? (
+                            <input
+                              type="checkbox"
+                              checked={activeSelectedOrderNos.includes(item.orderNo)}
+                              disabled={
+                                showModifyBatchToolbar
+                                  ? item.invoiceStatus !== "已开票"
+                                  : isAllInvoiceStatusTab
+                                    ? !["待开票", "已开票"].includes(item.invoiceStatus)
+                                    : item.invoiceStatus !== "待开票"
+                              }
+                              onChange={() => handleToggleSelectableRow(item.orderNo)}
+                            />
+                          )
+                          : null
                         : column.key === "orderNo"
                           ? (
                             <button className="buyer-link-btn" type="button" onClick={() => handleOpenOrderDetail(item.orderNo)}>
