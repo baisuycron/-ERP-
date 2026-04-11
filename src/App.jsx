@@ -69,6 +69,32 @@ const pickerRows = [
   { id: "123456", name: "百岁山天然矿泉水570m", stock: 319, marketPrice: "￥30~50", specCount: 6, image: "百" },
   { id: "162101", name: "景田饮用纯净水560ml", stock: 1633, marketPrice: "￥100", specCount: 1, image: "景" }
 ];
+const buyerPcMallOrderTabs = ["待申请开票(20)", "已申请开票(13)", "已开具发票"];
+const buyerPcMallSidebarGroups = [
+  { title: "商家中心" },
+  { title: "订单中心", items: ["我的订单", "咨询管理", "评价管理", "采购统计"] },
+  { title: "资产中心", items: ["我的优惠券"] },
+  { title: "我的关注", items: ["商品关注", "店铺关注", "常购清单"] },
+  { title: "售后服务", items: ["退款退货", "投诉维权", "平台客服"] },
+  { title: "账户管理", items: ["收货地址管理", "发票管理", "个人信息", "账户安全管理", "身份认证"], activeItem: "发票管理" }
+];
+const buyerPcMallInvoiceRows = [
+  { orderNo: "20260212022895768", product: "小米13 Pro 5G手机", spec: "12GB+256GB 陶瓷黑", price: "¥5,299.00", time: "2023-05-28 14:30", shop: "胖子炒货", store: "闪购一店", storeId: "ID:121301", status: "待申请", productTone: "phone" },
+  { orderNo: "20260212022895769", product: "索尼 WH-1000XM5 耳机", spec: "黑色 降噪版", price: "¥2,499.00", time: "2023-06-15 09:45", shop: "老百姓大药房", store: "闪购二店", storeId: "ID:121302", status: "待申请", productTone: "earphone" },
+  { orderNo: "20260212022895770", product: "美的破壁料理机", spec: "MJ-BL1543A 1.75L", price: "¥899.00", time: "2023-07-02 16:20", shop: "天猫超市", store: "-", storeId: "", status: "已驳回", extraStatus: "查看原因", productTone: "appliance" },
+  { orderNo: "20260212022895771", product: "海信 75E3F 75英寸电视", spec: "4K超高清 智能语音", price: "¥4,999.00", time: "2023-07-18 11:15", shop: "苏宁易购", store: "-", storeId: "", status: "已驳回", extraStatus: "查看原因", productTone: "tv" },
+  { orderNo: "20260212022895772", product: "米家空气净化器Pro H", spec: "AC-M7-SC 除甲醛", price: "¥1,699.00", time: "2023-08-05 13:50", shop: "小米有品", store: "-", storeId: "", status: "已撤销", productTone: "purifier" },
+  { orderNo: "20260212022895773", product: "联想小新Pro16 2023", spec: "i7-13700H 32G 1TB RTX4050", price: "¥8,999.00", time: "2023-08-22 10:30", shop: "京东商城", store: "-", storeId: "", status: "已撤销", productTone: "laptop" }
+];
+const buyerPcMallAppliedInvoiceRows = [
+  { orderNo: "202306150010002", invoiceTitle: "北京科技有限公司", invoiceType: "电子增值税专用发票", invoiceTypeTone: "blue", amount: "¥12,568.00", appliedAt: "2023-06-15 14:30", shop: "北京科技有限公司", store: "北京朝阳门店", storeId: "(102325)", status: "已申请" },
+  { orderNo: "202306100020003", invoiceTitle: "上海浦东门店", invoiceType: "电子增值税专用发票", invoiceTypeTone: "blue", amount: "¥8,420.00", appliedAt: "2023-06-10 10:15", shop: "上海贸易有限公司", store: "北京朝阳门店", storeId: "(102325)", status: "已申请" },
+  { orderNo: "202306050030001", invoiceTitle: "广州天河门店", invoiceType: "电子普通发票", invoiceTypeTone: "purple", amount: "¥3,150.00", appliedAt: "2023-06-05 16:45", shop: "广州科技股份有限公司", store: "北京朝阳门店", storeId: "(102325)", status: "已申请" },
+  { orderNo: "202305280040005", invoiceTitle: "深圳南山门店", invoiceType: "电子增值税专用发票", invoiceTypeTone: "blue", amount: "¥6,780.00", appliedAt: "2023-05-28 09:20", shop: "深圳电子有限公司", store: "北京朝阳门店", storeId: "(102325)", status: "已申请" },
+  { orderNo: "202305200050006", invoiceTitle: "杭州西湖门店", invoiceType: "电子普通发票", invoiceTypeTone: "purple", amount: "¥4,250.00", appliedAt: "2023-05-20 13:10", shop: "杭州服饰有限公司", store: "北京朝阳门店", storeId: "(102325)", status: "已申请" }
+];
+const buyerPcMallAccountOptions = ["wujing146(总部)", "nfsq369(子账号)", "shawnee003(总部)", "lgq01(默认账号)"];
+const buyerPcMallStatusOptions = ["待申请", "已驳回", "已撤销"];
 
 const emptyFilters = { status: "全部", dateRange: "", activityName: "", activityId: "", productId: "", specId: "", productName: "" };
 const createSpecialPricePageConfig = () => ({
@@ -633,8 +659,620 @@ function SidebarIcon({ type }) {
       return null;
   }
 }
-function Header({ currentMarketingPage, specialCreateTab }) {
+
+function TopActionIcon({ type }) {
+  const commonProps = { width: 14, height: 14, viewBox: "0 0 16 16", fill: "none", xmlns: "http://www.w3.org/2000/svg", "aria-hidden": true };
+
+  switch (type) {
+    case "pc-mall":
+      return <svg {...commonProps}><rect x="2.1" y="2.7" width="11.8" height="8.2" rx="1.2" stroke="currentColor" strokeWidth="1.2" /><path d="M5.2 13.1h5.6M8 10.9v2.2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" /></svg>;
+    case "miniapp-mall":
+      return <svg {...commonProps}><circle cx="7" cy="8" r="4.1" stroke="currentColor" strokeWidth="1.2" /><path d="M9.4 6.2a2.5 2.5 0 0 0-3.7 3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" /><circle cx="10.8" cy="5.4" r="1.1" stroke="currentColor" strokeWidth="1.2" /></svg>;
+    case "service":
+      return <svg {...commonProps}><path d="M3.3 9.6a4.7 4.7 0 0 1 9.4 0" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" /><rect x="2.4" y="8.9" width="2.1" height="3.2" rx="1" stroke="currentColor" strokeWidth="1.2" /><rect x="11.5" y="8.9" width="2.1" height="3.2" rx="1" stroke="currentColor" strokeWidth="1.2" /><path d="M8 12.1v1.1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" /></svg>;
+    case "todo":
+      return <svg {...commonProps}><rect x="3" y="2.8" width="10" height="10.4" rx="1.3" stroke="currentColor" strokeWidth="1.2" /><path d="M5.5 6.2h5M5.5 9h5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" /></svg>;
+    case "export":
+      return <svg {...commonProps}><path d="M8 2.8v6.1M5.8 6.8 8 9l2.2-2.2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /><path d="M3.2 10.2v1.6c0 .7.5 1.2 1.2 1.2h7.2c.7 0 1.2-.5 1.2-1.2v-1.6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" /></svg>;
+    case "logout":
+      return <svg {...commonProps}><path d="M6.5 3.2H4.4c-.7 0-1.2.5-1.2 1.2v7.2c0 .7.5 1.2 1.2 1.2h2.1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" /><path d="M8.1 5.2 10.9 8l-2.8 2.8M10.9 8H6.2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+    default:
+      return null;
+  }
+}
+
+function formatPcMallDateRangeValue(startDate, endDate) {
+  if (startDate && endDate) return `${startDate} ～ ${endDate}`;
+  if (startDate) return `${startDate} ～`;
+  if (endDate) return `～ ${endDate}`;
+  return "";
+}
+
+function getMonthStart(date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function formatPcMallCalendarDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function buildPcMallCalendarDays(monthDate) {
+  const year = monthDate.getFullYear();
+  const month = monthDate.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const firstWeekday = (firstDay.getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysInPrevMonth = new Date(year, month, 0).getDate();
+  const cells = [];
+
+  for (let index = firstWeekday - 1; index >= 0; index -= 1) {
+    const date = new Date(year, month - 1, daysInPrevMonth - index);
+    cells.push({ key: formatPcMallCalendarDate(date), label: date.getDate(), date, isCurrentMonth: false });
+  }
+
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    const date = new Date(year, month, day);
+    cells.push({ key: formatPcMallCalendarDate(date), label: day, date, isCurrentMonth: true });
+  }
+
+  while (cells.length < 42) {
+    const day = cells.length - (firstWeekday + daysInMonth) + 1;
+    const date = new Date(year, month + 1, day);
+    cells.push({ key: formatPcMallCalendarDate(date), label: date.getDate(), date, isCurrentMonth: false });
+  }
+
+  return cells;
+}
+
+function PcMallRangeCalendar({ monthDate, onChangeMonth, startDate, endDate, onSelectDate }) {
+  const monthLabel = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, "0")}`;
+  const startValue = startDate ? new Date(`${startDate}T00:00:00`) : null;
+  const endValue = endDate ? new Date(`${endDate}T00:00:00`) : null;
+  const days = buildPcMallCalendarDays(monthDate);
+
+  return (
+    <div className="pc-mall-range-calendar">
+      <div className="pc-mall-range-calendar-head">
+        <button type="button" onClick={() => onChangeMonth(-1)}>‹</button>
+        <strong>{monthLabel}</strong>
+        <button type="button" onClick={() => onChangeMonth(1)}>›</button>
+      </div>
+      <div className="pc-mall-range-calendar-weekdays">
+        {["一", "二", "三", "四", "五", "六", "日"].map((day) => <span key={day}>{day}</span>)}
+      </div>
+      <div className="pc-mall-range-calendar-grid">
+        {days.map((item) => {
+          const dateValue = item.date.getTime();
+          const isStart = startValue ? dateValue === startValue.getTime() : false;
+          const isEnd = endValue ? dateValue === endValue.getTime() : false;
+          const isInRange = startValue && endValue ? dateValue > startValue.getTime() && dateValue < endValue.getTime() : false;
+
+          return (
+            <button
+              className={`pc-mall-range-day ${item.isCurrentMonth ? "" : "is-outside"} ${isInRange ? "is-in-range" : ""} ${isStart || isEnd ? "is-selected" : ""}`}
+              key={item.key}
+              type="button"
+              onClick={() => onSelectDate(formatPcMallCalendarDate(item.date))}
+            >
+              {item.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function PcMallDateRangeField({ placeholder }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [viewMonth, setViewMonth] = useState(() => getMonthStart(new Date()));
+  const fieldRef = useRef(null);
+  const displayValue = formatPcMallDateRangeValue(startDate, endDate);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const handlePointerDown = (event) => {
+      if (!fieldRef.current?.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+    };
+  }, [isOpen]);
+
+  const handleSelectDate = (dateValue) => {
+    if (!startDate || (startDate && endDate)) {
+      setStartDate(dateValue);
+      setEndDate("");
+      return;
+    }
+
+    if (dateValue < startDate) {
+      setStartDate(dateValue);
+      return;
+    }
+
+    setEndDate(dateValue);
+  };
+
+  return (
+    <div className={`pc-mall-date-field ${isOpen ? "is-open" : ""}`} ref={fieldRef}>
+      <button className="pc-mall-date-trigger" type="button" onClick={() => setIsOpen((current) => !current)}>
+        <span className={`pc-mall-date-trigger-text ${displayValue ? "has-value" : ""}`}>{displayValue || placeholder}</span>
+        <i>◫</i>
+      </button>
+      {isOpen ? (
+        <div className="pc-mall-date-popover">
+          <div className="pc-mall-date-popover-summary">
+            <span>{startDate || "开始日期"}</span>
+            <em>至</em>
+            <span>{endDate || "结束日期"}</span>
+          </div>
+          <PcMallRangeCalendar
+            monthDate={viewMonth}
+            onChangeMonth={(offset) => setViewMonth((current) => new Date(current.getFullYear(), current.getMonth() + offset, 1))}
+            startDate={startDate}
+            endDate={endDate}
+            onSelectDate={handleSelectDate}
+          />
+          <div className="pc-mall-date-popover-actions">
+            <button className="pc-mall-btn" type="button" onClick={() => { setStartDate(""); setEndDate(""); }}>清空</button>
+            <button className="pc-mall-btn pc-mall-btn-primary" type="button" onClick={() => setIsOpen(false)}>确定</button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function PcMallMultiSelect({ options, values, onChange, placeholder = "请选择" }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const handlePointerDown = (event) => {
+      if (!wrapperRef.current?.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+    };
+  }, [isOpen]);
+
+  const handleToggleOption = (option) => {
+    onChange(
+      values.includes(option)
+        ? values.filter((item) => item !== option)
+        : [...values, option]
+    );
+  };
+
+  return (
+    <div className={`pc-mall-multi-select ${isOpen ? "is-open" : ""}`} ref={wrapperRef}>
+      <button className="pc-mall-multi-select-trigger" type="button" onClick={() => setIsOpen((current) => !current)}>
+        {values.length > 0 ? (
+          <span className="pc-mall-multi-select-tags">
+            {values.map((value) => (
+              <span className="pc-mall-multi-select-tag" key={value}>
+                <span className="pc-mall-multi-select-tag-label">{value}</span>
+                <span
+                  aria-label={`删除${value}`}
+                  className="pc-mall-multi-select-tag-remove"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    handleToggleOption(value);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      handleToggleOption(value);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                >
+                  ×
+                </span>
+              </span>
+            ))}
+          </span>
+        ) : (
+          <span className="pc-mall-multi-select-text">{placeholder}</span>
+        )}
+        <i aria-hidden="true" />
+      </button>
+      {isOpen ? (
+        <div className="pc-mall-multi-select-menu">
+          {options.map((option) => (
+            <label className="pc-mall-multi-select-option" key={option}>
+              <input type="checkbox" checked={values.includes(option)} onChange={() => handleToggleOption(option)} />
+              <span>{option}</span>
+            </label>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function BuyerPcMallPage({ onPortalActionClick }) {
+  const [activeTab, setActiveTab] = useState(buyerPcMallOrderTabs[0]);
+  const [selectedInvoiceOrderNos, setSelectedInvoiceOrderNos] = useState([buyerPcMallInvoiceRows[0].orderNo]);
+  const [selectedAppliedInvoiceOrderNos, setSelectedAppliedInvoiceOrderNos] = useState([]);
+  const [selectedPendingAccounts, setSelectedPendingAccounts] = useState(["wujing146(总部)"]);
+  const [selectedPendingStatuses, setSelectedPendingStatuses] = useState(["待申请", "已驳回", "已撤销"]);
+  const [selectedAppliedAccounts, setSelectedAppliedAccounts] = useState([]);
+  const allInvoiceRowsSelected = buyerPcMallInvoiceRows.length > 0 && selectedInvoiceOrderNos.length === buyerPcMallInvoiceRows.length;
+  const allAppliedInvoiceRowsSelected = buyerPcMallAppliedInvoiceRows.length > 0 && selectedAppliedInvoiceOrderNos.length === buyerPcMallAppliedInvoiceRows.length;
+  const selectedInvoiceSummary = useMemo(() => {
+    const selectedOrderSet = new Set(selectedInvoiceOrderNos);
+    const selectedRows = buyerPcMallInvoiceRows.filter((item) => selectedOrderSet.has(item.orderNo));
+    const totalAmount = selectedRows.reduce((sum, item) => sum + (getPriceNumber(item.price) || 0), 0);
+
+    return {
+      count: selectedRows.length,
+      totalAmount
+    };
+  }, [selectedInvoiceOrderNos]);
+  const selectedAppliedInvoiceSummary = useMemo(() => {
+    const selectedOrderSet = new Set(selectedAppliedInvoiceOrderNos);
+    const selectedRows = buyerPcMallAppliedInvoiceRows.filter((item) => selectedOrderSet.has(item.orderNo));
+    const totalAmount = selectedRows.reduce((sum, item) => sum + (getPriceNumber(item.amount) || 0), 0);
+
+    return {
+      count: selectedRows.length,
+      totalAmount
+    };
+  }, [selectedAppliedInvoiceOrderNos]);
+
+  const handleToggleAllInvoiceRows = (checked) => {
+    setSelectedInvoiceOrderNos(checked ? buyerPcMallInvoiceRows.map((item) => item.orderNo) : []);
+  };
+
+  const handleToggleInvoiceRow = (orderNo) => {
+    setSelectedInvoiceOrderNos((current) => (
+      current.includes(orderNo)
+        ? current.filter((item) => item !== orderNo)
+        : [...current, orderNo]
+    ));
+  };
+
+  const handleToggleAllAppliedInvoiceRows = (checked) => {
+    setSelectedAppliedInvoiceOrderNos(checked ? buyerPcMallAppliedInvoiceRows.map((item) => item.orderNo) : []);
+  };
+
+  const handleToggleAppliedInvoiceRow = (orderNo) => {
+    setSelectedAppliedInvoiceOrderNos((current) => (
+      current.includes(orderNo)
+        ? current.filter((item) => item !== orderNo)
+        : [...current, orderNo]
+    ));
+  };
+
+  const isPendingTab = activeTab === buyerPcMallOrderTabs[0];
+  const isAppliedTab = activeTab === buyerPcMallOrderTabs[1];
+
+  return (
+    <div className="pc-mall-shell">
+      <header className="pc-mall-topbar">
+        <div className="pc-mall-topbar-inner">
+          <div className="pc-mall-brand">
+            <span className="pc-mall-brand-mark">⬆</span>
+            <span className="pc-mall-brand-name">闪电帮帮</span>
+            <span className="pc-mall-brand-account">NFSQ369（ID:13641）</span>
+            <button className="pc-mall-toplink" type="button">退出</button>
+          </div>
+          <div className="pc-mall-toplinks">
+            <button className="pc-mall-toplink pc-mall-portal-entry" type="button" onClick={() => onPortalActionClick?.("operations-admin")}>运营后台</button>
+            <button className="pc-mall-toplink pc-mall-portal-entry" type="button" onClick={() => onPortalActionClick?.("supplier-admin")}>供应商后台</button>
+            <button className="pc-mall-toplink pc-mall-portal-entry" type="button" onClick={() => onPortalActionClick?.("miniapp-mall")}>买家小程序商城</button>
+            <button className="pc-mall-toplink" type="button">我的美团闪电帮帮</button>
+            <button className="pc-mall-toplink pc-mall-cart" type="button">购物车(24)</button>
+            <button className="pc-mall-toplink" type="button">微信小程序</button>
+            <button className="pc-mall-toplink" type="button">卖家中心⌄</button>
+            <button className="pc-mall-toplink" type="button">客户中心⌄</button>
+          </div>
+        </div>
+      </header>
+
+      <div className="pc-mall-main">
+        <aside className="pc-mall-sidebar">
+          {buyerPcMallSidebarGroups.map((group) => (
+            <section className="pc-mall-side-group" key={group.title}>
+              <h3>{group.title}</h3>
+              {group.items ? (
+                <div className="pc-mall-side-links">
+                  {group.items.map((item) => (
+                    <button className={`pc-mall-side-link ${group.activeItem === item ? "is-active" : ""}`} key={item} type="button">{item}</button>
+                  ))}
+                </div>
+              ) : null}
+            </section>
+          ))}
+        </aside>
+
+        <section className="pc-mall-content">
+          <div className="pc-mall-breadcrumb">商家中心 <span>››</span> 发票管理</div>
+          <div className="pc-mall-panel">
+            <div className="pc-mall-panel-header">
+              <h1>发票管理</h1>
+            </div>
+
+            <div className="pc-mall-tabbar">
+              <div className="pc-mall-tabs">
+                {buyerPcMallOrderTabs.map((tab) => (
+                  <button className={`pc-mall-tab ${activeTab === tab ? "is-active" : ""}`} key={tab} type="button" onClick={() => setActiveTab(tab)}>
+                    {tab}
+                  </button>
+                ))}
+              </div>
+              <button className="pc-mall-invoice-type-btn" type="button">发票抬头管理</button>
+            </div>
+
+            {isPendingTab ? (
+              <>
+                <section className="pc-mall-filter-card">
+                  <div className="pc-mall-filter-grid">
+                    <label className="pc-mall-filter-field">
+                      <span>订单关键词</span>
+                      <input defaultValue="支持订单号/商品名称/店铺名称/快递单号/商品ID" />
+                    </label>
+                    <label className="pc-mall-filter-field">
+                      <span>下单时间</span>
+                      <PcMallDateRangeField placeholder="开始日期 ～ 结束日期" />
+                    </label>
+                    <label className="pc-mall-filter-field">
+                      <span>下单账号</span>
+                      <PcMallMultiSelect options={buyerPcMallAccountOptions} values={selectedPendingAccounts} onChange={setSelectedPendingAccounts} placeholder="请选择下单账号" />
+                    </label>
+                    <label className="pc-mall-filter-field">
+                      <span>闪购门店</span>
+                      <input placeholder="请输入闪购门店名称" />
+                    </label>
+                    <label className="pc-mall-filter-field">
+                      <span>闪购门店ID</span>
+                      <input defaultValue="169146" />
+                    </label>
+                    <label className="pc-mall-filter-field">
+                      <span>申请状态</span>
+                      <PcMallMultiSelect options={buyerPcMallStatusOptions} values={selectedPendingStatuses} onChange={setSelectedPendingStatuses} placeholder="请选择申请状态" />
+                    </label>
+                  </div>
+                  <div className="pc-mall-filter-actions">
+                    <button className="pc-mall-btn pc-mall-btn-primary" type="button">查询</button>
+                    <button className="pc-mall-btn" type="button">重置</button>
+                  </div>
+                </section>
+
+                <div className="pc-mall-table-toolbar">
+                  <div className="pc-mall-toolbar-left">
+                    <button className="pc-mall-batch-btn" type="button">批量申请开票</button>
+                    <div className="pc-mall-toolbar-summary">已选中 {selectedInvoiceSummary.count} 笔订单，合计金额： <strong>{`￥${selectedInvoiceSummary.totalAmount.toFixed(2)}`}</strong></div>
+                  </div>
+                  <button className="pc-mall-btn pc-mall-export-btn" type="button">导出数据</button>
+                </div>
+
+                <div className="pc-mall-table-wrap">
+                  <table className="pc-mall-table">
+                    <thead>
+                      <tr>
+                        <th><input type="checkbox" checked={allInvoiceRowsSelected} onChange={(e) => handleToggleAllInvoiceRows(e.target.checked)} /></th>
+                        <th>订单号</th>
+                        <th>商品信息</th>
+                        <th>订单实付金额</th>
+                        <th>下单时间</th>
+                        <th>店铺名称</th>
+                        <th>闪购门店</th>
+                        <th>申请状态</th>
+                        <th>发票操作</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {buyerPcMallInvoiceRows.map((item) => (
+                        <tr key={item.orderNo}>
+                          <td><input type="checkbox" checked={selectedInvoiceOrderNos.includes(item.orderNo)} onChange={() => handleToggleInvoiceRow(item.orderNo)} /></td>
+                          <td><button className="pc-mall-order-link" type="button">{item.orderNo}</button></td>
+                          <td>
+                            <div className="pc-mall-product-cell">
+                              <div className={`pc-mall-product-thumb is-${item.productTone}`} />
+                              <div className="pc-mall-product-meta">
+                                <div className="pc-mall-product-name">{item.product}</div>
+                                <div className="pc-mall-product-spec">{item.spec}</div>
+                              </div>
+                              <button className="pc-mall-more-link" type="button">更多</button>
+                            </div>
+                          </td>
+                          <td>{item.price}</td>
+                          <td>{item.time}</td>
+                          <td>{item.shop}</td>
+                          <td>
+                            <div className="pc-mall-store-cell">
+                              <div>{item.store}</div>
+                              {item.storeId ? <div>{item.storeId}</div> : null}
+                            </div>
+                          </td>
+                          <td>
+                            <div className="pc-mall-status-cell">
+                              <span>{item.status}</span>
+                              {item.extraStatus ? <button className="pc-mall-inline-link" type="button">{item.extraStatus}</button> : null}
+                            </div>
+                          </td>
+                          <td>
+                            <div className="pc-mall-action-cell">
+                              <button className="pc-mall-contact-btn" type="button">联系卖家</button>
+                              <button className="pc-mall-apply-btn" type="button">申请开票</button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            ) : null}
+
+            {isAppliedTab ? (
+              <>
+                <section className="pc-mall-filter-card pc-mall-filter-card-applied">
+                  <div className="pc-mall-filter-grid pc-mall-filter-grid-applied">
+                    <label className="pc-mall-filter-field">
+                      <span>订单关键字</span>
+                      <div className="pc-mall-input-with-icon">
+                        <input placeholder="输入订单号/商品名称" />
+                        <i>⌕</i>
+                      </div>
+                    </label>
+                    <label className="pc-mall-filter-field">
+                      <span>下单账号</span>
+                      <PcMallMultiSelect options={buyerPcMallAccountOptions} values={selectedAppliedAccounts} onChange={setSelectedAppliedAccounts} placeholder="请选择下单账号" />
+                    </label>
+                    <label className="pc-mall-filter-field">
+                      <span>闪购门店</span>
+                      <input placeholder="输入门店名称" />
+                    </label>
+                    <label className="pc-mall-filter-field">
+                      <span>闪购门店ID</span>
+                      <input placeholder="输入门店ID" />
+                    </label>
+                    <label className="pc-mall-filter-field">
+                      <span>发票抬头</span>
+                      <input placeholder="输入发票抬头" />
+                    </label>
+                    <label className="pc-mall-filter-field">
+                      <span>纳税人识别号</span>
+                      <input placeholder="输入纳税人识别号" />
+                    </label>
+                    <label className="pc-mall-filter-field">
+                      <span>下单时间</span>
+                      <PcMallDateRangeField placeholder="开始日期 ～ 结束日期" />
+                    </label>
+                    <label className="pc-mall-filter-field">
+                      <span>申请时间</span>
+                      <PcMallDateRangeField placeholder="开始日期 ～ 结束日期" />
+                    </label>
+                  </div>
+                  <div className="pc-mall-filter-actions pc-mall-filter-actions-applied">
+                    <button className="pc-mall-btn pc-mall-btn-primary" type="button">查询</button>
+                    <button className="pc-mall-btn" type="button">重置</button>
+                  </div>
+                </section>
+
+                <div className="pc-mall-table-toolbar">
+                  <div className="pc-mall-toolbar-left">
+                    <button className="pc-mall-btn pc-mall-toolbar-btn" type="button">批量修改</button>
+                    <button className="pc-mall-btn pc-mall-toolbar-btn" type="button">批量撤销</button>
+                    <div className="pc-mall-toolbar-summary">已选中 {selectedAppliedInvoiceSummary.count} 笔订单，申请开票金额合计： <strong>{`￥${selectedAppliedInvoiceSummary.totalAmount.toFixed(2)}`}</strong></div>
+                  </div>
+                  <button className="pc-mall-btn pc-mall-export-btn" type="button">导出数据</button>
+                </div>
+
+                <div className="pc-mall-table-wrap">
+                  <table className="pc-mall-table pc-mall-table-applied">
+                    <thead>
+                      <tr>
+                        <th><input type="checkbox" checked={allAppliedInvoiceRowsSelected} onChange={(e) => handleToggleAllAppliedInvoiceRows(e.target.checked)} /></th>
+                        <th>订单号</th>
+                        <th>发票抬头</th>
+                        <th>发票类型</th>
+                        <th>申请开票金额</th>
+                        <th>申请时间</th>
+                        <th>店铺名称</th>
+                        <th>闪购门店</th>
+                        <th>开票状态</th>
+                        <th>发票操作</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {buyerPcMallAppliedInvoiceRows.map((item) => (
+                        <tr key={item.orderNo}>
+                          <td><input type="checkbox" checked={selectedAppliedInvoiceOrderNos.includes(item.orderNo)} onChange={() => handleToggleAppliedInvoiceRow(item.orderNo)} /></td>
+                          <td><button className="pc-mall-order-link" type="button">{item.orderNo}</button></td>
+                          <td>{item.invoiceTitle}</td>
+                          <td><span className={`pc-mall-invoice-tag is-${item.invoiceTypeTone}`}>{item.invoiceType}</span></td>
+                          <td className="pc-mall-amount-cell">{item.amount}</td>
+                          <td>{item.appliedAt}</td>
+                          <td>{item.shop}</td>
+                          <td>
+                            <div className="pc-mall-store-cell">
+                              <div>{item.store}</div>
+                              <div>{item.storeId}</div>
+                            </div>
+                          </td>
+                          <td>
+                            <div className="pc-mall-status-cell pc-mall-status-dot-cell">
+                              <span className="pc-mall-status-dot" />
+                              <span>{item.status}</span>
+                            </div>
+                          </td>
+                          <td>
+                            <div className="pc-mall-action-cell">
+                              <button className="pc-mall-contact-btn" type="button">联系卖家</button>
+                              <button className="pc-mall-apply-btn" type="button">查看</button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            ) : null}
+
+            <div className="pc-mall-pagination-wrap">
+              <div className="pc-mall-pagination">
+                <span className="pc-mall-pagination-total">共计 4170 条</span>
+                <button className="pc-mall-page-size" type="button">10 条/页</button>
+                <div className="pc-mall-page-list">
+                  <button className="pc-mall-page-btn is-arrow" type="button">‹</button>
+                  <button className="pc-mall-page-btn is-active" type="button">1</button>
+                  <button className="pc-mall-page-btn" type="button">2</button>
+                  <button className="pc-mall-page-btn" type="button">3</button>
+                  <button className="pc-mall-page-btn" type="button">4</button>
+                  <button className="pc-mall-page-btn" type="button">5</button>
+                  <span className="pc-mall-page-ellipsis">...</span>
+                  <button className="pc-mall-page-btn" type="button">417</button>
+                  <button className="pc-mall-page-btn is-arrow" type="button">›</button>
+                </div>
+                <span className="pc-mall-pagination-jump-label">到第</span>
+                <input className="pc-mall-page-input" placeholder="请输入" />
+                <span className="pc-mall-pagination-jump-label">页</span>
+                <button className="pc-mall-page-jump" type="button">跳转</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function Header({ currentMarketingPage, specialCreateTab, onTopActionClick }) {
   const pendingCount = 24;
+  const topActionItems = [
+    { key: "pc-mall", label: "买家PC商城", icon: "pc-mall" },
+    { key: "miniapp-mall", label: "买家小程序商城", icon: "miniapp-mall" },
+    { key: "service", label: "在线客服", icon: "service" },
+    { key: "todo", label: "我的待办", icon: "todo", badge: pendingCount },
+    { key: "export", label: "导出记录", icon: "export" },
+    { key: "logout", label: "退出登录", icon: "logout" }
+  ];
+
   return (
     <header className="workspace-topbar">
       <div className="page-tabs">
@@ -643,10 +1281,13 @@ function Header({ currentMarketingPage, specialCreateTab }) {
         {specialCreateTab ? <div className="page-tab is-current">{specialCreateTab} <span>×</span></div> : null}
       </div>
       <div className="top-actions">
-        <a href="#"><span className="top-action-icon">☺</span>在线客服</a>
-        <a href="#" className="top-action-with-badge"><span className="top-action-icon">▣</span>我的待办<em>{pendingCount}</em></a>
-        <a href="#"><span className="top-action-icon">⌁</span>导出记录</a>
-        <a href="#"><span className="top-action-icon">◦</span>退出登录</a>
+        {topActionItems.map((item) => (
+          <a href="#" key={item.key} className={item.badge ? "top-action-with-badge" : ""} onClick={(event) => { event.preventDefault(); onTopActionClick?.(item.key); }}>
+            <span className="top-action-icon"><TopActionIcon type={item.icon} /></span>
+            {item.label}
+            {item.badge ? <em>{item.badge}</em> : null}
+          </a>
+        ))}
       </div>
     </header>
   );
@@ -1897,6 +2538,7 @@ function AddBuyerModal({ open, groupOptions, form, discountInvalid, onFormChange
 }
 
 export default function App() {
+  const [activePortalPage, setActivePortalPage] = useState("admin");
   const [activeSection, setActiveSection] = useState("marketing");
   const [activeBuyerPage, setActiveBuyerPage] = useState("买家列表");
   const [buyerRows, setBuyerRows] = useState(buyerSeedRows);
@@ -2516,6 +3158,7 @@ export default function App() {
   };
 
   const handleSwitchMarketingPage = (pageName) => {
+    setActivePortalPage("admin");
     setActiveSection("marketing");
     setCurrentMarketingPage(pageName);
     setIsCreating(false);
@@ -2534,6 +3177,7 @@ export default function App() {
   };
 
   const handleSwitchBuyerPage = (pageName) => {
+    setActivePortalPage("admin");
     setActiveSection("buyer");
     setActiveBuyerPage(pageName);
     setBuyerPage(1);
@@ -2762,6 +3406,44 @@ export default function App() {
     setBuyerImportResult(null);
   };
 
+  const handleTopActionClick = (actionKey) => {
+    if (actionKey === "pc-mall") {
+      setActivePortalPage("buyer-pc-mall");
+      setToastMessage("");
+      return;
+    }
+
+    if (actionKey === "operations-admin") {
+      setActivePortalPage("admin");
+      setActiveSection("marketing");
+      setToastMessage("");
+      return;
+    }
+
+    if (actionKey === "supplier-admin") {
+      setActivePortalPage("admin");
+      setActiveSection("buyer");
+      setActiveBuyerPage("买家列表");
+      setBuyerPage(1);
+      setToastMessage("");
+      return;
+    }
+
+    if (actionKey === "miniapp-mall") {
+      setToastMessage("买家小程序商城页面入口已预留，后续可继续按截图补齐。");
+      return;
+    }
+
+    if (actionKey === "service" || actionKey === "todo" || actionKey === "export" || actionKey === "logout") {
+      const actionLabelMap = { service: "在线客服", todo: "我的待办", export: "导出记录", logout: "退出登录" };
+      setToastMessage(`${actionLabelMap[actionKey]}功能已保留入口，后续可继续接真实逻辑。`);
+    }
+  };
+
+  if (activePortalPage === "buyer-pc-mall") {
+    return <BuyerPcMallPage onPortalActionClick={handleTopActionClick} />;
+  }
+
   return (
     <div className="admin-shell">
       <aside className="sidebar">
@@ -2806,7 +3488,7 @@ export default function App() {
       </aside>
 
       <section className="workspace">
-        <Header currentMarketingPage={currentPageTitle} specialCreateTab={!isBuyerSection && isCreating && (isPrimarySpecialPricePage(currentMarketingPage) || isSecondarySpecialPricePage(currentMarketingPage)) ? "新增专享价" : ""} />
+        <Header currentMarketingPage={currentPageTitle} specialCreateTab={!isBuyerSection && isCreating && (isPrimarySpecialPricePage(currentMarketingPage) || isSecondarySpecialPricePage(currentMarketingPage)) ? "新增专享价" : ""} onTopActionClick={handleTopActionClick} />
         <main className="workspace-main">
           {isBuyerSection ? (
             activeBuyerPage === "导入买家" ? (
