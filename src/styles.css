@@ -728,7 +728,7 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .pc-mall-batch-field input:focus,
 .pc-mall-batch-field textarea:focus { border-color: #f0b429; box-shadow: 0 0 0 3px rgba(240, 180, 41, 0.12); }
 .pc-mall-batch-field input.is-error,
-.pc-mall-batch-field textarea.is-error { border-color: #ff4d4f; box-shadow: inset 0 0 0 1px #ff4d4f; }
+.pc-mall-batch-field textarea.is-error { border-color: #ff4d4f; box-shadow: none; }
 .pc-mall-batch-note-field { align-items: start; }
 .pc-mall-batch-note-field > span { padding-top: 10px; }
 .pc-mall-batch-note-input { grid-column: 2; }
@@ -818,6 +818,15 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .pc-mall-batch-card.is-special-layout .pc-mall-batch-note-input textarea:focus {
   border-color: #f0b429;
   box-shadow: 0 0 0 3px rgba(240, 180, 41, 0.12);
+}
+.pc-mall-input-action-row input.is-error,
+.pc-mall-batch-select-wrap select.is-error,
+.pc-mall-batch-card.is-special-layout .pc-mall-input-action-row input.is-error,
+.pc-mall-batch-card.is-special-layout .pc-mall-batch-field input.is-error,
+.pc-mall-batch-card.is-special-layout .pc-mall-batch-field textarea.is-error,
+.pc-mall-batch-card.is-special-layout .pc-mall-batch-select-wrap select.is-error {
+  border-color: #ff4d4f;
+  box-shadow: none;
 }
 .pc-mall-batch-card.is-special-layout .pc-mall-text-btn { right: 12px; color: #ff7a1a; font-size: 12px; font-weight: 400; }
 .pc-mall-batch-summary-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
