@@ -6118,6 +6118,12 @@ function ShopInvoicePage({ activeShopTab = "发票管理", onOpenOrderInfoTab, o
     ));
   };
 
+  const hasInconsistentInvoiceTitles = (rows) => {
+    if (rows.length <= 1) return false;
+    const normalizedTitles = rows.map((item) => String(item.invoiceTitle || "").trim());
+    return new Set(normalizedTitles).size > 1;
+  };
+
   const handleOpenConfirmInvoiceModal = (orderNos = selectedShopInvoiceOrderNos, mode = "batch") => {
     const selectedSet = new Set(orderNos);
     const selectedRows = shopInvoiceRows.filter((item) => selectedSet.has(item.orderNo));
@@ -6130,6 +6136,11 @@ function ShopInvoicePage({ activeShopTab = "发票管理", onOpenOrderInfoTab, o
 
     if (selectedRows.some((item) => item.invoiceStatus !== "待开票")) {
       setShopInvoiceNotice("部分订单开票状态非待开票，无法批量开票，请检查");
+      return;
+    }
+
+    if (hasInconsistentInvoiceTitles(rowsToConfirm)) {
+      setShopInvoiceNotice("订单发票抬头不一致，无法批量开票，请检查");
       return;
     }
 
