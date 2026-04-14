@@ -12,6 +12,7 @@ const initialShopInvoiceFilters = {
   orderNo: "",
   invoiceType: "全部",
   singleInvoice: "全部",
+  overdueStatus: "全部",
   invoiceBatch: "",
   invoiceStatus: "全部",
   orderStatus: "全部",
@@ -5833,6 +5834,8 @@ function ShopInvoicePage({ activeShopTab = "发票管理", onOpenOrderInfoTab, o
 
     const storeKeyword = appliedFilters.store.trim().toLowerCase();
     if (storeKeyword && !item.store.toLowerCase().includes(storeKeyword)) return false;
+    if (appliedFilters.overdueStatus === "是" && !isShopInvoiceApplicationOverdue(item)) return false;
+    if (appliedFilters.overdueStatus === "否" && isShopInvoiceApplicationOverdue(item)) return false;
 
     const matchDateRange = (dateTime, range) => {
       if (!range.startDate && !range.endDate) return true;
@@ -5864,6 +5867,7 @@ function ShopInvoicePage({ activeShopTab = "发票管理", onOpenOrderInfoTab, o
   const isAllInvoiceStatusTab = activeInvoiceStatusTab === "全部";
   const showInvoiceOverdueBadge = ["全部", "待开票", "已驳回", "已撤销"].includes(activeInvoiceStatusTab);
   const showConfirmBatchToolbar = activeInvoiceStatusTab === "全部" || activeInvoiceStatusTab === "待开票";
+  const showPendingModifyBatchAction = activeInvoiceStatusTab === "全部";
   const showModifyBatchToolbar = activeInvoiceStatusTab === "已开票";
   const showBatchRejectAction = activeInvoiceStatusTab === "全部" || activeInvoiceStatusTab === "待开票";
   const showSelectableCheckboxes = showConfirmBatchToolbar || showModifyBatchToolbar;
@@ -6854,6 +6858,16 @@ function ShopInvoicePage({ activeShopTab = "发票管理", onOpenOrderInfoTab, o
               <input placeholder="请输入开票批次" value={draftFilters.invoiceBatch} onChange={(e) => handleDraftFilterChange("invoiceBatch", e.target.value)} />
             </div>
           </label>
+          <label className="shop-invoice-field">
+            <span>超时未开</span>
+            <div className="shop-invoice-select-wrap">
+              <select value={draftFilters.overdueStatus} onChange={(e) => handleDraftFilterChange("overdueStatus", e.target.value)}>
+                <option>全部</option>
+                <option>是</option>
+                <option>否</option>
+              </select>
+            </div>
+          </label>
           <div className="shop-invoice-filter-actions">
             <button className="shop-invoice-collapse" type="button">收起 ^</button>
             <button className="btn btn-reset" type="button" onClick={handleResetFilters}>重置</button>
@@ -6868,7 +6882,7 @@ function ShopInvoicePage({ activeShopTab = "发票管理", onOpenOrderInfoTab, o
             {showConfirmBatchToolbar ? (
               <>
                 <button className="btn btn-dark" type="button" onClick={() => handleOpenConfirmInvoiceModal()}>批量开票</button>
-                <button className="btn btn-dark" type="button" onClick={() => handleOpenModifyInvoiceModal(selectedShopInvoiceOrderNos)}>批量修改开票</button>
+                {showPendingModifyBatchAction ? <button className="btn btn-dark" type="button" onClick={() => handleOpenModifyInvoiceModal(selectedShopInvoiceOrderNos)}>批量修改开票</button> : null}
                 {showBatchRejectAction ? <button className="btn btn-dark" type="button" onClick={() => handleOpenRejectInvoiceModal()}>批量驳回</button> : null}
                 <div className="shop-invoice-toolbar-summary">
                   已选中 {selectedConfirmRows.length} 笔待开票订单，发票应开金额合计：<strong>{formatMoneyDisplay(confirmInvoiceSummary.shouldInvoiceAmount)}</strong>
