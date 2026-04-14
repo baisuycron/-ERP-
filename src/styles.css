@@ -273,6 +273,7 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .shop-invoice-table th.is-frozen-right:last-child, .shop-invoice-table td.is-frozen-right:last-child { border-right: 1px solid #e0e4ea; }
 .shop-invoice-table th:last-child, .shop-invoice-table td:last-child { border-right: none; }
 .shop-invoice-table th:nth-child(1), .shop-invoice-table td:nth-child(1) { width: 44px; text-align: center; padding-left: 0; padding-right: 0; }
+.shop-invoice-table.is-no-select th:nth-child(1), .shop-invoice-table.is-no-select td:nth-child(1) { text-align: left; padding-left: 14px; padding-right: 14px; }
 .shop-invoice-col-amount-tax { white-space: nowrap; word-break: keep-all; }
 .shop-invoice-col-invoiced-at { white-space: nowrap; word-break: keep-all; }
 .shop-invoice-amount { color: #ff6f18; }

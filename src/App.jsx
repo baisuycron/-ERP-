@@ -6959,7 +6959,7 @@ function ShopInvoicePage({ activeShopTab = "发票管理", onOpenOrderInfoTab, o
         </div>
 
         <div className="shop-invoice-table-shell">
-          <table className="shop-invoice-table" style={{ minWidth: `${Math.max(tableMinWidth, 1320)}px` }}>
+          <table className={`shop-invoice-table ${showSelectableCheckboxes ? "" : "is-no-select"}`} style={{ minWidth: `${Math.max(tableMinWidth, 1320)}px` }}>
             <thead>
               <tr>
                 {visibleColumns.map((column) => (
