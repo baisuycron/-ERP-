@@ -6133,6 +6133,21 @@ function ShopInvoicePage({ activeShopTab = "发票管理", onOpenOrderInfoTab, o
       return;
     }
 
+    if (mode === "batch" && rowsToConfirm.length > 1) {
+      const firstRow = rowsToConfirm[0];
+      const hasDifferentInvoiceTitle = rowsToConfirm.some((item) => item.invoiceTitle !== firstRow.invoiceTitle);
+      if (hasDifferentInvoiceTitle) {
+        setShopInvoiceNotice("本次选中订单的发票抬头不一致，无法批量开票，请检查");
+        return;
+      }
+
+      const hasDifferentInvoiceType = rowsToConfirm.some((item) => item.invoiceType !== firstRow.invoiceType);
+      if (hasDifferentInvoiceType) {
+        setShopInvoiceNotice("本次选中订单的发票类型不一致，无法批量开票，请检查");
+        return;
+      }
+    }
+
     const defaultWithTax = formatMoneyDisplay(rowsToConfirm.reduce((sum, item) => sum + parseMoneyValue(item.shouldInvoiceAmount), 0));
     setSelectedShopInvoiceOrderNos(rowsToConfirm.map((item) => item.orderNo));
     setConfirmInvoiceForm({
