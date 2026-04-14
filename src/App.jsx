@@ -1053,6 +1053,35 @@ const shopInvoiceManagementRows = [
     actions: ["发票详情", "确认开票", "驳回"]
   },
   {
+    orderNo: "2026041014582635",
+    invoiceType: "电子增值税专用发票",
+    originalInvoiceType: "电子增值税专用发票",
+    invoiceTitle: "成都锦行商贸有限公司",
+    originalInvoiceTitle: "成都锦行商贸有限公司",
+    taxpayerId: "91510100MA6F202605",
+    orderStatus: "已完成",
+    orderAmount: "¥1680.00",
+    afterSaleStatus: "-",
+    afterSaleAmount: "¥0.00",
+    amount: "¥1680.00",
+    shouldInvoiceAmount: "¥1680.00",
+    invoiceAmountWithTax: "¥1680.00",
+    buyerAccount: "cd-jx (ID:21420)",
+    store: "高新闪购店\n(ID:2232766)",
+    paidAt: "2026-04-10 14:58:26",
+    appliedAt: "2026-04-10 15:10:42",
+    modifiedAt: "2026-04-10 15:10:42",
+    applicationStatus: "待开票",
+    invoicedAt: "-",
+    invoiceNo: "-",
+    invoiceMethod: "系统",
+    invoiceStatus: "待开票",
+    invoiceStatusTone: "warning",
+    afterSaleStatusDetail: "-",
+    afterSaleExpired: "否",
+    actions: ["发票详情", "确认开票", "驳回"]
+  },
+  {
     orderNo: "2026041010314407",
     invoiceType: "电子普通发票",
     originalInvoiceType: "电子普通发票",
@@ -1096,6 +1125,7 @@ const shopInvoiceSingleInvoiceByOrderNo = {
   "2026040816024198": "是",
   "2026040909231674": "是",
   "2026040914175826": "否",
+  "2026041014582635": "否",
   "2026041010314407": "否"
 };
 const shopInvoiceBatchByOrderNo = {
@@ -1112,6 +1142,7 @@ const shopInvoiceBatchByOrderNo = {
   "2026040816024198": "KP202604-003",
   "2026040909231674": "KP202604-004",
   "2026040914175826": "KP202604-005",
+  "2026041014582635": "KP202604-005",
   "2026041010314407": "KP202604-006"
 };
 const normalizedShopInvoiceManagementRows = shopInvoiceManagementRows.map((row) => ({
