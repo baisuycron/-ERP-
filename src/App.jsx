@@ -8317,7 +8317,7 @@ function AddBuyerModal({ open, groupOptions, form, discountInvalid, onFormChange
   );
 }
 
-function BuyerMiniAppMallPage() {
+function BuyerMiniAppMallPage({ onBackToPcMall }) {
   const [activeTab, setActiveTab] = useState("home");
   const [miniappView, setMiniappView] = useState("main");
   const categoryItems = [
@@ -8390,7 +8390,7 @@ function BuyerMiniAppMallPage() {
                   <div className="miniapp-order-title">发票详情</div>
                   <div className="miniapp-order-header-actions">
                     <span>•••</span>
-                    <span>◎</span>
+                    <button type="button" aria-label="返回买家PC商城" onClick={() => onBackToPcMall?.()}>◎</button>
                   </div>
                 </header>
 
@@ -8461,7 +8461,7 @@ function BuyerMiniAppMallPage() {
                   <div className="miniapp-order-title">订单列表</div>
                   <div className="miniapp-order-header-actions">
                     <span>•••</span>
-                    <span>◎</span>
+                    <button type="button" aria-label="返回买家PC商城" onClick={() => onBackToPcMall?.()}>◎</button>
                   </div>
                 </header>
 
@@ -8530,7 +8530,7 @@ function BuyerMiniAppMallPage() {
                   </div>
                   <div className="miniapp-mine-header-actions">
                     <span>•••</span>
-                    <span>◎</span>
+                    <button type="button" aria-label="返回买家PC商城" onClick={() => onBackToPcMall?.()}>◎</button>
                   </div>
                 </header>
 
@@ -8586,7 +8586,7 @@ function BuyerMiniAppMallPage() {
                   <div className="miniapp-header-title">闪电帮帮</div>
                   <div className="miniapp-header-actions">
                     <span>☆ 2.8</span>
-                    <span>◎</span>
+                    <button type="button" aria-label="返回买家PC商城" onClick={() => onBackToPcMall?.()}>◎</button>
                   </div>
                 </header>
 
@@ -9679,7 +9679,7 @@ export default function App() {
   }
 
   if (activePortalPage === "miniapp-mall") {
-    return <BuyerMiniAppMallPage />;
+    return <BuyerMiniAppMallPage onBackToPcMall={() => setActivePortalPage("buyer-pc-mall")} />;
   }
 
   if (activePortalPage === "platform-center") {
