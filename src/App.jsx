@@ -563,6 +563,39 @@ function getShopInvoiceResubmittedTooltip(row) {
   return `上次撤销时间：${row.lastCanceledAt || "-"}\n本次重提时间：${row.resubmittedAt || "-"}`;
 }
 
+function getShopInvoiceProductCategoryLabel(item) {
+  const productText = String(item?.product || "").trim();
+  if (!productText) return "其他";
+
+  const categoryRules = [
+    { keywords: ["饮品", "整箱", "茉沏"], label: "食品饮料" },
+    { keywords: ["办公", "复印纸", "收纳", "托盘"], label: "办公用品" },
+    { keywords: ["电子设备", "投屏器", "扩展坞", "显示器"], label: "电子设备" },
+    { keywords: ["耳机"], label: "影音设备" },
+    { keywords: ["电视"], label: "家用电器" },
+    { keywords: ["空气净化器"], label: "生活电器" },
+    { keywords: ["笔记本"], label: "电脑整机" },
+    { keywords: ["工业设备", "设备固定支架"], label: "工业设备" },
+    { keywords: ["维护工具", "工具包"], label: "工业耗材" },
+    { keywords: ["标签打印机", "价签", "热敏纸"], label: "门店物料" },
+    { keywords: ["陈列物料"], label: "营销物料" }
+  ];
+
+  const matchedRule = categoryRules.find((rule) => (
+    rule.keywords.some((keyword) => productText.includes(keyword))
+  ));
+  return matchedRule?.label || productText;
+}
+
+function getShopInvoiceOrderCategorySummary(row) {
+  const detail = createShopInvoiceOrderDetail(row);
+  const categories = (detail?.items || [])
+    .map((item) => getShopInvoiceProductCategoryLabel(item))
+    .filter(Boolean);
+  const uniqueCategories = [...new Set(categories)];
+  return uniqueCategories.length > 0 ? uniqueCategories.join("、") : "-";
+}
+
 function exportShopInvoiceContentWorkbook(rows, invoiceContent) {
   if (!Array.isArray(rows) || rows.length === 0) return false;
 
@@ -585,6 +618,7 @@ function exportShopInvoiceContentWorkbook(rows, invoiceContent) {
     : rows.map((row) => ({
       订单号: row.orderNo,
       发票内容: normalizedContent,
+      商品类别: getShopInvoiceOrderCategorySummary(row),
       发票类型: row.invoiceType || "-",
       发票抬头: row.invoiceTitle || "-",
       纳税人识别号: row.taxpayerId || "-",
@@ -1020,7 +1054,9 @@ function getBuyerPcMallInvoiceAfterSaleViewTooltip(row) {
   const statuses = getBuyerPcMallInvoiceOrderAfterSaleStatuses(row);
   if (statuses.length === 0) return "";
 
-  const inProgressCount = statuses.filter((status) => shopInvoiceAfterSaleInProgressStatuses.includes(status)).length;
+  const inProgressCount = statuses.filter((status) => (
+    status === "售后中" || shopInvoiceAfterSaleInProgressStatuses.includes(status)
+  )).length;
   return `该笔订单共${statuses.length}种商品申请售后，当前剩余${inProgressCount}种处于售后中`;
 }
 
@@ -2345,6 +2381,279 @@ const shopInvoiceOrderDetailSeed = {
       afterSaleAmount: "¥680",
       applyInvoiceAmount: "¥1380",
       shouldInvoiceAmount: "¥1380"
+    }
+  },
+  "2026040816024198": {
+    orderStatusText: "已完成",
+    afterSaleStatusText: "-",
+    receiverInfo: "何**  188****4198",
+    address: "深圳市福田区深南大道 6008 号采购中心 12 楼",
+    paidAt: "2026-04-08 16:02:41",
+    buyerAccount: "hn-jicai(ID:21317)",
+    storeName: "福田闪购店",
+    storeId: "门店ID: 2232750",
+    remark: "本单包含门店终端、标签耗材及陈列物料，请按清单统一归档。",
+    items: [
+      {
+        product: "工业级门店平板终端",
+        spec: "FT-PAD-680",
+        unitPrice: "680",
+        quantity: "1",
+        subtotal: "680",
+        afterSaleStatus: "-",
+        afterSaleCount: "0",
+        actualAfterSaleCount: "0",
+        afterSaleAmount: "0.00",
+        shippedCount: "1"
+      },
+      {
+        product: "二维码扫描枪",
+        spec: "FT-SCAN-260",
+        unitPrice: "260",
+        quantity: "2",
+        subtotal: "520",
+        afterSaleStatus: "-",
+        afterSaleCount: "0",
+        actualAfterSaleCount: "0",
+        afterSaleAmount: "0.00",
+        shippedCount: "2"
+      },
+      {
+        product: "桌面标签支架",
+        spec: "FT-LABEL-180",
+        unitPrice: "180",
+        quantity: "2",
+        subtotal: "360",
+        afterSaleStatus: "-",
+        afterSaleCount: "0",
+        actualAfterSaleCount: "0",
+        afterSaleAmount: "0.00",
+        shippedCount: "2"
+      },
+      {
+        product: "热敏标签纸补充装",
+        spec: "FT-PAPER-90",
+        unitPrice: "90",
+        quantity: "3",
+        subtotal: "270",
+        afterSaleStatus: "-",
+        afterSaleCount: "0",
+        actualAfterSaleCount: "0",
+        afterSaleAmount: "0.00",
+        shippedCount: "3"
+      },
+      {
+        product: "陈列海报物料包",
+        spec: "FT-POSTER-140",
+        unitPrice: "140",
+        quantity: "2",
+        subtotal: "280",
+        afterSaleStatus: "-",
+        afterSaleCount: "0",
+        actualAfterSaleCount: "0",
+        afterSaleAmount: "0.00",
+        shippedCount: "2"
+      },
+      {
+        product: "门店交互音箱",
+        spec: "FT-SPEAKER-340",
+        unitPrice: "340",
+        quantity: "1",
+        subtotal: "340",
+        afterSaleStatus: "-",
+        afterSaleCount: "0",
+        actualAfterSaleCount: "0",
+        afterSaleAmount: "0.00",
+        shippedCount: "1"
+      }
+    ],
+    summary: {
+      itemCount: "共 11 件，商品，总商品金额：",
+      goodsAmount: "¥2450",
+      shippingFee: "¥0",
+      taxFee: "¥0",
+      orderAmount: "¥2450",
+      afterSaleAmount: "¥0",
+      applyInvoiceAmount: "¥2450",
+      shouldInvoiceAmount: "¥2450"
+    }
+  },
+  "2026040914175826": {
+    orderStatusText: "已完成",
+    afterSaleStatusText: "-",
+    receiverInfo: "刘**  139****5826",
+    address: "成都市高新区天府大道 188 号 B 座 8 楼",
+    paidAt: "2026-04-11 14:17:58",
+    buyerAccount: "cd-jx(ID:21420)",
+    storeName: "高新闪购店",
+    storeId: "门店ID: 2232766",
+    remark: "门店常备办公补货单，含文具与员工茶歇商品。",
+    items: [
+      {
+        product: "A4 复印纸整箱",
+        spec: "CD-PAPER-120",
+        unitPrice: "120",
+        quantity: "2",
+        subtotal: "240",
+        afterSaleStatus: "-",
+        afterSaleCount: "0",
+        actualAfterSaleCount: "0",
+        afterSaleAmount: "0.00",
+        shippedCount: "2"
+      },
+      {
+        product: "中性笔补充盒",
+        spec: "CD-PEN-68",
+        unitPrice: "68",
+        quantity: "2",
+        subtotal: "136",
+        afterSaleStatus: "-",
+        afterSaleCount: "0",
+        actualAfterSaleCount: "0",
+        afterSaleAmount: "0.00",
+        shippedCount: "2"
+      },
+      {
+        product: "文件收纳箱",
+        spec: "CD-BOX-96",
+        unitPrice: "96",
+        quantity: "1",
+        subtotal: "96",
+        afterSaleStatus: "-",
+        afterSaleCount: "0",
+        actualAfterSaleCount: "0",
+        afterSaleAmount: "0.00",
+        shippedCount: "1"
+      },
+      {
+        product: "桌面绿植摆件",
+        spec: "CD-PLANT-58",
+        unitPrice: "58",
+        quantity: "1",
+        subtotal: "58",
+        afterSaleStatus: "-",
+        afterSaleCount: "0",
+        actualAfterSaleCount: "0",
+        afterSaleAmount: "0.00",
+        shippedCount: "1"
+      },
+      {
+        product: "咖啡茶歇礼包",
+        spec: "CD-TEA-115",
+        unitPrice: "115",
+        quantity: "2",
+        subtotal: "230",
+        afterSaleStatus: "-",
+        afterSaleCount: "0",
+        actualAfterSaleCount: "0",
+        afterSaleAmount: "0.00",
+        shippedCount: "2"
+      }
+    ],
+    summary: {
+      itemCount: "共 8 件，商品，总商品金额：",
+      goodsAmount: "¥760",
+      shippingFee: "¥0",
+      taxFee: "¥0",
+      orderAmount: "¥760",
+      afterSaleAmount: "¥0",
+      applyInvoiceAmount: "¥760",
+      shouldInvoiceAmount: "¥760"
+    }
+  },
+  "2026041014582635": {
+    orderStatusText: "已完成",
+    afterSaleStatusText: "-",
+    receiverInfo: "唐**  187****2635",
+    address: "成都市高新区软件园 D 区 6 栋 3 楼",
+    paidAt: "2026-04-10 14:58:26",
+    buyerAccount: "cd-jx(ID:21420)",
+    storeName: "高新闪购店",
+    storeId: "门店ID: 2232766",
+    remark: "会议室设备升级采购，混合电子设备与办公配套用品。",
+    items: [
+      {
+        product: "便携投影仪",
+        spec: "CD-PROJ-720",
+        unitPrice: "720",
+        quantity: "1",
+        subtotal: "720",
+        afterSaleStatus: "-",
+        afterSaleCount: "0",
+        actualAfterSaleCount: "0",
+        afterSaleAmount: "0.00",
+        shippedCount: "1"
+      },
+      {
+        product: "无线演示器",
+        spec: "CD-PRES-160",
+        unitPrice: "160",
+        quantity: "1",
+        subtotal: "160",
+        afterSaleStatus: "-",
+        afterSaleCount: "0",
+        actualAfterSaleCount: "0",
+        afterSaleAmount: "0.00",
+        shippedCount: "1"
+      },
+      {
+        product: "HDMI 高清线",
+        spec: "CD-HDMI-65",
+        unitPrice: "65",
+        quantity: "2",
+        subtotal: "130",
+        afterSaleStatus: "-",
+        afterSaleCount: "0",
+        actualAfterSaleCount: "0",
+        afterSaleAmount: "0.00",
+        shippedCount: "2"
+      },
+      {
+        product: "移动白板套装",
+        spec: "CD-BOARD-210",
+        unitPrice: "210",
+        quantity: "1",
+        subtotal: "210",
+        afterSaleStatus: "-",
+        afterSaleCount: "0",
+        actualAfterSaleCount: "0",
+        afterSaleAmount: "0.00",
+        shippedCount: "1"
+      },
+      {
+        product: "会议记录本礼包",
+        spec: "CD-NOTE-92",
+        unitPrice: "92",
+        quantity: "2",
+        subtotal: "184",
+        afterSaleStatus: "-",
+        afterSaleCount: "0",
+        actualAfterSaleCount: "0",
+        afterSaleAmount: "0.00",
+        shippedCount: "2"
+      },
+      {
+        product: "瓶装茶饮组合",
+        spec: "CD-DRINK-69",
+        unitPrice: "69",
+        quantity: "4",
+        subtotal: "276",
+        afterSaleStatus: "-",
+        afterSaleCount: "0",
+        actualAfterSaleCount: "0",
+        afterSaleAmount: "0.00",
+        shippedCount: "4"
+      }
+    ],
+    summary: {
+      itemCount: "共 11 件，商品，总商品金额：",
+      goodsAmount: "¥1680",
+      shippingFee: "¥0",
+      taxFee: "¥0",
+      orderAmount: "¥1680",
+      afterSaleAmount: "¥0",
+      applyInvoiceAmount: "¥1680",
+      shouldInvoiceAmount: "¥1680"
     }
   }
 };
@@ -8182,7 +8491,7 @@ function ShopInvoicePage({
       attachmentName: !confirmInvoiceForm.attachmentName,
       invoiceNo: !confirmInvoiceForm.invoiceNo.trim(),
       invoiceAmountWithTax: !confirmInvoiceForm.invoiceAmountWithTax.trim(),
-      invoiceAmountWithoutTax: !confirmInvoiceForm.invoiceAmountWithoutTax.trim(),
+      invoiceAmountWithoutTax: false,
       invoicedDate: !confirmInvoiceForm.invoicedDate
     };
 
@@ -8263,7 +8572,7 @@ function ShopInvoicePage({
       attachmentName: !modifyInvoiceForm.attachmentName,
       invoiceNo: !modifyInvoiceForm.invoiceNo.trim(),
       invoiceAmountWithTax: !modifyInvoiceForm.invoiceAmountWithTax.trim(),
-      invoiceAmountWithoutTax: !modifyInvoiceForm.invoiceAmountWithoutTax.trim(),
+      invoiceAmountWithoutTax: false,
       invoicedDate: !modifyInvoiceForm.invoicedDate
     };
 
@@ -9172,7 +9481,9 @@ function ShopInvoicePage({
                     <span className="shop-invoice-confirm-summary-label">发票内容:</span>
                     <span className="shop-invoice-summary-value is-text-row">
                       <strong>{confirmInvoiceContent}</strong>
-                      <button className="shop-invoice-content-download" type="button" onClick={handleDownloadConfirmInvoiceContent}>下载内容</button>
+                      {confirmInvoiceContent === "商品明细" ? (
+                        <button className="shop-invoice-content-download" type="button" onClick={handleDownloadConfirmInvoiceContent}>下载内容</button>
+                      ) : null}
                     </span>
                   </div>
                   <div className="shop-invoice-confirm-summary-row">
@@ -9239,7 +9550,7 @@ function ShopInvoicePage({
                     <input className={confirmInvoiceErrors.invoiceAmountWithTax ? "is-error" : ""} placeholder="请输入开票金额(含税)" value={confirmInvoiceForm.invoiceAmountWithTax} onChange={(e) => handleConfirmInvoiceFieldChange("invoiceAmountWithTax", e.target.value)} />
                   </label>
                   <label className="shop-invoice-confirm-field">
-                    <span><i>*</i>开票金额(不含税):</span>
+                    <span>开票金额(不含税):</span>
                     <input className={confirmInvoiceErrors.invoiceAmountWithoutTax ? "is-error" : ""} placeholder="请输入开票金额(不含税)" value={confirmInvoiceForm.invoiceAmountWithoutTax} onChange={(e) => handleConfirmInvoiceFieldChange("invoiceAmountWithoutTax", e.target.value)} />
                   </label>
                   <label className="shop-invoice-confirm-field">
@@ -9347,7 +9658,9 @@ function ShopInvoicePage({
                     <span className="shop-invoice-confirm-summary-label">发票内容:</span>
                     <span className="shop-invoice-summary-value is-text-row">
                       <strong>{modifyInvoiceContent}</strong>
-                      <button className="shop-invoice-content-download" type="button" onClick={handleDownloadModifyInvoiceContent}>下载内容</button>
+                      {modifyInvoiceContent === "商品明细" ? (
+                        <button className="shop-invoice-content-download" type="button" onClick={handleDownloadModifyInvoiceContent}>下载内容</button>
+                      ) : null}
                     </span>
                   </div>
                   <div className="shop-invoice-confirm-summary-row">
@@ -9414,7 +9727,7 @@ function ShopInvoicePage({
                     <input className={modifyInvoiceErrors.invoiceAmountWithTax ? "is-error" : ""} placeholder="请输入开票金额(含税)" value={modifyInvoiceForm.invoiceAmountWithTax} onChange={(e) => handleModifyInvoiceFieldChange("invoiceAmountWithTax", e.target.value)} />
                   </label>
                   <label className="shop-invoice-confirm-field">
-                    <span><i>*</i>开票金额(不含税):</span>
+                    <span>开票金额(不含税):</span>
                     <input className={modifyInvoiceErrors.invoiceAmountWithoutTax ? "is-error" : ""} placeholder="请输入开票金额(不含税)" value={modifyInvoiceForm.invoiceAmountWithoutTax} onChange={(e) => handleModifyInvoiceFieldChange("invoiceAmountWithoutTax", e.target.value)} />
                   </label>
                   <label className="shop-invoice-confirm-field">
