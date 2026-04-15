@@ -26,6 +26,25 @@ const initialShopInvoiceFilters = {
 };
 
 const shopInvoiceAfterSaleStatusOptions = ["售后中", "退款成功", "售后关闭", "部分售后完成"];
+const shopInvoiceAfterSaleStatusTooltip = `售后中：当订单下任一 SKU 售后状态属于以下之一：
+
+待供应商审核
+待买家寄货
+待供应商收货
+待平台确认
+退款中
+
+退款成功：当订单下所有发起售后的 SKU 都是：退款成功
+
+售后关闭：当订单下所有发起售后的 SKU 都是以下关闭态之一：
+供应商拒绝
+平台驳回
+买家取消
+
+部分售后完成：
+当订单下所有售后都已结束，但结束结果混合，例如：
+部分 SKU = 退款成功
+部分 SKU = 供应商拒绝 / 平台驳回 / 买家取消`;
 const shopInvoicePaymentMethodOptions = ["全部", "先货后款", "先款后货"];
 const shopInvoiceAfterSaleInProgressStatuses = ["待供应商审核", "待买家寄货", "待供应商收货", "待平台确认", "退款中", "售后审核中"];
 const shopInvoiceAfterSaleClosedStatuses = ["供应商拒绝", "平台驳回", "买家取消"];
@@ -1484,7 +1503,13 @@ const shopInvoiceColumnDefinitions = [
   { key: "taxpayerId", label: "纳税人识别号", width: 180, visible: true, renderCell: (item) => item.taxpayerId },
   { key: "orderStatus", label: "订单状态", width: 110, visible: true, renderCell: (item) => item.orderStatus },
   { key: "orderAmount", label: "订单总额", width: 120, visible: true, renderCell: (item) => item.orderAmount },
-  { key: "afterSaleStatus", label: "售后状态", width: 110, visible: true, renderCell: (item) => item.afterSaleStatus },
+  {
+    key: "afterSaleStatus",
+    label: "售后状态",
+    width: 110,
+    visible: true,
+    renderCell: (item) => item.afterSaleStatus
+  },
   { key: "afterSaleAmount", label: "售后金额总计", width: 130, visible: true, renderCell: (item) => item.afterSaleAmount },
   { key: "amount", label: "申请开票金额", width: 140, visible: true, renderCell: (item) => <div className="shop-invoice-amount">{item.amount}</div> },
   { key: "shouldInvoiceAmount", label: "发票应开金额", width: 140, visible: true, renderCell: (item) => item.shouldInvoiceAmount },
@@ -6868,6 +6893,7 @@ function ShopInvoicePage({ activeShopTab = "发票管理", onOpenOrderInfoTab, o
   const [shopInvoiceColumnPrefs, setShopInvoiceColumnPrefs] = useState(initialShopInvoiceColumnPrefs);
   const [shopInvoiceColumnOrder, setShopInvoiceColumnOrder] = useState(initialShopInvoiceColumnOrder);
   const [draggingColumnKey, setDraggingColumnKey] = useState("");
+  const [afterSaleHeaderTooltip, setAfterSaleHeaderTooltip] = useState(null);
   const [columnPopoverPosition, setColumnPopoverPosition] = useState({ top: 0, right: 0, maxHeight: 0, zoneMaxHeight: 0 });
   const columnTriggerRef = useRef(null);
   const confirmInvoiceFileInputRef = useRef(null);
@@ -7085,6 +7111,18 @@ function ShopInvoicePage({ activeShopTab = "发票管理", onOpenOrderInfoTab, o
     if (!activeInvoiceHistory?.invoiceBatch || activeInvoiceHistory.invoiceBatch === "-") return 0;
     return shopInvoiceRows.filter((item) => item.invoiceBatch === activeInvoiceHistory.invoiceBatch).length;
   }, [activeInvoiceHistory, shopInvoiceRows]);
+
+  const handleShowAfterSaleHeaderTooltip = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    setAfterSaleHeaderTooltip({
+      left: rect.left + (rect.width / 2),
+      top: rect.top - 8
+    });
+  };
+
+  const handleHideAfterSaleHeaderTooltip = () => {
+    setAfterSaleHeaderTooltip(null);
+  };
 
   const handleDraftFilterChange = (key, nextValue) => {
     setDraftFilters((current) => ({
@@ -8384,40 +8422,67 @@ function ShopInvoicePage({ activeShopTab = "发票管理", onOpenOrderInfoTab, o
         </div>
 
         <div className="shop-invoice-table-shell">
-          <table className={`shop-invoice-table ${showSelectableCheckboxes ? "" : "is-no-select"}`} style={{ minWidth: `${Math.max(tableMinWidth, 1320)}px` }}>
-            <thead>
-              <tr>
-                {visibleColumns.map((column) => (
-                  <th className={getColumnClassName(column, "header")} key={column.key} style={getColumnStyle(column)}>
-                    {column.key === "select"
-                      ? showSelectableCheckboxes
-                        ? <input type="checkbox" checked={allSelectableInvoiceRowsSelected} onChange={(e) => handleToggleAllSelectableRows(e.target.checked)} />
-                        : null
-                      : column.renderHeader ? column.renderHeader() : column.label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {pagedRows.map((item) => (
-                <tr key={item.orderNo}>
+          <div className="shop-invoice-table-scroll">
+            <table className={`shop-invoice-table ${showSelectableCheckboxes ? "" : "is-no-select"}`} style={{ minWidth: `${Math.max(tableMinWidth, 1320)}px` }}>
+              <thead>
+                <tr>
                   {visibleColumns.map((column) => (
-                    <td className={getColumnClassName(column, "cell")} key={column.key} style={getColumnStyle(column)}>
-                      {renderInvoiceTableCell(item, column)}
-                    </td>
+                    <th className={getColumnClassName(column, "header")} key={column.key} style={getColumnStyle(column)}>
+                      {column.key === "select"
+                        ? showSelectableCheckboxes
+                          ? <input type="checkbox" checked={allSelectableInvoiceRowsSelected} onChange={(e) => handleToggleAllSelectableRows(e.target.checked)} />
+                          : null
+                        : column.key === "afterSaleStatus"
+                          ? (
+                            <span className="shop-invoice-header-with-tip">
+                              <span>售后状态</span>
+                              <span
+                                className="shop-invoice-summary-tip shop-invoice-header-tip"
+                                onMouseEnter={handleShowAfterSaleHeaderTooltip}
+                                onMouseLeave={handleHideAfterSaleHeaderTooltip}
+                              >
+                                <img className="shop-invoice-summary-tip-icon" src={questionHeaderIcon} alt="" aria-hidden="true" />
+                              </span>
+                            </span>
+                          )
+                        : column.renderHeader ? column.renderHeader() : column.label}
+                    </th>
                   ))}
                 </tr>
-              ))}
-              {pagedRows.length === 0 ? (
-                <tr>
-                  <td colSpan={visibleColumns.length} style={{ textAlign: "center", color: "#8b94a3", padding: "40px 12px" }}>
-                    暂无匹配的发票记录
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {pagedRows.map((item) => (
+                  <tr key={item.orderNo}>
+                    {visibleColumns.map((column) => (
+                      <td className={getColumnClassName(column, "cell")} key={column.key} style={getColumnStyle(column)}>
+                        {renderInvoiceTableCell(item, column)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+                {pagedRows.length === 0 ? (
+                  <tr>
+                    <td colSpan={visibleColumns.length} style={{ textAlign: "center", color: "#8b94a3", padding: "40px 12px" }}>
+                      暂无匹配的发票记录
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
         </div>
+
+        {afterSaleHeaderTooltip ? (
+          <div
+            className="shop-invoice-fixed-tooltip"
+            style={{
+              left: `${afterSaleHeaderTooltip.left}px`,
+              top: `${afterSaleHeaderTooltip.top}px`
+            }}
+          >
+            {shopInvoiceAfterSaleStatusTooltip}
+          </div>
+        ) : null}
 
         <div className="buyer-pagination">
           <span>共{filteredRows.length}条发票记录</span>

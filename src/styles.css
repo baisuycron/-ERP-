@@ -280,7 +280,8 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .shop-invoice-column-item input { width: 14px; height: 14px; }
 .shop-invoice-drag-handle { border: none; padding: 0; background: transparent; color: #9aa3b2; font-size: 14px; line-height: 1; cursor: grab; }
 .shop-invoice-column-empty { padding: 16px 12px; color: #98a2b3; font-size: 12px; text-align: center; }
-.shop-invoice-table-shell { overflow-x: auto; border: 1px solid #e0e4ea; }
+.shop-invoice-table-shell { position: relative; overflow: visible; border: 1px solid #e0e4ea; }
+.shop-invoice-table-scroll { overflow-x: auto; overflow-y: visible; }
 .shop-invoice-table-shell.is-nested { margin: 12px 14px 14px; border-top: 1px solid #e0e4ea; }
 .shop-invoice-batch-table-shell { border: 1px solid #e0e4ea; }
 .shop-invoice-batch-table td { vertical-align: middle; }
@@ -347,10 +348,13 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .shop-invoice-summary-tip { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; flex: none; }
 .shop-invoice-summary-tip-icon { display: block; width: 14px; height: 14px; opacity: 0.72; }
 .shop-invoice-summary-tip:hover .shop-invoice-summary-tip-icon { opacity: 1; }
+.shop-invoice-header-with-tip { display: inline-flex; align-items: center; gap: 4px; }
 .shop-invoice-summary-tooltip { position: absolute; right: calc(100% + 8px); top: 50%; transform: translateY(-50%); width: max-content; max-width: none; padding: 8px 10px; border-radius: 4px; background: rgba(36, 36, 36, 0.94); color: #fff; font-size: 12px; line-height: 1.5; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s ease; z-index: 24; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18); }
 .shop-invoice-summary-tooltip, .shop-invoice-summary-tooltip * { color: #fff !important; }
 .shop-invoice-summary-tooltip::before { content: ""; position: absolute; right: -5px; top: 50%; transform: translateY(-50%); border-width: 5px 0 5px 5px; border-style: solid; border-color: transparent transparent transparent rgba(36, 36, 36, 0.94); }
 .shop-invoice-summary-tip:hover .shop-invoice-summary-tooltip { opacity: 1; }
+.shop-invoice-fixed-tooltip { position: fixed; left: 0; top: 0; z-index: 240; width: 320px; max-width: 320px; padding: 8px 10px; border-radius: 4px; background: rgba(36, 36, 36, 0.94); color: #fff; font-size: 12px; line-height: 1.5; white-space: pre-line; text-align: left; transform: translate(-50%, -100%); pointer-events: none; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18); }
+.shop-invoice-fixed-tooltip::before { content: ""; position: absolute; left: 50%; top: 100%; transform: translateX(-50%); border-width: 5px 5px 0; border-style: solid; border-color: rgba(36, 36, 36, 0.94) transparent transparent; }
 .shop-invoice-confirm-summary .shop-invoice-summary-tooltip { left: 50%; right: auto; top: auto; bottom: calc(100% + 8px); transform: translateX(-50%); }
 .shop-invoice-confirm-summary .shop-invoice-summary-tooltip::before { left: 50%; right: auto; top: 100%; transform: translateX(-50%); border-width: 5px 5px 0; border-color: rgba(36, 36, 36, 0.94) transparent transparent; }
 .shop-invoice-confirm-section { padding: 18px 8px 0; }
