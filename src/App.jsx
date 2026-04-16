@@ -779,8 +779,8 @@ const supplierDashboardOrderCards = [
 ];
 const supplierDashboardInvoiceCards = [
   { value: "7", label: "待开票", targetStatusTab: "待开票", targetMarkerFilter: "全部" },
-  { value: "3", label: "即将超时开票", targetStatusTab: "待开票", targetMarkerFilter: "即将超时" },
-  { value: "4", label: "超时未开票", targetStatusTab: "待开票", targetMarkerFilter: "超时" }
+  { value: "3", label: "即将超时开票申请", targetStatusTab: "待开票", targetMarkerFilter: "即将超时" },
+  { value: "4", label: "超时未处理开票申请", targetStatusTab: "待开票", targetMarkerFilter: "超时" }
 ];
 const platformCenterSidebarItems = [
   { key: "home", label: "首页", icon: "home" },
