@@ -51,9 +51,9 @@ const shopInvoiceAfterSaleClosedStatuses = ["供应商拒绝", "平台驳回", "
 const shopInvoiceAfterSaleSuccessStatuses = ["退款成功"];
 
 const normalizeShopInvoiceMode = (value) => {
-  if (value === "单独开票" || value === "是") return "单独开票";
-  if (value === "合并开票" || value === "否") return "合并开票";
-  return "合并开票";
+  if (value === "单独开票" || value === "是") return "是";
+  if (value === "合并开票" || value === "否") return "否";
+  return "否";
 };
 
 function parseMoneyValue(value) {
@@ -1757,7 +1757,7 @@ const shopInvoiceColumnDefinitions = [
   { key: "shouldInvoiceAmount", label: "发票应开金额", width: 140, visible: true, renderCell: (item) => item.shouldInvoiceAmount },
   { key: "invoiceAmountWithTax", label: "发票金额（含税）", width: 156, visible: true, headerClassName: "shop-invoice-col-amount-tax", cellClassName: "shop-invoice-col-amount-tax", renderCell: (item) => ["待开票", "已驳回", "已撤销"].includes(item.invoiceStatus || item.applicationStatus) ? "-" : item.invoiceAmountWithTax },
   { key: "invoiceContent", label: "发票内容", width: 120, visible: true, renderCell: (item) => item.invoiceContent || "商品类别" },
-  { key: "singleInvoice", label: "开票类型", width: 110, visible: true, renderCell: (item) => normalizeShopInvoiceMode(item.singleInvoice) },
+  { key: "singleInvoice", label: "是否单独开票", width: 110, visible: true, renderCell: (item) => normalizeShopInvoiceMode(item.singleInvoice) },
   { key: "invoiceBatch", label: "开票批次", width: 140, visible: true, renderCell: (item) => item.invoiceBatch || "-" },
   { key: "invoiceRemark", label: "开票备注", width: 220, visible: true, renderCell: (item) => item.invoiceRemark || "-" },
   { key: "buyerAccount", label: "买家账号", width: 150, visible: true, renderCell: (item) => item.buyerAccount },
@@ -1867,6 +1867,8 @@ const buyerPcMallBatchInvoiceForm = {
   receiverEmail: "",
   remark: ""
 };
+const buyerPcMallDefaultReceiverPhone = "13800138000";
+const buyerPcMallDefaultReceiverEmail = "nfsq369@shandianbangbang.com";
 const initialBatchInvoiceFieldErrors = {
   invoiceType: false,
   titleType: false,
@@ -2915,6 +2917,80 @@ function createBuyerPcMallAppliedInvoiceRow(order, form, appliedAt = formatBuyer
   };
 }
 
+function createBuyerPcMallBatchInvoiceFormFromTitleRow(row) {
+  if (!row) return buyerPcMallBatchInvoiceForm;
+
+  const [firstStore] = getBuyerPcMallInvoiceTitleStoreBindings(row);
+  return {
+    ...buyerPcMallBatchInvoiceForm,
+    invoiceType: row.invoiceType || buyerPcMallBatchInvoiceForm.invoiceType,
+    titleType: row.titleType || buyerPcMallBatchInvoiceForm.titleType,
+    titleName: row.title || "",
+    taxpayerId: row.taxpayerId || "",
+    registeredAddress: row.registeredAddress || "",
+    phone: row.phone || "",
+    bank: row.bank || "",
+    bankAccount: row.bankAccount || "",
+    storeName: firstStore?.name || "",
+    invoiceContent: buyerPcMallBatchInvoiceForm.invoiceContent
+  };
+}
+
+function createBuyerPcMallBatchOrderInvoiceFields(titleRow) {
+  if (!titleRow) {
+    return {
+      invoiceTitleId: "",
+      invoiceTitle: "",
+      invoiceType: buyerPcMallBatchInvoiceForm.invoiceType,
+      titleType: buyerPcMallBatchInvoiceForm.titleType,
+      taxpayerId: "",
+      registeredAddress: "",
+      phone: "",
+      bank: "",
+      bankAccount: "",
+      receiverPhone: buyerPcMallDefaultReceiverPhone,
+      receiverEmail: buyerPcMallDefaultReceiverEmail
+    };
+  }
+
+  return {
+    invoiceTitleId: titleRow.id,
+    invoiceTitle: titleRow.title || "",
+    invoiceType: titleRow.invoiceType || buyerPcMallBatchInvoiceForm.invoiceType,
+    titleType: titleRow.titleType || buyerPcMallBatchInvoiceForm.titleType,
+    taxpayerId: titleRow.taxpayerId || "",
+    registeredAddress: titleRow.registeredAddress || "",
+    phone: titleRow.phone || "",
+    bank: titleRow.bank || "",
+    bankAccount: titleRow.bankAccount || "",
+    receiverPhone: buyerPcMallDefaultReceiverPhone,
+    receiverEmail: buyerPcMallDefaultReceiverEmail
+  };
+}
+
+function getBuyerPcMallInvoiceTitleTooltip(titleRow) {
+  if (!titleRow) return "发票抬头信息暂无";
+
+  const lines = [
+    `发票类型：${titleRow.invoiceType || "-"}`,
+    `抬头类型：${titleRow.titleType || "-"}`,
+    `发票抬头：${titleRow.title || "-"}`
+  ];
+
+  if (titleRow.titleType !== "个人") {
+    lines.push(`纳税人识别号：${titleRow.taxpayerId || "-"}`);
+  }
+
+  if (titleRow.invoiceType === "电子增值税专用发票") {
+    lines.push(`企业地址：${titleRow.registeredAddress || "-"}`);
+    lines.push(`企业电话：${titleRow.phone || "-"}`);
+    lines.push(`开户银行名称：${titleRow.bank || "-"}`);
+    lines.push(`开户银行账号：${titleRow.bankAccount || "-"}`);
+  }
+
+  return lines.join("\n");
+}
+
 function createBuyerPcMallPendingInvoiceRowFromRevoked(appliedRow) {
   return normalizeBuyerPcMallInvoiceRow({
     orderNo: appliedRow.orderNo,
@@ -2955,9 +3031,31 @@ function createBuyerPcMallModifyInvoiceFormFromAppliedRow(row) {
   };
 }
 
-function createBuyerPcMallBatchItemFromAppliedRow(row) {
+function createBuyerPcMallBatchItemFromAppliedRow(row, invoiceTitleRows = []) {
+  const matchedTitle = invoiceTitleRows.find((titleItem) => titleItem.title === row.invoiceTitle) || null;
+  const invoiceFields = matchedTitle
+    ? {
+      ...createBuyerPcMallBatchOrderInvoiceFields(matchedTitle),
+      receiverPhone: row.receiverPhone && row.receiverPhone !== "-" ? row.receiverPhone : buyerPcMallDefaultReceiverPhone,
+      receiverEmail: row.receiverEmail && row.receiverEmail !== "-" ? row.receiverEmail : buyerPcMallDefaultReceiverEmail
+    }
+    : {
+      invoiceTitleId: "",
+      invoiceTitle: row.invoiceTitle || "",
+      invoiceType: row.invoiceType || buyerPcMallBatchInvoiceForm.invoiceType,
+      titleType: row.titleType || buyerPcMallBatchInvoiceForm.titleType,
+      taxpayerId: row.taxpayerId && row.taxpayerId !== "-" ? row.taxpayerId : "",
+      registeredAddress: row.registeredAddress && row.registeredAddress !== "-" ? row.registeredAddress : "",
+      phone: row.phone && row.phone !== "-" ? row.phone : "",
+      bank: row.bank && row.bank !== "-" ? row.bank : "",
+      bankAccount: row.bankAccount && row.bankAccount !== "-" ? row.bankAccount : "",
+      receiverPhone: row.receiverPhone && row.receiverPhone !== "-" ? row.receiverPhone : "",
+      receiverEmail: row.receiverEmail && row.receiverEmail !== "-" ? row.receiverEmail : ""
+    };
+
   return {
     ...row,
+    ...invoiceFields,
     price: row.amount,
     time: row.appliedAt,
     buyerAccount: "nfsq369（ID:13641）",
@@ -4453,14 +4551,18 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
   summaryTitle,
   allowToggleOrder = true,
   allowRemoveOrder = true,
-  showOrderGroupMode = false
+  showOrderGroupMode = false,
+  showSeparateInvoiceColumn = false,
+  hideInvoiceAndReceiverSections = false,
+  invoiceTitleRows = [],
+  onOrderItemsChange
 }) {
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState(initialBatchInvoiceFieldErrors);
   const [orderGroupMode, setOrderGroupMode] = useState("order");
   const modalBodyRef = useRef(null);
   const pendingScrollTopRef = useRef(null);
-  const batchTableClassName = `pc-mall-table pc-mall-batch-table${allowToggleOrder ? "" : " is-without-toggle"}`;
+  const batchTableClassName = `pc-mall-table pc-mall-batch-table${allowToggleOrder ? "" : " is-without-toggle"}${hideInvoiceAndReceiverSections ? " has-row-invoice-fields" : ""}`;
 
   useEffect(() => {
     setForm(initialForm.invoiceType === "电子增值税专用发票" ? { ...initialForm, titleType: "企业" } : initialForm);
@@ -4508,6 +4610,26 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
 
     return groups;
   }, [orderGroupMode, orderItems]);
+
+  const handleChangeOrderItem = (orderNo, field, value) => {
+    if (!onOrderItemsChange) return;
+
+    onOrderItemsChange((current) => current.map((item) => {
+      if (item.orderNo !== orderNo) return item;
+      if (field === "invoiceTitleId") {
+        const matchedTitle = invoiceTitleRows.find((titleItem) => titleItem.id === value);
+        return {
+          ...item,
+          ...createBuyerPcMallBatchOrderInvoiceFields(matchedTitle)
+        };
+      }
+
+      return {
+        ...item,
+        [field]: value
+      };
+    }));
+  };
 
   const handleChange = (field, value) => {
     if (field === "invoiceType" && modalBodyRef.current) {
@@ -4610,6 +4732,15 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
   };
 
   const handleSubmit = () => {
+    if (hideInvoiceAndReceiverSections) {
+      onSubmit({
+        ...form,
+        orderItems,
+        remark: form.remark.trim()
+      });
+      return;
+    }
+
     const invoiceType = form.invoiceType.trim();
     const titleType = form.titleType.trim();
     const titleName = form.titleName.trim();
@@ -4706,7 +4837,7 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
         </div>
 
         <div className="pc-mall-batch-modal-body" ref={modalBodyRef}>
-          {isSpecialInvoiceLayout ? (
+          {!hideInvoiceAndReceiverSections && isSpecialInvoiceLayout ? (
             <>
               <section className="pc-mall-batch-card is-special-layout">
                 <h2>发票信息</h2>
@@ -4771,8 +4902,8 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                 </div>
               </section>
             </>
-          ) : (
-            <section className="pc-mall-batch-card">
+          ) : !hideInvoiceAndReceiverSections ? (
+            <section className={`pc-mall-batch-card ${hideInvoiceAndReceiverSections ? "pc-mall-batch-card-order-summary" : ""}`}>
               <h2>发票信息</h2>
               <div className="pc-mall-batch-form-grid">
                 <div className="pc-mall-batch-field">
@@ -4826,9 +4957,10 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                 </div>
               </div>
             </section>
-          )}
+          ) : null}
 
-          <section className="pc-mall-batch-card">
+          {!hideInvoiceAndReceiverSections ? (
+          <section className={`pc-mall-batch-card ${hideInvoiceAndReceiverSections ? "pc-mall-batch-card-order-note" : ""}`}>
             <div className="pc-mall-batch-section-head">
               <h2>收票信息</h2>
               <span>收票人手机和邮箱至少填一项</span>
@@ -4844,9 +4976,10 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
               </label>
             </div>
           </section>
+          ) : null}
 
           {showOrderSummary ? (
-            <section className="pc-mall-batch-card">
+            <section className={`pc-mall-batch-card ${hideInvoiceAndReceiverSections ? "pc-mall-batch-card-order-list" : ""}`}>
               <div className="pc-mall-batch-summary-head">
                 <h2>{summaryTitle || `本次批量申请开票共 ${summary.count} 笔订单，申请开票金额合计：￥${summary.totalAmount.toFixed(2)}`}</h2>
                 {showOrderGroupMode ? (
@@ -4890,9 +5023,11 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                             </span>
                           </th>
                           <th>申请开票金额</th>
-                          <th>支付时间</th>
-                          <th>买家账号</th>
                           <th>闪购门店</th>
+                          {hideInvoiceAndReceiverSections ? <th>发票抬头</th> : null}
+                          {hideInvoiceAndReceiverSections ? <th>收票人手机</th> : null}
+                          {hideInvoiceAndReceiverSections ? <th>收票人邮箱</th> : null}
+                          {showSeparateInvoiceColumn ? <th>是否单独开票</th> : null}
                           {allowToggleOrder ? <th>单开发票</th> : null}
                           {allowRemoveOrder ? <th>操作</th> : null}
                         </tr>
@@ -4905,14 +5040,54 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                             <td>{item.afterSaleStatus || "-"}</td>
                             <td>{item.afterSaleAmount || "¥0.00"}</td>
                             <td>{item.price}</td>
-                            <td>{item.time}</td>
-                            <td>{item.buyerAccount}</td>
                             <td>
                               <div className="pc-mall-store-cell">
                                 <div>{item.store}</div>
                                 {item.storeId ? <div>{item.storeId}</div> : null}
                               </div>
                             </td>
+                            {hideInvoiceAndReceiverSections ? (
+                              <td>
+                                <div className="pc-mall-batch-title-field">
+                                  <div className="pc-mall-batch-select-wrap pc-mall-batch-table-select-wrap">
+                                    <select value={item.invoiceTitleId || ""} onChange={(e) => handleChangeOrderItem(item.orderNo, "invoiceTitleId", e.target.value)}>
+                                      {invoiceTitleRows.map((titleItem) => (
+                                        <option key={titleItem.id} value={titleItem.id}>{titleItem.title}</option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  <span className="pc-mall-inline-tooltip-wrap pc-mall-batch-title-view-wrap">
+                                    <button className="pc-mall-batch-title-view-btn" type="button">查看</button>
+                                    <span className="pc-mall-inline-tooltip">{getBuyerPcMallInvoiceTitleTooltip(invoiceTitleRows.find((titleItem) => titleItem.id === item.invoiceTitleId) || null)}</span>
+                                  </span>
+                                </div>
+                              </td>
+                            ) : null}
+                            {hideInvoiceAndReceiverSections ? (
+                              <td>
+                                <input
+                                  className="pc-mall-batch-table-input"
+                                  value={item.receiverPhone || ""}
+                                  onChange={(e) => handleChangeOrderItem(item.orderNo, "receiverPhone", e.target.value)}
+                                />
+                              </td>
+                            ) : null}
+                            {hideInvoiceAndReceiverSections ? (
+                              <td>
+                                <input
+                                  className="pc-mall-batch-table-input"
+                                  value={item.receiverEmail || ""}
+                                  onChange={(e) => handleChangeOrderItem(item.orderNo, "receiverEmail", e.target.value)}
+                                />
+                              </td>
+                            ) : null}
+                            {showSeparateInvoiceColumn ? (
+                              <td>
+                                <label className="pc-mall-batch-checkbox-cell">
+                                  <input type="checkbox" checked={Boolean(item.needInvoice)} onChange={() => onToggleOrder(item.orderNo)} />
+                                </label>
+                              </td>
+                            ) : null}
                             {allowToggleOrder ? (
                               <td>
                                 <button className={`pc-mall-switch ${item.needInvoice ? "is-on" : ""}`} type="button" onClick={() => onToggleOrder(item.orderNo)}>
@@ -5011,12 +5186,14 @@ function BuyerPcMallPage({ onPortalActionClick }) {
   const [modifyInvoiceOrders, setModifyInvoiceOrders] = useState([]);
   const [modifyInvoiceInitialForm, setModifyInvoiceInitialForm] = useState(buyerPcMallBatchInvoiceForm);
   const [invoiceActionModal, setInvoiceActionModal] = useState(null);
+  const buyerPcMallMissingInvoiceTitleNotice = "请在发票抬头管理>新增发票抬头后再开票";
   const getBuyerPcMallApplyDisabledReason = useCallback((item) => {
     if (!item) return "";
     if (item.applyDisabledReason) return item.applyDisabledReason;
     if (item.afterSaleStatus === "售后中") return "售后状态为 售后中的订单，不允许申请开票";
     return "";
   }, []);
+  const hasInvoiceTitles = invoiceTitleRows.length > 0;
   const displayedPendingInvoiceRows = useMemo(() => (
     invoiceRows.filter((item) => (
       selectedPendingOrderStatus === "全部" || item.orderStatus === selectedPendingOrderStatus
@@ -5172,6 +5349,11 @@ function BuyerPcMallPage({ onPortalActionClick }) {
   };
 
   const handleOpenBatchInvoicePage = (mode = "merged") => {
+    if (!hasInvoiceTitles) {
+      setBatchInvoiceNotice(buyerPcMallMissingInvoiceTitleNotice);
+      return;
+    }
+
     if (selectedInvoiceOrderNos.length === 0) {
       setBatchInvoiceNotice("请先勾选订单，再进行申请开票。");
       return;
@@ -5180,6 +5362,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
     const selectedOrderSet = new Set(selectedInvoiceOrderNos);
     const selectedRows = invoiceRows.filter((item) => selectedOrderSet.has(item.orderNo));
     const blockedRow = selectedRows.find((item) => getBuyerPcMallApplyDisabledReason(item));
+    const defaultTitleRow = invoiceTitleRows.find((item) => item.isDefault) || invoiceTitleRows[0] || null;
     if (blockedRow) {
       setBatchInvoiceNotice(`${getBuyerPcMallApplyDisabledReason(blockedRow)}。`);
       return;
@@ -5187,6 +5370,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
     const batchRows = selectedRows
       .map((item) => ({
         ...item,
+        ...createBuyerPcMallBatchOrderInvoiceFields(defaultTitleRow),
         needInvoice: mode === "separate",
         buyerAccount: "zhuda123"
       }));
@@ -5289,6 +5473,10 @@ function BuyerPcMallPage({ onPortalActionClick }) {
     setDraftInvoiceTitleManagementKeyword("");
     setAppliedInvoiceTitleManagementKeyword("");
   };
+  const handleDeleteInvoiceTitle = (titleId) => {
+    setInvoiceTitleRows((current) => current.filter((item) => item.id !== titleId));
+    setBatchInvoiceNotice("删除发票抬头成功");
+  };
   const handleSaveInvoiceTitle = (form) => {
     const nextRow = {
       id: `title-${Date.now()}`,
@@ -5315,13 +5503,28 @@ function BuyerPcMallPage({ onPortalActionClick }) {
 
   const handleBatchInvoiceSubmit = (form) => {
     const appliedAt = formatBuyerPcMallDateTime();
-    const selectedOrderNos = new Set(batchInvoiceOrderItems.map((item) => item.orderNo));
+    const submitOrderItems = Array.isArray(form.orderItems) && form.orderItems.length > 0 ? form.orderItems : batchInvoiceOrderItems;
+    const selectedOrderNos = new Set(submitOrderItems.map((item) => item.orderNo));
     const currentDate = new Date();
     const mergedInvoiceBatch = createBuyerPcMallInvoiceBatchNo(currentDate, "001");
-    const nextAppliedRows = batchInvoiceOrderItems.map((item, index) => (
+    const nextAppliedRows = submitOrderItems.map((item, index) => (
       createBuyerPcMallAppliedInvoiceRow(
         item,
-        form,
+        form.orderItems
+          ? {
+            ...form,
+            invoiceType: item.invoiceType || form.invoiceType,
+            titleType: item.titleType || form.titleType,
+            titleName: item.invoiceTitle || form.titleName,
+            taxpayerId: item.taxpayerId || "",
+            registeredAddress: item.registeredAddress || "",
+            phone: item.phone || "",
+            bank: item.bank || "",
+            bankAccount: item.bankAccount || "",
+            receiverPhone: item.receiverPhone || "",
+            receiverEmail: item.receiverEmail || ""
+          }
+          : form,
         appliedAt,
         batchInvoiceMode === "merged"
           ? mergedInvoiceBatch
@@ -5336,9 +5539,14 @@ function BuyerPcMallPage({ onPortalActionClick }) {
     setBatchInvoiceMode("merged");
     setInvoicePageView("list");
     setActiveTab("已申请开票");
-    setBatchInvoiceNotice(batchInvoiceMode === "merged" ? "按店铺合并开票申请成功" : "按订单分别开票申请成功");
+    setBatchInvoiceNotice("批量申请开票成功");
   };
   const handleOpenSingleInvoiceModal = (orderNo) => {
+    if (!hasInvoiceTitles) {
+      setBatchInvoiceNotice(buyerPcMallMissingInvoiceTitleNotice);
+      return;
+    }
+
     const matchedOrder = invoiceRows.find((item) => item.orderNo === orderNo);
     if (!matchedOrder) return;
     const applyDisabledReason = getBuyerPcMallApplyDisabledReason(matchedOrder);
@@ -5401,7 +5609,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
       return;
     }
 
-    setModifyInvoiceOrders(selectedRows.map((item) => createBuyerPcMallBatchItemFromAppliedRow(item)));
+    setModifyInvoiceOrders(selectedRows.map((item) => createBuyerPcMallBatchItemFromAppliedRow(item, invoiceTitleRows)));
     setModifyInvoiceInitialForm(createBuyerPcMallModifyInvoiceFormFromAppliedRow(selectedRows[0]));
   };
 
@@ -5431,7 +5639,8 @@ function BuyerPcMallPage({ onPortalActionClick }) {
 
   const handleSubmitModifyInvoice = (form) => {
     const modifiedAt = formatBuyerPcMallDateTime();
-    const enabledModifyOrders = modifyInvoiceOrders.filter((item) => item.needInvoice);
+    const submitOrderItems = Array.isArray(form.orderItems) && form.orderItems.length > 0 ? form.orderItems : modifyInvoiceOrders;
+    const enabledModifyOrders = submitOrderItems.filter((item) => item.needInvoice);
 
     if (enabledModifyOrders.length === 0) {
       setBatchInvoiceNotice("请至少保留1笔订单后再提交修改。");
@@ -5439,26 +5648,29 @@ function BuyerPcMallPage({ onPortalActionClick }) {
     }
 
     const targetOrderNos = new Set(enabledModifyOrders.map((item) => item.orderNo));
+    const submitOrderMap = new Map(submitOrderItems.map((item) => [item.orderNo, item]));
 
     setAppliedInvoiceRows((current) => current.map((item) => {
       if (!targetOrderNos.has(item.orderNo)) return item;
-      const titleType = form.invoiceType === "电子增值税专用发票" ? "企业" : form.titleType;
+      const orderItem = submitOrderMap.get(item.orderNo) || item;
+      const invoiceSource = form.orderItems ? orderItem : form;
+      const titleType = invoiceSource.invoiceType === "电子增值税专用发票" ? "企业" : invoiceSource.titleType;
       return {
         ...item,
-        invoiceTitle: form.titleName,
-        invoiceType: form.invoiceType,
-        invoiceTypeTone: form.invoiceType.includes("专用") ? "blue" : "purple",
-        taxpayerId: titleType === "个人" ? "-" : form.taxpayerId,
+        invoiceTitle: invoiceSource.invoiceTitle || invoiceSource.titleName || item.invoiceTitle,
+        invoiceType: invoiceSource.invoiceType,
+        invoiceTypeTone: invoiceSource.invoiceType.includes("专用") ? "blue" : "purple",
+        taxpayerId: titleType === "个人" ? "-" : invoiceSource.taxpayerId,
         titleType,
-        registeredAddress: form.registeredAddress || "-",
-        phone: form.phone || "-",
-        bank: form.bank || "-",
-        bankAccount: form.bankAccount || "-",
-        store: form.storeName || item.store,
-        receiverPhone: form.receiverPhone || "-",
-        receiverEmail: form.receiverEmail || "-",
-        invoiceContent: form.invoiceContent,
-        remark: form.remark || "发票申请已提交，请等待供应商开票。",
+        registeredAddress: invoiceSource.registeredAddress || "-",
+        phone: invoiceSource.phone || "-",
+        bank: invoiceSource.bank || "-",
+        bankAccount: invoiceSource.bankAccount || "-",
+        store: form.orderItems ? item.store : (form.storeName || item.store),
+        receiverPhone: invoiceSource.receiverPhone || "-",
+        receiverEmail: invoiceSource.receiverEmail || "-",
+        invoiceContent: form.orderItems ? (item.invoiceContent || "商品类别") : form.invoiceContent,
+        remark: form.orderItems ? (item.remark || "发票申请已提交，请等待供应商开票。") : (form.remark || "发票申请已提交，请等待供应商开票。"),
         modifiedOnce: true,
         modifiedAt
       };
@@ -5467,23 +5679,25 @@ function BuyerPcMallPage({ onPortalActionClick }) {
     setActiveBuyerInvoiceDetail((current) => {
       if (!current || !targetOrderNos.has(current.orderInfo.orderNo)) return current;
       const targetRow = appliedInvoiceRows.find((item) => item.orderNo === current.orderInfo.orderNo);
-      if (!targetRow) return current;
+      const orderItem = submitOrderMap.get(current.orderInfo.orderNo);
+      const invoiceSource = form.orderItems ? orderItem : form;
+      if (!targetRow || !invoiceSource) return current;
       return createBuyerPcMallInvoiceDetail({
         ...targetRow,
-        invoiceTitle: form.titleName,
-        invoiceType: form.invoiceType,
-        invoiceTypeTone: form.invoiceType.includes("专用") ? "blue" : "purple",
-        taxpayerId: form.invoiceType === "电子增值税专用发票" || form.titleType === "企业" ? form.taxpayerId : "-",
-        titleType: form.invoiceType === "电子增值税专用发票" ? "企业" : form.titleType,
-        registeredAddress: form.registeredAddress || "-",
-        phone: form.phone || "-",
-        bank: form.bank || "-",
-        bankAccount: form.bankAccount || "-",
-        store: form.storeName || targetRow.store,
-        receiverPhone: form.receiverPhone || "-",
-        receiverEmail: form.receiverEmail || "-",
-        invoiceContent: form.invoiceContent,
-        remark: form.remark || "发票申请已提交，请等待供应商开票。",
+        invoiceTitle: invoiceSource.invoiceTitle || invoiceSource.titleName || targetRow.invoiceTitle,
+        invoiceType: invoiceSource.invoiceType,
+        invoiceTypeTone: invoiceSource.invoiceType.includes("专用") ? "blue" : "purple",
+        taxpayerId: invoiceSource.invoiceType === "电子增值税专用发票" || invoiceSource.titleType === "企业" ? invoiceSource.taxpayerId : "-",
+        titleType: invoiceSource.invoiceType === "电子增值税专用发票" ? "企业" : invoiceSource.titleType,
+        registeredAddress: invoiceSource.registeredAddress || "-",
+        phone: invoiceSource.phone || "-",
+        bank: invoiceSource.bank || "-",
+        bankAccount: invoiceSource.bankAccount || "-",
+        store: form.orderItems ? targetRow.store : (form.storeName || targetRow.store),
+        receiverPhone: invoiceSource.receiverPhone || "-",
+        receiverEmail: invoiceSource.receiverEmail || "-",
+        invoiceContent: form.orderItems ? (targetRow.invoiceContent || "商品类别") : form.invoiceContent,
+        remark: form.orderItems ? (targetRow.remark || "发票申请已提交，请等待供应商开票。") : (form.remark || "发票申请已提交，请等待供应商开票。"),
         modifiedOnce: true,
         modifiedAt
       }, "applied");
@@ -5513,7 +5727,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
       return;
     }
     setInvoiceActionModal(null);
-    setModifyInvoiceOrders([createBuyerPcMallBatchItemFromAppliedRow(targetRow)]);
+    setModifyInvoiceOrders([createBuyerPcMallBatchItemFromAppliedRow(targetRow, invoiceTitleRows)]);
     setModifyInvoiceInitialForm(createBuyerPcMallModifyInvoiceFormFromAppliedRow(targetRow));
   };
 
@@ -5661,27 +5875,34 @@ function BuyerPcMallPage({ onPortalActionClick }) {
   const isInvoiceTitleManagementView = invoicePageView === "title-management";
   const isInvoiceDetailView = invoicePageView === "detail";
   const shouldEnableInvoiceDetailScroll = isInvoiceDetailView && (isAppliedTab || isInvoicedTab);
+  const defaultInvoiceTitleRow = invoiceTitleRows.find((item) => item.isDefault) || invoiceTitleRows[0] || null;
   const batchInvoiceModal = isBatchInvoiceView ? (
     <BuyerPcMallBatchInvoiceModal
-      initialForm={buyerPcMallBatchInvoiceForm}
+      initialForm={createBuyerPcMallBatchInvoiceFormFromTitleRow(defaultInvoiceTitleRow)}
       orderItems={batchInvoiceOrderItems}
+      invoiceTitleRows={invoiceTitleRows}
+      onOrderItemsChange={setBatchInvoiceOrderItems}
       summary={batchInvoiceSummary}
       onClose={handleBatchInvoiceBack}
       onSubmit={handleBatchInvoiceSubmit}
       onNotice={setBatchInvoiceNotice}
       onToggleOrder={handleToggleBatchInvoiceOrder}
       onRemoveOrder={handleRemoveBatchInvoiceOrder}
-      title={batchInvoiceMode === "merged" ? "按店铺合并开票" : "按订单分别开票"}
+      title="批量申请开票"
       submitButtonText="提交申请"
-      summaryTitle={`本次${batchInvoiceMode === "merged" ? "按店铺合并" : "按订单分别"}开票共 ${batchInvoiceSummary.count} 笔订单，申请开票金额合计：￥${batchInvoiceSummary.totalAmount.toFixed(2)}`}
+      summaryTitle={`本次批量申请开票共 ${batchInvoiceSummary.count} 笔订单，申请开票金额合计：￥${batchInvoiceSummary.totalAmount.toFixed(2)}`}
       allowToggleOrder={false}
       showOrderGroupMode
+      showSeparateInvoiceColumn
+      hideInvoiceAndReceiverSections
     />
   ) : null;
   const modifyInvoiceModal = modifyInvoiceOrders.length > 0 ? (
     <BuyerPcMallBatchInvoiceModal
       initialForm={modifyInvoiceInitialForm}
       orderItems={modifyInvoiceOrders}
+      invoiceTitleRows={invoiceTitleRows}
+      onOrderItemsChange={setModifyInvoiceOrders}
       summary={{
         count: modifyInvoiceOrders.length,
         totalAmount: modifyInvoiceOrders.reduce((sum, item) => sum + (getPriceNumber(item.price) || 0), 0)
@@ -5695,6 +5916,9 @@ function BuyerPcMallPage({ onPortalActionClick }) {
       submitButtonText="确认修改"
       summaryTitle={`本次${modifyInvoiceOrders.length === 1 ? "" : "批量"}修改开票共 ${modifyInvoiceOrders.length} 笔订单，申请开票金额合计：￥${modifyInvoiceOrders.reduce((sum, item) => sum + (getPriceNumber(item.price) || 0), 0).toFixed(2)}`}
       allowToggleOrder={false}
+      showOrderGroupMode
+      showSeparateInvoiceColumn
+      hideInvoiceAndReceiverSections
     />
   ) : null;
   const singleInvoiceModal = singleInvoiceOrder ? (
@@ -5832,7 +6056,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                         设为默认
                       </button>
                       <button className="pc-mall-invoice-title-icon-btn" type="button">编辑</button>
-                      <button className="pc-mall-invoice-title-icon-btn" type="button">删除</button>
+                      <button className="pc-mall-invoice-title-icon-btn" type="button" onClick={() => handleDeleteInvoiceTitle(item.id)}>删除</button>
                     </div>
                   </article>
                 ))}
@@ -6007,8 +6231,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
 
                 <div className="pc-mall-table-toolbar">
                   <div className="pc-mall-toolbar-left">
-                    <button className="pc-mall-batch-btn" type="button" onClick={() => handleOpenBatchInvoicePage("merged")}>按店铺合并开票</button>
-                    <button className="pc-mall-batch-btn pc-mall-batch-btn-secondary" type="button" onClick={() => handleOpenBatchInvoicePage("separate")}>按订单分别开票</button>
+                    <button className="pc-mall-batch-btn" type="button" onClick={() => handleOpenBatchInvoicePage("merged")}>批量申请开票</button>
                     <div className="pc-mall-toolbar-summary">已选中 {selectedInvoiceSummary.count} 笔订单，合计金额： <strong>{`￥${selectedInvoiceSummary.totalAmount.toFixed(2)}`}</strong></div>
                   </div>
                   <div className="pc-mall-toolbar-right">
@@ -6202,6 +6425,15 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                         <th>订单号</th>
                         <th>发票抬头</th>
                         <th>发票类型</th>
+                        <th>
+                          <span className="pc-mall-header-with-tip">
+                            <span>订单总额</span>
+                            <span className="shop-invoice-summary-tip pc-mall-header-tip">
+                              <img className="shop-invoice-summary-tip-icon" src={questionHeaderIcon} alt="" aria-hidden="true" />
+                              <span className="shop-invoice-summary-tooltip">订单总额 = 总商品金额 - 折扣/优惠金额 + 运费</span>
+                            </span>
+                          </span>
+                        </th>
                         <th>申请开票金额</th>
                         <th>申请时间</th>
                         <th>开票批次</th>
@@ -6218,6 +6450,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                           <td><button className="pc-mall-order-link" type="button">{item.orderNo}</button></td>
                           <td>{item.invoiceTitle}</td>
                           <td><span className={`pc-mall-invoice-tag is-${item.invoiceTypeTone}`}>{item.invoiceType}</span></td>
+                          <td className="pc-mall-amount-cell">{item.price || item.amount}</td>
                           <td className="pc-mall-amount-cell">{item.amount}</td>
                           <td>{item.appliedAt}</td>
                           <td>{item.invoiceBatch || "-"}</td>
@@ -6328,6 +6561,15 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                         <th>订单号</th>
                         <th>发票抬头</th>
                         <th>发票类型</th>
+                        <th>
+                          <span className="pc-mall-header-with-tip">
+                            <span>订单总额</span>
+                            <span className="shop-invoice-summary-tip pc-mall-header-tip">
+                              <img className="shop-invoice-summary-tip-icon" src={questionHeaderIcon} alt="" aria-hidden="true" />
+                              <span className="shop-invoice-summary-tooltip">订单总额 = 总商品金额 - 折扣/优惠金额 + 运费</span>
+                            </span>
+                          </span>
+                        </th>
                         <th>开票金额</th>
                         <th>开票批次</th>
                         <th>店铺名称</th>
@@ -6344,6 +6586,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                           <td><button className="pc-mall-order-link" type="button">{item.orderNo}</button></td>
                           <td>{item.invoiceTitle}</td>
                           <td><span className={`pc-mall-invoice-tag is-${item.invoiceTypeTone}`}>{item.invoiceType}</span></td>
+                          <td className="pc-mall-amount-cell">{item.price || item.amount}</td>
                           <td className="pc-mall-amount-cell">{item.amount}</td>
                           <td>{item.invoiceBatch || "-"}</td>
                           <td>
@@ -9144,14 +9387,8 @@ function ShopInvoicePage({
             </div>
           </label>
           <label className="shop-invoice-field">
-            <span>开票类型</span>
-            <div className="shop-invoice-select-wrap">
-              <select value={draftFilters.singleInvoice} onChange={(e) => handleDraftFilterChange("singleInvoice", e.target.value)}>
-                <option>全部</option>
-                <option>合并开票</option>
-                <option>单独开票</option>
-              </select>
-            </div>
+            <span>申请时间</span>
+            <PcMallDateRangeField placeholder="开始日期 ～ 结束日期" value={draftFilters.appliedAtRange} onChange={(value) => handleDraftFilterChange("appliedAtRange", value)} />
           </label>
           <label className="shop-invoice-field">
             <span>付款方式</span>
@@ -9199,9 +9436,15 @@ function ShopInvoicePage({
               </select>
             </div>
           </label>
-          <label className="shop-invoice-field">
-            <span>申请时间</span>
-            <PcMallDateRangeField placeholder="开始日期 ～ 结束日期" value={draftFilters.appliedAtRange} onChange={(value) => handleDraftFilterChange("appliedAtRange", value)} />
+          <label className="shop-invoice-field shop-invoice-field-wide-label">
+            <span>是否单独开票</span>
+            <div className="shop-invoice-select-wrap">
+              <select value={draftFilters.singleInvoice} onChange={(e) => handleDraftFilterChange("singleInvoice", e.target.value)}>
+                <option>全部</option>
+                <option>是</option>
+                <option>否</option>
+              </select>
+            </div>
           </label>
           <label className="shop-invoice-field">
             <span>开票时间</span>
@@ -9219,7 +9462,7 @@ function ShopInvoicePage({
               <input placeholder="请输入发票抬头" value={draftFilters.invoiceTitle} onChange={(e) => handleDraftFilterChange("invoiceTitle", e.target.value)} />
             </div>
           </label>
-          <label className="shop-invoice-field shop-invoice-field-taxpayer-id">
+          <label className="shop-invoice-field shop-invoice-field-taxpayer-id shop-invoice-field-wide-label">
             <span>纳税人识别号</span>
             <div className="shop-invoice-input-wrap">
               <input placeholder="请输入纳税人识别号" value={draftFilters.taxpayerId} onChange={(e) => handleDraftFilterChange("taxpayerId", e.target.value)} />
