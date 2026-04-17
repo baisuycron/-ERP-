@@ -2737,6 +2737,7 @@ function createShopInvoiceIssuedDetail(row) {
       invoiceStatus: row.invoiceStatus,
       invoiceStatusTone: row.invoiceStatusTone || "dark",
       invoiceType: row.invoiceType,
+      invoiceContent: row.invoiceContent || "商品类别",
       invoiceTypeExtraText,
       appliedAt: row.appliedAt,
       invoicePlatform: "闪电帮帮",
@@ -2795,6 +2796,7 @@ function createBuyerPcMallInvoiceDetail(row, sourceType) {
   const mappedRow = {
     orderNo: row.orderNo,
     invoiceType: row.invoiceType,
+    invoiceContent: row.invoiceContent || "商品类别",
     invoiceTitle: row.invoiceTitle,
     taxpayerId: isPersonalTitle ? "-" : `9131${String(row.orderNo).slice(-10)}`,
     orderStatus: "已完成",
@@ -4166,6 +4168,7 @@ function BuyerPcMallInvoiceDetailPage({ detail, onBack, onPreview, onModifyInvoi
           <div className="shop-invoice-detail-info-grid">
             <div className="shop-invoice-detail-info-row"><span>开票状态</span><strong className="shop-invoice-status-detail"><span className={`shop-invoice-mini-tag is-${detail.invoiceInfo.invoiceStatusTone || "dark"}`}>{detail.invoiceInfo.invoiceStatus}</span>{detail.invoiceInfo.statusExtraText ? <span className="shop-invoice-status-extra">{detail.invoiceInfo.statusExtraText}</span> : null}</strong></div>
             <div className="shop-invoice-detail-info-row"><span>发票类型</span><strong className="shop-invoice-status-detail">{detail.invoiceInfo.invoiceType}{detail.invoiceInfo.invoiceTypeExtraText ? <span className="shop-invoice-detail-alert">{detail.invoiceInfo.invoiceTypeExtraText}</span> : null}</strong></div>
+            <div className="shop-invoice-detail-info-row"><span>发票内容</span><strong>{detail.invoiceInfo.invoiceContent || "商品类别"}</strong></div>
             <div className="shop-invoice-detail-info-row"><span>申请时间</span><strong>{detail.invoiceInfo.appliedAt}</strong></div>
             <div className="shop-invoice-detail-info-row">
               <span>发票号码</span>
@@ -4562,9 +4565,10 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
   const [errors, setErrors] = useState(initialBatchInvoiceFieldErrors);
   const [orderGroupMode, setOrderGroupMode] = useState("order");
   const [batchReplaceTitleId, setBatchReplaceTitleId] = useState("");
+  const [batchReplaceInvoiceContent, setBatchReplaceInvoiceContent] = useState("");
   const modalBodyRef = useRef(null);
   const pendingScrollTopRef = useRef(null);
-  const batchTableClassName = `pc-mall-table pc-mall-batch-table${allowToggleOrder ? "" : " is-without-toggle"}${hideInvoiceAndReceiverSections ? " has-row-invoice-fields" : ""}`;
+  const batchTableClassName = `pc-mall-table pc-mall-batch-table${allowToggleOrder ? "" : " is-without-toggle"}${hideInvoiceAndReceiverSections ? " has-row-invoice-fields" : ""}${enableBatchTitleReplace ? " has-batch-content-column" : ""}`;
 
   useEffect(() => {
     setForm(initialForm.invoiceType === "电子增值税专用发票" ? { ...initialForm, titleType: "企业" } : initialForm);
@@ -4575,6 +4579,7 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
     if (!enableBatchTitleReplace) return;
     const firstMatchedTitleId = orderItems.find((item) => item.invoiceTitleId)?.invoiceTitleId || "";
     setBatchReplaceTitleId(firstMatchedTitleId);
+    setBatchReplaceInvoiceContent("");
   }, [enableBatchTitleReplace, orderItems]);
 
   useLayoutEffect(() => {
@@ -4741,27 +4746,28 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
 
   const handleBatchReplaceInvoiceTitle = () => {
     if (!enableBatchTitleReplace || !onOrderItemsChange) return;
-    if (!batchReplaceTitleId) {
-      onNotice("请选择要批量修改的发票抬头");
+    if (!batchReplaceTitleId && !batchReplaceInvoiceContent) {
+      onNotice("请选择要批量修改的内容");
       return;
     }
 
-    const matchedTitle = invoiceTitleRows.find((item) => item.id === batchReplaceTitleId);
-    if (!matchedTitle) {
+    const matchedTitle = batchReplaceTitleId ? invoiceTitleRows.find((item) => item.id === batchReplaceTitleId) : null;
+    if (batchReplaceTitleId && !matchedTitle) {
       onNotice("未找到对应的发票抬头，请重新选择");
       return;
     }
 
     onOrderItemsChange((current) => current.map((item) => {
-      const nextTitleFields = createBuyerPcMallBatchOrderInvoiceFields(matchedTitle);
+      const nextTitleFields = matchedTitle ? createBuyerPcMallBatchOrderInvoiceFields(matchedTitle) : {};
       return {
         ...item,
         ...nextTitleFields,
+        invoiceContent: batchReplaceInvoiceContent || item.invoiceContent || "商品类别",
         receiverPhone: item.receiverPhone,
         receiverEmail: item.receiverEmail
       };
     }));
-    onNotice("批量修改发票抬头成功");
+    onNotice("批量修改成功");
   };
 
   const handleSubmit = () => {
@@ -5030,13 +5036,21 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
               </div>
               {enableBatchTitleReplace ? (
                 <div className="pc-mall-batch-title-replace-bar">
-                  <span className="pc-mall-batch-title-replace-label">发票抬头批量修改</span>
+                  <span className="pc-mall-batch-title-replace-label">批量修改</span>
                   <div className="pc-mall-batch-title-replace-controls">
                     <div className="pc-mall-batch-select-wrap pc-mall-batch-title-replace-select">
                       <select value={batchReplaceTitleId} onChange={(e) => setBatchReplaceTitleId(e.target.value)}>
                         <option value="">请选择发票抬头</option>
                         {invoiceTitleRows.map((titleItem) => (
                           <option key={titleItem.id} value={titleItem.id}>{titleItem.title}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="pc-mall-batch-select-wrap pc-mall-batch-title-replace-select is-content-select">
+                      <select value={batchReplaceInvoiceContent} onChange={(e) => setBatchReplaceInvoiceContent(e.target.value)}>
+                        <option value="">请选择开票内容</option>
+                        {["商品类别", "商品明细"].map((option) => (
+                          <option key={option} value={option}>{option}</option>
                         ))}
                       </select>
                     </div>
@@ -5075,6 +5089,7 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                           <th>闪购门店</th>
                           {hideInvoiceAndReceiverSections ? <th>发票抬头</th> : null}
                           {hideInvoiceAndReceiverSections ? <th>收票信息</th> : null}
+                          {enableBatchTitleReplace ? <th>发票内容</th> : null}
                           {showSeparateInvoiceColumn && !hideInvoiceAndReceiverSections ? <th>是否单独开票</th> : null}
                           {allowToggleOrder ? <th>单开发票</th> : null}
                           {allowRemoveOrder ? <th>操作</th> : null}
@@ -5115,6 +5130,7 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                                 </div>
                               </td>
                             ) : null}
+                            {enableBatchTitleReplace ? <td>{item.invoiceContent || "商品类别"}</td> : null}
                             {showSeparateInvoiceColumn && !hideInvoiceAndReceiverSections ? (
                               <td>
                                 <label className="pc-mall-batch-checkbox-cell">
@@ -5137,6 +5153,21 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                   </div>
                 </div>
               ))}
+            </section>
+          ) : null}
+
+          {hideInvoiceAndReceiverSections && !enableBatchTitleReplace ? (
+            <section className="pc-mall-batch-card">
+              <div className="pc-mall-batch-content-row">
+                <h2>发票内容</h2>
+                <div className="pc-mall-batch-content-input">
+                  {["商品类别", "商品明细"].map((option) => (
+                    <button className={`pc-mall-chip ${form.invoiceContent === option ? "is-active" : ""}`} key={option} type="button" onClick={() => handleChange("invoiceContent", option)}>
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </section>
           ) : null}
 
