@@ -56,6 +56,14 @@ const normalizeShopInvoiceMode = (value) => {
   return "否";
 };
 
+const normalizeShopInvoiceSelectionValue = (value) => {
+  if (value === true) return "是";
+  if (value === false) return "否";
+  return normalizeShopInvoiceMode(value);
+};
+
+const isShopInvoiceSingleInvoiceEnabled = (value) => normalizeShopInvoiceSelectionValue(value) === "是";
+
 function parseMoneyValue(value) {
   const numeric = Number(String(value || "").replace(/[^\d.-]/g, ""));
   return Number.isFinite(numeric) ? numeric : 0;
@@ -2963,7 +2971,7 @@ function createBuyerPcMallAppliedInvoiceRow(order, form, appliedAt = formatBuyer
     receiverPhone: form.receiverPhone || "-",
     receiverEmail: form.receiverEmail || "-",
     invoiceContent: form.invoiceContent,
-    singleInvoice: normalizeShopInvoiceMode(order.needInvoice === true || order.needInvoice === "是" ? "是" : "否"),
+    singleInvoice: normalizeShopInvoiceSelectionValue(order.needInvoice),
     invoiceBatch,
     remark: form.remark || "发票申请已提交，请等待供应商开票。",
     modifiedOnce: false,
@@ -3135,7 +3143,7 @@ function createBuyerPcMallBatchItemFromAppliedRow(row, invoiceTitleRows = []) {
     price: row.amount,
     time: row.appliedAt,
     buyerAccount: "nfsq369（ID:13641）",
-    needInvoice: normalizeShopInvoiceMode(row.singleInvoice) === "是"
+    needInvoice: normalizeShopInvoiceSelectionValue(row.singleInvoice)
   };
 }
 
@@ -5239,12 +5247,12 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                             {enableBatchTitleReplace ? <td>{item.invoiceContent || "商品类别"}</td> : null}
                             {showSeparateInvoiceColumn && (!hideInvoiceAndReceiverSections || enableBatchTitleReplace || editableSeparateInvoiceColumn) ? (
                               <td>
-                                {hideInvoiceAndReceiverSections && !editableSeparateInvoiceColumn ? normalizeShopInvoiceMode(item.needInvoice ? "是" : "否") : (
+                                {hideInvoiceAndReceiverSections && !editableSeparateInvoiceColumn ? normalizeShopInvoiceSelectionValue(item.needInvoice) : (
                                   editableSeparateInvoiceColumn ? (
                                     <div className="pc-mall-batch-table-select-wrap">
                                       <div className="pc-mall-batch-select-wrap">
-                                        <select value={item.needInvoice || ""} onChange={(event) => onToggleOrder(item.orderNo, event.target.value)}>
-                                          <option value="">请选择</option>
+                                        <select value={normalizeShopInvoiceSelectionValue(item.needInvoice)} onChange={(event) => onToggleOrder(item.orderNo, event.target.value)}>
+                                          {hideInvoiceAndReceiverSections ? null : <option value="">请选择</option>}
                                           <option value="是">是</option>
                                           <option value="否">否</option>
                                         </select>
@@ -5252,7 +5260,7 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                                     </div>
                                   ) : (
                                     <label className="pc-mall-batch-checkbox-cell">
-                                      <input type="checkbox" checked={Boolean(item.needInvoice)} onChange={() => onToggleOrder(item.orderNo)} />
+                                      <input type="checkbox" checked={isShopInvoiceSingleInvoiceEnabled(item.needInvoice)} onChange={() => onToggleOrder(item.orderNo)} />
                                     </label>
                                   )
                                 )}
@@ -5260,7 +5268,7 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                             ) : null}
                             {allowToggleOrder ? (
                               <td>
-                                <button className={`pc-mall-switch ${item.needInvoice ? "is-on" : ""}`} type="button" onClick={() => onToggleOrder(item.orderNo)}>
+                                <button className={`pc-mall-switch ${isShopInvoiceSingleInvoiceEnabled(item.needInvoice) ? "is-on" : ""}`} type="button" onClick={() => onToggleOrder(item.orderNo)}>
                                   <span />
                                 </button>
                               </td>
@@ -5763,7 +5771,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
     setSingleInvoiceOrder({
       ...matchedOrder,
       ...createBuyerPcMallBatchOrderInvoiceFields(defaultTitleRow),
-      needInvoice: "",
+      needInvoice: "否",
       buyerAccount: "zhuda123"
     });
   };
@@ -5794,7 +5802,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
   const handleToggleBatchInvoiceOrder = (orderNo) => {
     setBatchInvoiceOrderItems((current) => current.map((item) => (
       item.orderNo === orderNo
-        ? { ...item, needInvoice: !item.needInvoice }
+        ? { ...item, needInvoice: isShopInvoiceSingleInvoiceEnabled(item.needInvoice) ? "否" : "是" }
         : item
     )));
   };
@@ -5836,7 +5844,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
   const handleToggleModifyInvoiceOrder = (orderNo) => {
     setModifyInvoiceOrders((current) => current.map((item) => (
       item.orderNo === orderNo
-        ? { ...item, needInvoice: !item.needInvoice }
+        ? { ...item, needInvoice: isShopInvoiceSingleInvoiceEnabled(item.needInvoice) ? "否" : "是" }
         : item
     )));
   };
@@ -5855,7 +5863,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
   const handleSubmitModifyInvoice = (form) => {
     const modifiedAt = formatBuyerPcMallDateTime();
     const submitOrderItems = Array.isArray(form.orderItems) && form.orderItems.length > 0 ? form.orderItems : modifyInvoiceOrders;
-    const enabledModifyOrders = submitOrderItems.filter((item) => item.needInvoice);
+    const enabledModifyOrders = submitOrderItems;
 
     if (enabledModifyOrders.length === 0) {
       return;
@@ -5884,7 +5892,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
         receiverPhone: invoiceSource.receiverPhone || "-",
         receiverEmail: invoiceSource.receiverEmail || "-",
         invoiceContent: form.orderItems ? (orderItem.invoiceContent || item.invoiceContent || "商品类别") : form.invoiceContent,
-        singleInvoice: normalizeShopInvoiceMode(orderItem.needInvoice ? "是" : "否"),
+        singleInvoice: normalizeShopInvoiceSelectionValue(orderItem.needInvoice),
         remark: form.orderItems ? (item.remark || "发票申请已提交，请等待供应商开票。") : (form.remark || "发票申请已提交，请等待供应商开票。"),
         modifiedOnce: true,
         modifiedAt
@@ -5912,7 +5920,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
         receiverPhone: invoiceSource.receiverPhone || "-",
         receiverEmail: invoiceSource.receiverEmail || "-",
         invoiceContent: form.orderItems ? (orderItem?.invoiceContent || targetRow.invoiceContent || "商品类别") : form.invoiceContent,
-        singleInvoice: normalizeShopInvoiceMode(orderItem?.needInvoice ? "是" : "否"),
+        singleInvoice: normalizeShopInvoiceSelectionValue(orderItem?.needInvoice),
         remark: form.orderItems ? (targetRow.remark || "发票申请已提交，请等待供应商开票。") : (form.remark || "发票申请已提交，请等待供应商开票。"),
         modifiedOnce: true,
         modifiedAt
@@ -6146,6 +6154,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
       allowToggleOrder={false}
       showOrderGroupMode
       showSeparateInvoiceColumn
+      editableSeparateInvoiceColumn={modifyInvoiceOrders.length === 1}
       hideInvoiceAndReceiverSections
       allowRemoveOrder={false}
       enableBatchTitleReplace={modifyInvoiceOrders.length > 1}
@@ -6157,7 +6166,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
       orderItems={[singleInvoiceOrder]}
       summary={{
         count: 1,
-        enabledCount: singleInvoiceOrder.needInvoice ? 1 : 0,
+        enabledCount: isShopInvoiceSingleInvoiceEnabled(singleInvoiceOrder.needInvoice) ? 1 : 0,
         totalAmount: getPriceNumber(singleInvoiceOrder.price) || 0
       }}
       onClose={handleCloseSingleInvoiceModal}
