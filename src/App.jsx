@@ -725,6 +725,50 @@ function exportBuyerPcMallAppliedInvoiceWorkbook(rows) {
   XLSX.writeFile(workbook, `已申请开票导出-${rows.length}条.xlsx`);
   return true;
 }
+
+function exportBuyerPcMallInvoicedInvoiceWorkbook(rows) {
+  if (!Array.isArray(rows) || rows.length === 0) return false;
+
+  const orderRows = rows.map((row) => ({
+    订单号: row.orderNo || "-",
+    发票抬头: row.invoiceTitle || "-",
+    发票类型: row.invoiceType || "-",
+    开票金额: row.amount || "-",
+    开票批次: row.invoiceBatch || "-",
+    店铺名称: row.shop || "-",
+    闪购门店: [row.store, row.storeId].filter(Boolean).join(" ") || "-",
+    发票号码: row.invoiceNo || "-",
+    开票时间: row.invoicedAt || "-",
+    开票状态: row.status || "-"
+  }));
+  const detailRows = rows.flatMap((row) => {
+    const detail = createBuyerPcMallInvoiceDetail(row, "invoiced");
+    return (detail?.items || []).map((item, index) => ({
+      订单号: row.orderNo || "-",
+      商品名称: item.product || `${row.shop || "-"}订单商品`,
+      商品ID: row.productId || `${row.orderNo || "-"}-${index + 1}`,
+      规格: item.spec || row.spec || "-",
+      规格ID: row.specId || `${row.orderNo || "-"}-S${index + 1}`,
+      货号: row.skuNo || "-",
+      "单价(元)\n(商品折扣/优惠前价格)": item.unitPrice || "-",
+      购买数量: item.quantity || "1",
+      "小计(元)\n(单价*数量)": item.subtotal || "-",
+      "售后金额\n(售后中金额+已退款金额)": item.afterSaleAmount || row.afterSaleAmount || "-",
+      售后状态: item.afterSaleStatus || row.afterSaleStatus || "-",
+      申请售后数量: item.afterSaleCount || "0",
+      实际售后数量: item.actualAfterSaleCount || "0",
+      已发数量: item.shippedCount || "1"
+    }));
+  });
+
+  const workbook = XLSX.utils.book_new();
+  const orderWorksheet = XLSX.utils.json_to_sheet(orderRows);
+  const detailWorksheet = XLSX.utils.json_to_sheet(detailRows);
+  XLSX.utils.book_append_sheet(workbook, orderWorksheet, "订单列表");
+  XLSX.utils.book_append_sheet(workbook, detailWorksheet, "商品明细");
+  XLSX.writeFile(workbook, `已开具发票导出-${rows.length}条.xlsx`);
+  return true;
+}
 const menuItems = [
   { label: "首页", icon: "home" },
   { label: "商品", icon: "goods" },
@@ -1063,10 +1107,13 @@ function getBuyerPcMallInvoiceAfterSaleViewTooltip(row) {
 function normalizeBuyerPcMallInvoiceRow(row) {
   const detailStatuses = getBuyerPcMallInvoiceOrderAfterSaleStatuses(row);
   const afterSaleSummary = getShopInvoiceOrderAfterSaleSummary(detailStatuses);
+  const normalizedAfterSaleStatus = afterSaleSummary.afterSaleStatus === "退款成功" || afterSaleSummary.afterSaleStatus === "部分售后完成"
+    ? "部分退款"
+    : afterSaleSummary.afterSaleStatus;
 
   return {
     ...row,
-    afterSaleStatus: afterSaleSummary.afterSaleStatus,
+    afterSaleStatus: normalizedAfterSaleStatus,
     afterSaleStatusDetail: detailStatuses.length > 0 ? detailStatuses.join("、") : "-",
     hasPendingSupplierReview: detailStatuses.includes("待供应商审核")
   };
@@ -1793,8 +1840,7 @@ const initialShopInvoiceColumnPrefs = shopInvoiceColumnDefinitions.reduce((resul
 const initialShopInvoiceColumnOrder = shopInvoiceColumnDefinitions.filter((column) => column.key !== "select").map((column) => column.key);
 const buyerPcMallAccountOptions = ["wujing146(总部)", "nfsq369(子账号)", "shawnee003(总部)", "lgq01(默认账号)"];
 const buyerPcMallStatusOptions = ["待申请", "已驳回", "已撤销"];
-const buyerPcMallOrderStatusOptions = ["全部", "待发货", "待收货", "已完成"];
-const buyerPcMallAfterSaleStatusOptions = ["全部", ...shopInvoiceAfterSaleStatusOptions];
+const buyerPcMallAfterSaleStatusOptions = ["全部", "售后中", "部分退款", "售后关闭"];
 const buyerPcMallStoreOptions = ["闪购一店", "闪购二店", "北京朝阳门店", "成都晨曦路门店"];
 const buyerPcMallStoreSearchOptions = [
   { value: "闪购一店", label: "闪购一店", meta: "ID：121301", searchText: "闪购一店 id:121301 id：121301 121301" },
@@ -5218,7 +5264,6 @@ function BuyerPcMallPage({ onPortalActionClick }) {
   const [selectedPendingStatuses, setSelectedPendingStatuses] = useState(["待申请", "已驳回", "已撤销"]);
   const [selectedPendingAfterSaleStatuses, setSelectedPendingAfterSaleStatuses] = useState(["全部"]);
   const [selectedPendingPaymentMethod, setSelectedPendingPaymentMethod] = useState("全部");
-  const [selectedPendingOrderStatus, setSelectedPendingOrderStatus] = useState("全部");
   const [selectedPendingStores, setSelectedPendingStores] = useState([]);
   const [pendingStoreKeyword, setPendingStoreKeyword] = useState("");
   const [selectedAppliedAccounts, setSelectedAppliedAccounts] = useState([]);
@@ -5259,11 +5304,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
     return "";
   }, []);
   const hasInvoiceTitles = invoiceTitleRows.length > 0;
-  const displayedPendingInvoiceRows = useMemo(() => (
-    invoiceRows.filter((item) => (
-      selectedPendingOrderStatus === "全部" || item.orderStatus === selectedPendingOrderStatus
-    ))
-  ), [invoiceRows, selectedPendingOrderStatus]);
+  const displayedPendingInvoiceRows = useMemo(() => invoiceRows, [invoiceRows]);
   const selectableInvoiceOrderNos = useMemo(() => (
     displayedPendingInvoiceRows.filter((item) => !getBuyerPcMallApplyDisabledReason(item)).map((item) => item.orderNo)
   ), [displayedPendingInvoiceRows, getBuyerPcMallApplyDisabledReason]);
@@ -5927,6 +5968,15 @@ function BuyerPcMallPage({ onPortalActionClick }) {
     setBatchInvoiceNotice("已申请开票查询数据导出成功");
   };
 
+  const handleExportInvoicedQueryData = () => {
+    const didExport = exportBuyerPcMallInvoicedInvoiceWorkbook(displayedInvoicedInvoiceRows);
+    if (!didExport) {
+      setBatchInvoiceNotice("当前没有可导出的查询数据。");
+      return;
+    }
+    setBatchInvoiceNotice("已开具发票查询数据导出成功");
+  };
+
   const isPendingTab = activeTab === "可申请开票";
   const isAppliedTab = activeTab === "已申请开票";
   const isInvoicedTab = activeTab === "已开具发票";
@@ -6239,7 +6289,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                 <section className="pc-mall-filter-card">
                   <div className="pc-mall-filter-grid">
                     <label className="pc-mall-filter-field">
-                  <span>订单关键字</span>
+                  <span>关键字</span>
                   <input defaultValue="支持订单号/店铺名称" />
                     </label>
                     <label className="pc-mall-filter-field">
@@ -6279,16 +6329,6 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                         </select>
                       </div>
                     </label>
-                    <label className="pc-mall-filter-field">
-                      <span>订单状态</span>
-                      <div className="pc-mall-select-wrap pc-mall-select-wrap-payment">
-                        <select value={selectedPendingOrderStatus} onChange={(event) => setSelectedPendingOrderStatus(event.target.value)}>
-                          {buyerPcMallOrderStatusOptions.map((option) => (
-                            <option key={option} value={option}>{option}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </label>
                     <div className="pc-mall-filter-actions pc-mall-filter-actions-inline">
                       <button className="pc-mall-btn" type="button">重置</button>
                       <button className="pc-mall-btn pc-mall-btn-dark" type="button">查询</button>
@@ -6312,7 +6352,6 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                       <tr>
                         <th><input type="checkbox" checked={allInvoiceRowsSelected} disabled={selectableInvoiceOrderNos.length === 0} onChange={(e) => handleToggleAllInvoiceRows(e.target.checked)} /></th>
                         <th>订单号</th>
-                        <th>订单状态</th>
                         <th>
                           <span className="pc-mall-header-with-tip">
                             <span>订单总额</span>
@@ -6357,7 +6396,6 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                         <tr key={item.orderNo}>
                           <td><input type="checkbox" checked={selectedInvoiceOrderNos.includes(item.orderNo)} disabled={isApplyDisabled} onChange={() => handleToggleInvoiceRow(item.orderNo)} /></td>
                           <td><button className="pc-mall-order-link" type="button">{item.orderNo}</button></td>
-                          <td>{item.orderStatus || "-"}</td>
                           <td>{item.price}</td>
                           <td>
                             <div className="pc-mall-status-cell">
@@ -6420,7 +6458,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                 <section className="pc-mall-filter-card pc-mall-filter-card-applied">
                   <div className="pc-mall-filter-grid pc-mall-filter-grid-applied">
                     <label className="pc-mall-filter-field">
-                      <span>订单关键字</span>
+                      <span>关键字</span>
                       <div className="pc-mall-input-with-icon">
                   <input placeholder="支持订单号/店铺名称" />
                         <i>⌕</i>
@@ -6558,7 +6596,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                 <section className="pc-mall-filter-card pc-mall-filter-card-applied">
                   <div className="pc-mall-filter-grid pc-mall-filter-grid-applied">
                     <label className="pc-mall-filter-field">
-                      <span>订单关键字</span>
+                      <span>关键字</span>
                   <input placeholder="支持订单号/店铺名称" />
                     </label>
                     <label className="pc-mall-filter-field">
@@ -6618,6 +6656,9 @@ function BuyerPcMallPage({ onPortalActionClick }) {
 
                 <div className="pc-mall-table-toolbar">
                   <div className="pc-mall-toolbar-left">
+                  </div>
+                  <div className="pc-mall-toolbar-right">
+                    <button className="pc-mall-batch-btn pc-mall-batch-btn-secondary" type="button" onClick={handleExportInvoicedQueryData}>查询数据导出</button>
                   </div>
                 </div>
 
