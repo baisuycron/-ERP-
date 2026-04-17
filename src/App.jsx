@@ -1804,7 +1804,7 @@ const shopInvoiceColumnDefinitions = [
   { key: "shouldInvoiceAmount", label: "发票应开金额", width: 140, visible: true, renderCell: (item) => item.shouldInvoiceAmount },
   { key: "invoiceAmountWithTax", label: "发票金额（含税）", width: 156, visible: true, headerClassName: "shop-invoice-col-amount-tax", cellClassName: "shop-invoice-col-amount-tax", renderCell: (item) => ["待开票", "已驳回", "已撤销"].includes(item.invoiceStatus || item.applicationStatus) ? "-" : item.invoiceAmountWithTax },
   { key: "invoiceContent", label: "发票内容", width: 120, visible: true, renderCell: (item) => item.invoiceContent || "商品类别" },
-  { key: "singleInvoice", label: "是否单独开票", width: 110, visible: true, renderCell: (item) => normalizeShopInvoiceMode(item.singleInvoice) },
+  { key: "singleInvoice", label: "需要单独开票", width: 110, visible: true, renderCell: (item) => normalizeShopInvoiceMode(item.singleInvoice) },
   { key: "invoiceBatch", label: "开票批次", width: 140, visible: true, renderCell: (item) => item.invoiceBatch || "-" },
   { key: "invoiceRemark", label: "开票备注", width: 220, visible: true, renderCell: (item) => item.invoiceRemark || "-" },
   { key: "buyerAccount", label: "买家账号", width: 150, visible: true, renderCell: (item) => item.buyerAccount },
@@ -5154,7 +5154,7 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                     </div>
                     <div className="pc-mall-batch-select-wrap pc-mall-batch-title-replace-select is-separate-select">
                       <select value={batchReplaceSingleInvoice} onChange={(e) => setBatchReplaceSingleInvoice(e.target.value)}>
-                        <option value="">请选择是否单独开票</option>
+                        <option value="">请选择需要单独开票</option>
                         {["是", "否"].map((option) => (
                           <option key={option} value={option}>{option}</option>
                         ))}
@@ -5196,7 +5196,7 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                           {hideInvoiceAndReceiverSections ? <th>发票抬头</th> : null}
                           {hideInvoiceAndReceiverSections ? <th>收票信息</th> : null}
                           {enableBatchTitleReplace ? <th>发票内容</th> : null}
-                          {showSeparateInvoiceColumn && (!hideInvoiceAndReceiverSections || enableBatchTitleReplace || editableSeparateInvoiceColumn) ? <th>是否单独开票</th> : null}
+                          {showSeparateInvoiceColumn && (!hideInvoiceAndReceiverSections || enableBatchTitleReplace || editableSeparateInvoiceColumn) ? <th>需要单独开票</th> : null}
                           {allowToggleOrder ? <th>单开发票</th> : null}
                           {allowRemoveOrder ? <th>操作</th> : null}
                         </tr>
@@ -6609,7 +6609,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                       <input placeholder="输入纳税人识别号" />
                     </label>
                     <label className="pc-mall-filter-field">
-                      <span>是否单独开票</span>
+                      <span>需要单独开票</span>
                       <div className="pc-mall-select-wrap">
                         <select value={draftAppliedSingleInvoice} onChange={(event) => setDraftAppliedSingleInvoice(event.target.value)}>
                           <option value="">请选择</option>
@@ -6675,7 +6675,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                         <th>开票批次</th>
                         <th>店铺名称</th>
                         <th>闪购门店</th>
-                        <th>是否单独开票</th>
+                        <th>需要单独开票</th>
                         <th>开票状态</th>
                         <th>操作</th>
                       </tr>
@@ -9678,7 +9678,7 @@ function ShopInvoicePage({
             </div>
           </label>
           <label className="shop-invoice-field shop-invoice-field-wide-label">
-            <span>是否单独开票</span>
+            <span>需要单独开票</span>
             <div className="shop-invoice-select-wrap">
               <select value={draftFilters.singleInvoice} onChange={(e) => handleDraftFilterChange("singleInvoice", e.target.value)}>
                 <option>全部</option>
