@@ -5270,13 +5270,8 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                             {hideInvoiceAndReceiverSections ? (
                               <td>
                                 <div className="pc-mall-batch-table-select-wrap">
-                                  <div className="pc-mall-batch-select-wrap">
-                                    <select value={item.invoiceTitleId || ""} onChange={(event) => handleChangeOrderItem(item.orderNo, "invoiceTitleId", event.target.value)}>
-                                      <option value="">请选择发票抬头</option>
-                                      {invoiceTitleRows.map((titleItem) => (
-                                        <option key={titleItem.id} value={titleItem.id}>{titleItem.title}</option>
-                                      ))}
-                                    </select>
+                                  <div className="pc-mall-batch-title-field">
+                                    <div className="pc-mall-batch-title-text">{item.invoiceTitle || "-"}</div>
                                   </div>
                                   <span className="pc-mall-inline-tooltip-wrap pc-mall-batch-title-view-wrap">
                                     <button className="pc-mall-batch-title-view-btn" type="button">查看</button>
