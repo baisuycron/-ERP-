@@ -4555,11 +4555,13 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
   showSeparateInvoiceColumn = false,
   hideInvoiceAndReceiverSections = false,
   invoiceTitleRows = [],
-  onOrderItemsChange
+  onOrderItemsChange,
+  enableBatchTitleReplace = false
 }) {
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState(initialBatchInvoiceFieldErrors);
   const [orderGroupMode, setOrderGroupMode] = useState("order");
+  const [batchReplaceTitleId, setBatchReplaceTitleId] = useState("");
   const modalBodyRef = useRef(null);
   const pendingScrollTopRef = useRef(null);
   const batchTableClassName = `pc-mall-table pc-mall-batch-table${allowToggleOrder ? "" : " is-without-toggle"}${hideInvoiceAndReceiverSections ? " has-row-invoice-fields" : ""}`;
@@ -4568,6 +4570,12 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
     setForm(initialForm.invoiceType === "电子增值税专用发票" ? { ...initialForm, titleType: "企业" } : initialForm);
     setErrors(initialBatchInvoiceFieldErrors);
   }, [initialForm]);
+
+  useEffect(() => {
+    if (!enableBatchTitleReplace) return;
+    const firstMatchedTitleId = orderItems.find((item) => item.invoiceTitleId)?.invoiceTitleId || "";
+    setBatchReplaceTitleId(firstMatchedTitleId);
+  }, [enableBatchTitleReplace, orderItems]);
 
   useLayoutEffect(() => {
     if (pendingScrollTopRef.current == null || !modalBodyRef.current) return;
@@ -4729,6 +4737,31 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
         bankAccount: false
       }));
     }
+  };
+
+  const handleBatchReplaceInvoiceTitle = () => {
+    if (!enableBatchTitleReplace || !onOrderItemsChange) return;
+    if (!batchReplaceTitleId) {
+      onNotice("请选择要批量修改的发票抬头");
+      return;
+    }
+
+    const matchedTitle = invoiceTitleRows.find((item) => item.id === batchReplaceTitleId);
+    if (!matchedTitle) {
+      onNotice("未找到对应的发票抬头，请重新选择");
+      return;
+    }
+
+    onOrderItemsChange((current) => current.map((item) => {
+      const nextTitleFields = createBuyerPcMallBatchOrderInvoiceFields(matchedTitle);
+      return {
+        ...item,
+        ...nextTitleFields,
+        receiverPhone: item.receiverPhone,
+        receiverEmail: item.receiverEmail
+      };
+    }));
+    onNotice("批量修改发票抬头成功");
   };
 
   const handleSubmit = () => {
@@ -4981,7 +5014,7 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
           {showOrderSummary ? (
             <section className={`pc-mall-batch-card ${hideInvoiceAndReceiverSections ? "pc-mall-batch-card-order-list" : ""}`}>
               <div className="pc-mall-batch-summary-head">
-                <h2>{summaryTitle || `本次批量申请开票共 ${summary.count} 笔订单，申请开票金额合计：￥${summary.totalAmount.toFixed(2)}`}</h2>
+                <h2>{summaryTitle ?? `本次批量申请开票共 ${summary.count} 笔订单，申请开票金额合计：￥${summary.totalAmount.toFixed(2)}`}</h2>
                 {showOrderGroupMode && !hideInvoiceAndReceiverSections ? (
                   <label className="pc-mall-batch-group-control">
                     <span>展示方式</span>
@@ -4995,6 +5028,22 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                   </label>
                 ) : null}
               </div>
+              {enableBatchTitleReplace ? (
+                <div className="pc-mall-batch-title-replace-bar">
+                  <span className="pc-mall-batch-title-replace-label">发票抬头批量修改</span>
+                  <div className="pc-mall-batch-title-replace-controls">
+                    <div className="pc-mall-batch-select-wrap pc-mall-batch-title-replace-select">
+                      <select value={batchReplaceTitleId} onChange={(e) => setBatchReplaceTitleId(e.target.value)}>
+                        <option value="">请选择发票抬头</option>
+                        {invoiceTitleRows.map((titleItem) => (
+                          <option key={titleItem.id} value={titleItem.id}>{titleItem.title}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <button className="pc-mall-batch-title-replace-confirm" type="button" onClick={handleBatchReplaceInvoiceTitle}>确定</button>
+                  </div>
+                </div>
+              ) : null}
               {groupedOrderSections.map((group) => (
                 <div className="pc-mall-batch-group-block" key={group.key}>
                   {orderGroupMode !== "order" ? <div className="pc-mall-batch-group-title">{group.title}</div> : null}
@@ -5899,11 +5948,13 @@ function BuyerPcMallPage({ onPortalActionClick }) {
       onRemoveOrder={handleRemoveModifyInvoiceOrder}
       title={modifyInvoiceOrders.length === 1 ? "修改开票信息" : "批量修改开票信息"}
       submitButtonText="确认修改"
-      summaryTitle={`本次${modifyInvoiceOrders.length === 1 ? "" : "批量"}修改开票共 ${modifyInvoiceOrders.length} 笔订单，申请开票金额合计：￥${modifyInvoiceOrders.reduce((sum, item) => sum + (getPriceNumber(item.price) || 0), 0).toFixed(2)}`}
+      summaryTitle=""
       allowToggleOrder={false}
       showOrderGroupMode
       showSeparateInvoiceColumn
       hideInvoiceAndReceiverSections
+      allowRemoveOrder={false}
+      enableBatchTitleReplace={modifyInvoiceOrders.length > 1}
     />
   ) : null;
   const singleInvoiceModal = singleInvoiceOrder ? (

@@ -1379,6 +1379,42 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .pc-mall-batch-summary-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
 .pc-mall-batch-summary-head h2 { margin-bottom: 0; font-size: 14px; }
 .pc-mall-batch-summary-head span { color: #6b7280; font-size: 12px; }
+.pc-mall-batch-title-replace-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.pc-mall-batch-title-replace-label {
+  flex: none;
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.pc-mall-batch-title-replace-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.pc-mall-batch-title-replace-select {
+  width: 320px;
+  max-width: 100%;
+}
+.pc-mall-batch-title-replace-select select {
+  height: 34px;
+  font-size: 13px;
+}
+.pc-mall-batch-title-replace-confirm {
+  flex: none;
+  min-width: 72px;
+  height: 34px;
+  border: 1px solid #111827;
+  border-radius: 4px;
+  background: #111827;
+  color: #fff;
+  font-size: 13px;
+}
 .pc-mall-batch-group-control { display: flex; align-items: center; gap: 10px; color: #6b7280; font-size: 12px; white-space: nowrap; }
 .pc-mall-batch-group-control span { color: #6b7280; }
 .pc-mall-batch-group-control .pc-mall-batch-select-wrap { width: 120px; }
@@ -1551,6 +1587,9 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
   .pc-mall-batch-form-grid,
   .pc-mall-batch-form-grid-two-column { grid-template-columns: 1fr; }
   .pc-mall-batch-summary-head { align-items: flex-start; flex-direction: column; }
+  .pc-mall-batch-title-replace-bar,
+  .pc-mall-batch-title-replace-controls { align-items: flex-start; flex-direction: column; }
+  .pc-mall-batch-title-replace-select { width: min(320px, 100%); }
   .pc-mall-batch-group-control { width: 100%; justify-content: space-between; }
   .pc-mall-batch-group-control .pc-mall-batch-select-wrap { width: 160px; max-width: 100%; }
   .pc-mall-batch-modal-foot { min-height: 62px; padding: 0 26px 10px 18px; }
