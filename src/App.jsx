@@ -4982,7 +4982,7 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
             <section className={`pc-mall-batch-card ${hideInvoiceAndReceiverSections ? "pc-mall-batch-card-order-list" : ""}`}>
               <div className="pc-mall-batch-summary-head">
                 <h2>{summaryTitle || `本次批量申请开票共 ${summary.count} 笔订单，申请开票金额合计：￥${summary.totalAmount.toFixed(2)}`}</h2>
-                {showOrderGroupMode ? (
+                {showOrderGroupMode && !hideInvoiceAndReceiverSections ? (
                   <label className="pc-mall-batch-group-control">
                     <span>展示方式</span>
                     <div className="pc-mall-batch-select-wrap">
@@ -5025,9 +5025,8 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                           <th>申请开票金额</th>
                           <th>闪购门店</th>
                           {hideInvoiceAndReceiverSections ? <th>发票抬头</th> : null}
-                          {hideInvoiceAndReceiverSections ? <th>收票人手机</th> : null}
-                          {hideInvoiceAndReceiverSections ? <th>收票人邮箱</th> : null}
-                          {showSeparateInvoiceColumn ? <th>是否单独开票</th> : null}
+                          {hideInvoiceAndReceiverSections ? <th>收票信息</th> : null}
+                          {showSeparateInvoiceColumn && !hideInvoiceAndReceiverSections ? <th>是否单独开票</th> : null}
                           {allowToggleOrder ? <th>单开发票</th> : null}
                           {allowRemoveOrder ? <th>操作</th> : null}
                         </tr>
@@ -5049,13 +5048,7 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                             {hideInvoiceAndReceiverSections ? (
                               <td>
                                 <div className="pc-mall-batch-title-field">
-                                  <div className="pc-mall-batch-select-wrap pc-mall-batch-table-select-wrap">
-                                    <select value={item.invoiceTitleId || ""} onChange={(e) => handleChangeOrderItem(item.orderNo, "invoiceTitleId", e.target.value)}>
-                                      {invoiceTitleRows.map((titleItem) => (
-                                        <option key={titleItem.id} value={titleItem.id}>{titleItem.title}</option>
-                                      ))}
-                                    </select>
-                                  </div>
+                                  <div className="pc-mall-batch-title-text">{item.invoiceTitle || "-"}</div>
                                   <span className="pc-mall-inline-tooltip-wrap pc-mall-batch-title-view-wrap">
                                     <button className="pc-mall-batch-title-view-btn" type="button">查看</button>
                                     <span className="pc-mall-inline-tooltip">{getBuyerPcMallInvoiceTitleTooltip(invoiceTitleRows.find((titleItem) => titleItem.id === item.invoiceTitleId) || null)}</span>
@@ -5065,23 +5058,15 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                             ) : null}
                             {hideInvoiceAndReceiverSections ? (
                               <td>
-                                <input
-                                  className="pc-mall-batch-table-input"
-                                  value={item.receiverPhone || ""}
-                                  onChange={(e) => handleChangeOrderItem(item.orderNo, "receiverPhone", e.target.value)}
-                                />
+                                <div className="pc-mall-batch-receiver-info">
+                                  <div className="pc-mall-batch-receiver-lines">
+                                    <span>收票人手机：{item.receiverPhone || "-"}</span>
+                                    <span>收票人邮箱：{item.receiverEmail || "-"}</span>
+                                  </div>
+                                </div>
                               </td>
                             ) : null}
-                            {hideInvoiceAndReceiverSections ? (
-                              <td>
-                                <input
-                                  className="pc-mall-batch-table-input"
-                                  value={item.receiverEmail || ""}
-                                  onChange={(e) => handleChangeOrderItem(item.orderNo, "receiverEmail", e.target.value)}
-                                />
-                              </td>
-                            ) : null}
-                            {showSeparateInvoiceColumn ? (
+                            {showSeparateInvoiceColumn && !hideInvoiceAndReceiverSections ? (
                               <td>
                                 <label className="pc-mall-batch-checkbox-cell">
                                   <input type="checkbox" checked={Boolean(item.needInvoice)} onChange={() => onToggleOrder(item.orderNo)} />

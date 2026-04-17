@@ -1416,7 +1416,8 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .pc-mall-batch-table th,
 .pc-mall-batch-table td { padding-top: 8px; padding-bottom: 8px; }
 .pc-mall-batch-table th,
-.pc-mall-batch-table td { padding-left: 6px; padding-right: 6px; font-size: 11px; }
+.pc-mall-batch-table td { padding-left: 6px; padding-right: 6px; font-size: 14px; font-weight: 400; }
+.pc-mall-batch-table th { font-weight: 400; }
 .pc-mall-batch-table td:nth-child(1),
 .pc-mall-batch-table td:nth-child(7),
 .pc-mall-batch-table td:nth-child(8),
@@ -1429,14 +1430,11 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .pc-mall-batch-table.has-row-invoice-fields th:nth-child(3) { width: 78px; }
 .pc-mall-batch-table.has-row-invoice-fields th:nth-child(4) { width: 88px; }
 .pc-mall-batch-table.has-row-invoice-fields th:nth-child(5) { width: 98px; }
-.pc-mall-batch-table.has-row-invoice-fields th:nth-child(6) { width: 176px; }
-.pc-mall-batch-table.has-row-invoice-fields th:nth-child(7) { width: 164px; }
-.pc-mall-batch-table.has-row-invoice-fields th:nth-child(8) { width: 152px; }
-.pc-mall-batch-table.has-row-invoice-fields th:nth-child(9) { width: 172px; }
-.pc-mall-batch-table.has-row-invoice-fields th:nth-child(10) { width: 96px; text-align: center; }
-.pc-mall-batch-table.has-row-invoice-fields th:nth-child(11) { width: 72px; text-align: center; }
-.pc-mall-batch-table.has-row-invoice-fields td:nth-child(10),
-.pc-mall-batch-table.has-row-invoice-fields td:nth-child(11) { text-align: center; }
+.pc-mall-batch-table.has-row-invoice-fields th:nth-child(6) { width: 116px; }
+.pc-mall-batch-table.has-row-invoice-fields th:nth-child(7) { width: 124px; }
+.pc-mall-batch-table.has-row-invoice-fields th:nth-child(8) { width: 220px; }
+.pc-mall-batch-table.has-row-invoice-fields th:nth-child(9) { width: 72px; text-align: center; }
+.pc-mall-batch-table.has-row-invoice-fields td:nth-child(9) { text-align: center; }
 .pc-mall-batch-title-field {
   display: flex;
   align-items: center;
@@ -1448,6 +1446,15 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
   flex: 1;
   min-width: 0;
 }
+.pc-mall-batch-title-text {
+  flex: none;
+  min-width: 0;
+  max-width: calc(100% - 28px);
+  color: #111827;
+  font-size: 14px;
+  line-height: 1.5;
+  word-break: break-all;
+}
 .pc-mall-batch-title-view-wrap {
   flex: none;
 }
@@ -1456,7 +1463,7 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
   padding: 0;
   background: transparent;
   color: #ff6a00;
-  font-size: 11px;
+  font-size: 14px;
   line-height: 1;
   cursor: pointer;
 }
@@ -1504,6 +1511,31 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .pc-mall-batch-table-select-wrap .pc-mall-batch-select-wrap select:focus {
   border-color: #f0b429;
   box-shadow: 0 0 0 3px rgba(240, 180, 41, 0.12);
+}
+.pc-mall-batch-receiver-info {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+.pc-mall-batch-receiver-lines {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+.pc-mall-batch-receiver-lines span {
+  color: #111827;
+  font-size: 14px;
+  line-height: 1.5;
+  word-break: break-all;
+}
+.pc-mall-batch-table .pc-mall-order-link,
+.pc-mall-batch-table .pc-mall-inline-remove {
+  font-size: 14px;
+  font-weight: 400;
 }
 .pc-mall-batch-checkbox-cell { display: inline-flex; align-items: center; justify-content: center; width: 100%; cursor: pointer; }
 .pc-mall-batch-checkbox-cell input { width: 14px; height: 14px; cursor: pointer; }
