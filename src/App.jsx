@@ -8208,6 +8208,487 @@ function BuyerListPage({ filters, onFiltersChange, rows, page, setPage, pageSize
   );
 }
 
+const shopInvoiceBulkUploadMockBatch = {
+  batchNo: "B202604190001",
+  uploadTime: "2026-04-19 15:30:26",
+  operator: "供应商管理员",
+  zipFileName: "invoice_upload.zip",
+  successInvoiceCount: 1,
+  failInvoiceCount: 2,
+  invoices: [
+    {
+      invoiceNo: "FP20260003",
+      pdfFileName: "FP20260003.pdf",
+      invoiceType: "电子增值税专用发票",
+      invoiceDate: "2026-04-19",
+      invoiceTitle: "湖南海商科技有限公司",
+      taxpayerId: "102324565122210",
+      invoiceAmount: "¥2760.00",
+      status: "导入成功",
+      failReason: "-",
+      pdfSize: "428 KB",
+      orders: [
+        { orderNo: "2026040119104267", store: "长沙五一广场店", buyerAccount: "changsha_buyer_01", orderAmount: "¥920.00", invoiceTitle: "湖南海商科技有限公司", taxpayerId: "102324565122210", invoiceType: "电子增值税专用发票", invoiceStatus: "已开票" },
+        { orderNo: "2026040119104268", store: "长沙五一广场店", buyerAccount: "changsha_buyer_02", orderAmount: "¥860.00", invoiceTitle: "湖南海商科技有限公司", taxpayerId: "102324565122210", invoiceType: "电子增值税专用发票", invoiceStatus: "已开票" },
+        { orderNo: "2026040119104269", store: "长沙五一广场店", buyerAccount: "changsha_buyer_03", orderAmount: "¥980.00", invoiceTitle: "湖南海商科技有限公司", taxpayerId: "102324565122210", invoiceType: "电子增值税专用发票", invoiceStatus: "已开票" }
+      ],
+      logs: [
+        "2026-04-19 15:30:26 生成发票记录并绑定 3 笔订单",
+        "2026-04-19 15:31:02 订单开票状态更新为已开票"
+      ]
+    },
+    {
+      invoiceNo: "FP20260001",
+      pdfFileName: "FP20260001.pdf",
+      invoiceType: "电子增值税专用发票",
+      invoiceDate: "2026-04-19",
+      invoiceTitle: "湖南海商科技有限公司",
+      taxpayerId: "102324565122210",
+      invoiceAmount: "¥2760.00",
+      status: "导入失败",
+      failReason: "发票【FP20260001】关联订单校验失败，整张发票导入失败",
+      pdfSize: "396 KB",
+      orders: [
+        { orderNo: "O20260001", store: "长沙五一广场店", buyerAccount: "changsha_buyer_01", orderAmount: "¥920.00", invoiceTitle: "湖南海商科技有限公司", taxpayerId: "102324565122210", invoiceType: "电子增值税专用发票", invoiceStatus: "待开票" },
+        { orderNo: "O20260002", store: "长沙五一广场店", buyerAccount: "changsha_buyer_02", orderAmount: "¥860.00", invoiceTitle: "湖南海商科技有限公司", taxpayerId: "102324565122210", invoiceType: "电子增值税专用发票", invoiceStatus: "已开票", failReason: "订单已开票，禁止重复关联" },
+        { orderNo: "O20260003", store: "长沙五一广场店", buyerAccount: "changsha_buyer_03", orderAmount: "¥980.00", invoiceTitle: "湖南海商科技有限公司", taxpayerId: "102324565122210", invoiceType: "电子增值税专用发票", invoiceStatus: "待开票" }
+      ],
+      logs: [
+        "2026-04-19 15:30:31 订单 O20260002 校验失败：订单已开票",
+        "2026-04-19 15:30:31 整票失败，未生成发票记录，未更新订单状态"
+      ]
+    },
+    {
+      invoiceNo: "FP20260002",
+      pdfFileName: "FP20260002.pdf",
+      invoiceType: "电子普通发票",
+      invoiceDate: "2026-04-19",
+      invoiceTitle: "深圳广联科技有限公司",
+      taxpayerId: "9144030011222333P",
+      invoiceAmount: "¥4599.00",
+      status: "导入失败",
+      failReason: "发票号码已存在，禁止重复上传",
+      pdfSize: "0 KB",
+      orders: [],
+      logs: [
+        "2026-04-19 15:30:33 发票号码 FP20260002 已存在",
+        "2026-04-19 15:30:33 发票级校验失败，未继续生成订单关联"
+      ]
+    }
+  ],
+  failDetails: [
+    {
+      batchNo: "B202604190001",
+      invoiceNo: "FP20260001",
+      pdfFileName: "FP20260001.pdf",
+      orderNo: "O20260002",
+      failLevel: "订单级",
+      failCode: "ORDER_ALREADY_INVOICED",
+      failReason: "订单已开票，禁止重复关联"
+    },
+    {
+      batchNo: "B202604190001",
+      invoiceNo: "FP20260002",
+      pdfFileName: "FP20260002.pdf",
+      orderNo: "",
+      failLevel: "发票级",
+      failCode: "INVOICE_DUPLICATE",
+      failReason: "发票号码已存在，禁止重复上传"
+    }
+  ]
+};
+
+function ShopInvoiceBulkUploadPage({ onBack, onToast }) {
+  const [selectedZipName, setSelectedZipName] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [batchResult, setBatchResult] = useState(null);
+  const [activePanel, setActivePanel] = useState("upload");
+  const [activeInvoiceNo, setActiveInvoiceNo] = useState("");
+  const [editingInvoice, setEditingInvoice] = useState(null);
+  const [replacingInvoice, setReplacingInvoice] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const activeInvoice = useMemo(() => {
+    if (!batchResult) return null;
+    return batchResult.invoices.find((item) => item.invoiceNo === activeInvoiceNo) || batchResult.invoices[0] || null;
+  }, [activeInvoiceNo, batchResult]);
+  const buyerOrderInvoice = batchResult?.invoices.find((item) => item.status === "导入成功") || null;
+  const buyerOrder = buyerOrderInvoice?.orders[0] || null;
+
+  const handleSelectZip = (event) => {
+    const file = event.target.files?.[0];
+    setSelectedZipName(file?.name || "");
+    setBatchResult(null);
+    setUploadProgress(0);
+  };
+
+  const handleDownloadTemplate = () => {
+    const invoiceSheet = XLSX.utils.json_to_sheet([
+      {
+        发票号码: "FP20260003",
+        发票类型: "电子增值税专用发票",
+        开票日期: "2026-04-19",
+        发票抬头: "湖南海商科技有限公司",
+        纳税人识别号: "102324565122210",
+        发票金额: 2760
+      }
+    ]);
+    const orderSheet = XLSX.utils.json_to_sheet([
+      { 发票号码: "FP20260003", 订单号: "2026040119104267" },
+      { 发票号码: "FP20260003", 订单号: "2026040119104268" },
+      { 发票号码: "FP20260003", 订单号: "2026040119104269" }
+    ]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, invoiceSheet, "发票信息");
+    XLSX.utils.book_append_sheet(workbook, orderSheet, "订单关联");
+    XLSX.writeFile(workbook, "批量上传发票模板.xlsx");
+    onToast?.("模板已生成，请按两个 Sheet 填写发票信息和订单关联");
+  };
+
+  const handleUpload = () => {
+    if (!selectedZipName || isUploading) return;
+    setIsUploading(true);
+    setUploadProgress(24);
+    onToast?.("ZIP 已上传，正在解析 mapping.xlsx 和 PDF 文件");
+
+    window.setTimeout(() => setUploadProgress(68), 350);
+    window.setTimeout(() => {
+      const nextResult = {
+        ...shopInvoiceBulkUploadMockBatch,
+        zipFileName: selectedZipName,
+        uploadTime: formatCurrentDateTime()
+      };
+      setBatchResult(nextResult);
+      setActiveInvoiceNo(nextResult.invoices[0]?.invoiceNo || "");
+      setActivePanel("result");
+      setUploadProgress(100);
+      setIsUploading(false);
+      onToast?.("导入完成：成功 1 张，失败 2 张。失败发票未落库，订单状态不变");
+    }, 900);
+  };
+
+  const handleDownloadFailDetails = () => {
+    if (!batchResult) return;
+    const rows = batchResult.failDetails.map((item) => ({
+      导入批次号: item.batchNo,
+      发票号码: item.invoiceNo,
+      PDF文件名: item.pdfFileName,
+      订单号: item.orderNo,
+      失败层级: item.failLevel,
+      失败原因编码: item.failCode,
+      失败原因描述: item.failReason
+    }));
+    const sheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, sheet, "失败明细");
+    XLSX.writeFile(workbook, `${batchResult.batchNo}-失败明细.xlsx`);
+    onToast?.("失败明细已导出");
+  };
+
+  const handleOpenDetail = (invoiceNo) => {
+    setActiveInvoiceNo(invoiceNo);
+    setActivePanel("detail");
+  };
+
+  const handleSubmitEdit = () => {
+    if (!editingInvoice) return;
+    const originalInvoiceNo = editingInvoice.originalInvoiceNo || editingInvoice.invoiceNo;
+    setBatchResult((current) => ({
+      ...current,
+      invoices: current.invoices.map((item) => (
+        item.invoiceNo === originalInvoiceNo
+          ? { ...item, ...editingInvoice, status: item.status === "导入成功" ? "已修改" : item.status, logs: [`${formatCurrentDateTime()} 修改发票基础信息`, ...item.logs] }
+          : item
+      ))
+    }));
+    setActiveInvoiceNo(editingInvoice.invoiceNo);
+    setEditingInvoice(null);
+    onToast?.("发票基础信息已修改，关联订单保持不变");
+  };
+
+  const handleSubmitReplacePdf = () => {
+    if (!replacingInvoice) return;
+    setBatchResult((current) => ({
+      ...current,
+      invoices: current.invoices.map((item) => (
+        item.invoiceNo === replacingInvoice.invoiceNo
+          ? { ...item, pdfFileName: replacingInvoice.pdfFileName || item.pdfFileName, pdfSize: "512 KB", logs: [`${formatCurrentDateTime()} 替换 PDF 文件`, ...item.logs] }
+          : item
+      ))
+    }));
+    setReplacingInvoice(null);
+    onToast?.("PDF 文件已替换");
+  };
+
+  const renderResultList = () => (
+    <section className="content-card bulk-invoice-card">
+      <div className="bulk-invoice-section-head">
+        <div>
+          <h3>导入结果</h3>
+          <p>按发票维度处理导入；同一张发票关联多笔订单时，不允许部分失败。</p>
+        </div>
+        <button className="btn btn-reset buyer-export-btn" type="button" disabled={!batchResult?.failInvoiceCount} onClick={handleDownloadFailDetails}>导出失败明细</button>
+      </div>
+      {batchResult ? (
+        <>
+          <div className="bulk-invoice-summary-grid">
+            <div><span>导入批次号</span><strong>{batchResult.batchNo}</strong></div>
+            <div><span>上传时间</span><strong>{batchResult.uploadTime}</strong></div>
+            <div><span>成功发票数</span><strong className="is-success">{batchResult.successInvoiceCount}</strong></div>
+            <div><span>失败发票数</span><strong className="is-danger">{batchResult.failInvoiceCount}</strong></div>
+          </div>
+          <div className="shop-invoice-table-shell bulk-invoice-table-shell">
+            <table className="shop-invoice-table is-no-select bulk-invoice-result-table">
+              <thead>
+                <tr>
+                  <th>发票号码</th>
+                  <th>PDF 文件名</th>
+                  <th>关联订单数</th>
+                  <th>导入状态</th>
+                  <th>失败原因</th>
+                </tr>
+              </thead>
+              <tbody>
+                {batchResult.invoices.map((item) => (
+                  <tr key={item.invoiceNo}>
+                    <td>{item.invoiceNo}</td>
+                    <td>{item.pdfFileName}</td>
+                    <td>{item.orders.length} 笔</td>
+                    <td><span className={`bulk-invoice-status ${item.status === "导入失败" ? "is-danger" : "is-success"}`}>{item.status}</span></td>
+                    <td>{item.failReason}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      ) : (
+        <div className="bulk-invoice-empty">选择 ZIP 文件并上传后，将在这里展示批次结果。</div>
+      )}
+    </section>
+  );
+
+  const renderInvoiceDetail = () => {
+    if (!activeInvoice) return <div className="bulk-invoice-empty">暂无发票详情</div>;
+    return (
+      <section className="content-card bulk-invoice-card">
+        <div className="bulk-invoice-section-head">
+          <div>
+            <h3>发票详情</h3>
+            <p>导入成功后仅支持修改基础信息和替换 PDF，不支持修改关联订单。</p>
+          </div>
+          <div className="bulk-invoice-head-actions">
+            <button className="btn btn-reset" type="button" onClick={() => setActivePanel("result")}>返回结果</button>
+            <button className="btn btn-dark" type="button" disabled={activeInvoice.status === "导入失败"} onClick={() => setEditingInvoice({ ...activeInvoice, originalInvoiceNo: activeInvoice.invoiceNo })}>修改开票信息</button>
+            <button className="btn btn-reset buyer-export-btn" type="button" disabled={activeInvoice.status === "导入失败"} onClick={() => setReplacingInvoice({ invoiceNo: activeInvoice.invoiceNo, pdfFileName: "" })}>替换 PDF</button>
+          </div>
+        </div>
+        <div className="bulk-invoice-detail-grid">
+          <div className="bulk-invoice-info-card">
+            <h4>发票基础信息</h4>
+            <div className="bulk-invoice-info-row"><span>发票号码</span><strong>{activeInvoice.invoiceNo}</strong></div>
+            <div className="bulk-invoice-info-row"><span>发票类型</span><strong>{activeInvoice.invoiceType}</strong></div>
+            <div className="bulk-invoice-info-row"><span>开票日期</span><strong>{activeInvoice.invoiceDate}</strong></div>
+            <div className="bulk-invoice-info-row"><span>发票抬头</span><strong>{activeInvoice.invoiceTitle}</strong></div>
+            <div className="bulk-invoice-info-row"><span>纳税人识别号</span><strong>{activeInvoice.taxpayerId}</strong></div>
+            <div className="bulk-invoice-info-row"><span>发票金额</span><strong>{activeInvoice.invoiceAmount}</strong></div>
+          </div>
+          <div className="bulk-invoice-pdf-card">
+            <h4>PDF 文件</h4>
+            <div className="bulk-invoice-pdf-preview">PDF</div>
+            <strong>{activeInvoice.pdfFileName}</strong>
+            <span>{activeInvoice.pdfSize}</span>
+            <div className="bulk-invoice-pdf-actions">
+              <button className="buyer-link-btn" type="button" disabled={activeInvoice.status === "导入失败"}>预览 PDF</button>
+              <button className="buyer-link-btn" type="button" disabled={activeInvoice.status === "导入失败"}>下载 PDF</button>
+            </div>
+          </div>
+        </div>
+        <div className="bulk-invoice-rules">
+          <strong>合并开票规则</strong>
+          <span>同一张发票关联的全部订单必须满足：同一发票抬头 / 纳税人识别号、同一发票类型、同一店铺订单。</span>
+        </div>
+        <div className="shop-invoice-table-shell bulk-invoice-table-shell">
+          <table className="shop-invoice-table is-no-select bulk-invoice-order-table">
+            <thead>
+              <tr>
+                <th>订单号</th>
+                <th>店铺订单</th>
+                <th>买家账号</th>
+                <th>订单金额</th>
+                <th>发票抬头 / 税号</th>
+                <th>开票状态</th>
+                <th>失败原因</th>
+              </tr>
+            </thead>
+            <tbody>
+              {activeInvoice.orders.map((order) => (
+                <tr key={order.orderNo}>
+                  <td>{order.orderNo}</td>
+                  <td>{order.store}</td>
+                  <td>{order.buyerAccount}</td>
+                  <td>{order.orderAmount}</td>
+                  <td>{order.invoiceTitle}<br />{order.taxpayerId}</td>
+                  <td>{order.invoiceStatus}</td>
+                  <td>{order.failReason || "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="bulk-invoice-log-card">
+          <h4>操作日志</h4>
+          {activeInvoice.logs.map((log) => <p key={log}>{log}</p>)}
+        </div>
+      </section>
+    );
+  };
+
+  const renderBuyerOrderDetail = () => (
+    <section className="content-card bulk-invoice-card">
+      <div className="bulk-invoice-section-head">
+        <div>
+          <h3>买家订单详情</h3>
+          <p>买家可在订单详情查看已关联发票，并下载 / 预览 PDF。</p>
+        </div>
+      </div>
+      {buyerOrder && buyerOrderInvoice ? (
+        <>
+          <div className="bulk-invoice-buyer-tip">该订单与其他 {buyerOrderInvoice.orders.length - 1} 笔订单合并开票</div>
+          <div className="bulk-invoice-info-card">
+            <div className="bulk-invoice-info-row"><span>订单号</span><strong>{buyerOrder.orderNo}</strong></div>
+            <div className="bulk-invoice-info-row"><span>开票状态</span><strong>{buyerOrder.invoiceStatus}</strong></div>
+            <div className="bulk-invoice-info-row"><span>发票号码</span><strong>{buyerOrderInvoice.invoiceNo}</strong></div>
+            <div className="bulk-invoice-info-row"><span>发票类型</span><strong>{buyerOrderInvoice.invoiceType}</strong></div>
+            <div className="bulk-invoice-info-row"><span>开票日期</span><strong>{buyerOrderInvoice.invoiceDate}</strong></div>
+            <div className="bulk-invoice-info-row"><span>发票抬头</span><strong>{buyerOrderInvoice.invoiceTitle}</strong></div>
+            <div className="bulk-invoice-info-row"><span>纳税人识别号</span><strong>{buyerOrderInvoice.taxpayerId}</strong></div>
+            <div className="bulk-invoice-info-row"><span>发票金额</span><strong>{buyerOrderInvoice.invoiceAmount}</strong></div>
+          </div>
+          <div className="bulk-invoice-buyer-actions">
+            <button className="btn btn-dark" type="button">预览 PDF</button>
+            <button className="btn btn-reset buyer-export-btn" type="button">下载 PDF</button>
+          </div>
+        </>
+      ) : (
+        <div className="bulk-invoice-empty">上传成功后可查看买家订单详情。</div>
+      )}
+    </section>
+  );
+
+  return (
+    <div className="bulk-invoice-page bulk-invoice-simple-page">
+      <section className="content-card bulk-invoice-simple-card">
+        <div className="bulk-invoice-simple-tip">
+          <span className="bulk-invoice-simple-tip-icon">!</span>
+          <span>温馨提示</span>
+        </div>
+
+        <div className="bulk-invoice-step-strip">
+          <div className="bulk-invoice-step">
+            <span>1</span>
+            <strong>第一步</strong>
+            <p>准备发票 PDF 与订单映射表</p>
+          </div>
+          <div className="bulk-invoice-step-line" />
+          <div className="bulk-invoice-step">
+            <span>2</span>
+            <strong>第二步</strong>
+            <button type="button" onClick={handleDownloadTemplate}>下载模板</button>
+          </div>
+          <div className="bulk-invoice-step-line" />
+          <div className="bulk-invoice-step">
+            <span>3</span>
+            <strong>第三步</strong>
+            <p>导入发票信息，上传文件并导入</p>
+          </div>
+        </div>
+
+        <div className="bulk-invoice-simple-form">
+          <div className="bulk-invoice-simple-row">
+            <span className="bulk-invoice-simple-label"><i>*</i>上传内容：</span>
+            <label className="bulk-invoice-simple-radio"><input type="radio" checked readOnly /> 发票ZIP包</label>
+          </div>
+          <div className="bulk-invoice-simple-row">
+            <span className="bulk-invoice-simple-label"><i>*</i>数据包：</span>
+            <input className="shop-invoice-file-input" ref={fileInputRef} type="file" accept=".zip" onChange={handleSelectZip} />
+            <button className="bulk-invoice-simple-file" type="button" onClick={() => fileInputRef.current?.click()}>
+              上传 选择文件
+            </button>
+            {selectedZipName ? <span className="bulk-invoice-simple-file-name">{selectedZipName}</span> : null}
+          </div>
+
+          {isUploading ? (
+            <div className="bulk-invoice-simple-progress">
+              <span style={{ width: `${uploadProgress}%` }} />
+            </div>
+          ) : null}
+
+          <div className="bulk-invoice-simple-notes">
+            <strong>注意事项：</strong>
+            <p>1、如需批量上传发票，请将 pdf 文件夹与 mapping.xlsx 打包上传；PDF 文件必须按“发票号码.pdf”命名，系统按 Excel 中的发票号码自动匹配同名 PDF。</p>
+            <p>2、mapping.xlsx 包含两个 Sheet：发票信息、订单关联；同一张发票关联多笔订单时，不允许部分失败。</p>
+            <p>3、任一订单校验失败时整张发票导入失败，不生成发票记录、不更新订单开票状态。</p>
+          </div>
+
+          <button className="bulk-invoice-simple-submit" type="button" disabled={!selectedZipName || isUploading} onClick={handleUpload}>
+            {isUploading ? "导入中..." : "导入"}
+          </button>
+        </div>
+      </section>
+
+      {batchResult ? renderResultList() : null}
+
+      {editingInvoice ? (
+        <div className="shop-invoice-modal-mask" onClick={() => setEditingInvoice(null)}>
+          <div className="shop-invoice-confirm-modal bulk-invoice-edit-modal" onClick={(event) => event.stopPropagation()}>
+            <div className="shop-invoice-confirm-head"><h3>修改开票信息</h3></div>
+            <div className="shop-invoice-confirm-body">
+              <div className="shop-invoice-confirm-form">
+                <label className="shop-invoice-confirm-field"><span>发票号码:</span><input value={editingInvoice.invoiceNo} onChange={(event) => setEditingInvoice((current) => ({ ...current, invoiceNo: event.target.value }))} /></label>
+                <label className="shop-invoice-confirm-field"><span>发票类型:</span><input value={editingInvoice.invoiceType} onChange={(event) => setEditingInvoice((current) => ({ ...current, invoiceType: event.target.value }))} /></label>
+                <label className="shop-invoice-confirm-field"><span>开票日期:</span><input value={editingInvoice.invoiceDate} onChange={(event) => setEditingInvoice((current) => ({ ...current, invoiceDate: event.target.value }))} /></label>
+                <label className="shop-invoice-confirm-field"><span>发票抬头:</span><input value={editingInvoice.invoiceTitle} onChange={(event) => setEditingInvoice((current) => ({ ...current, invoiceTitle: event.target.value }))} /></label>
+                <label className="shop-invoice-confirm-field"><span>纳税人识别号:</span><input value={editingInvoice.taxpayerId} onChange={(event) => setEditingInvoice((current) => ({ ...current, taxpayerId: event.target.value }))} /></label>
+                <label className="shop-invoice-confirm-field"><span>发票金额:</span><input value={editingInvoice.invoiceAmount} onChange={(event) => setEditingInvoice((current) => ({ ...current, invoiceAmount: event.target.value }))} /></label>
+              </div>
+              <div className="bulk-invoice-rules">关联订单不可修改，如需调整订单关系，请修正 mapping.xlsx 后重新导入。</div>
+            </div>
+            <div className="shop-invoice-confirm-foot">
+              <button className="btn btn-reset" type="button" onClick={() => setEditingInvoice(null)}>取消</button>
+              <button className="btn btn-dark" type="button" onClick={handleSubmitEdit}>提交</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {replacingInvoice ? (
+        <div className="shop-invoice-modal-mask" onClick={() => setReplacingInvoice(null)}>
+          <div className="shop-invoice-confirm-modal bulk-invoice-replace-modal" onClick={(event) => event.stopPropagation()}>
+            <div className="shop-invoice-confirm-head"><h3>替换 PDF 文件</h3></div>
+            <div className="shop-invoice-confirm-body">
+              <label className="shop-invoice-confirm-field is-upload">
+                <span>PDF 文件:</span>
+                <div className="shop-invoice-upload-box">
+                  <input className="shop-invoice-file-input" type="file" accept=".pdf" onChange={(event) => setReplacingInvoice((current) => ({ ...current, pdfFileName: event.target.files?.[0]?.name || "" }))} />
+                  <button className="shop-invoice-upload-btn" type="button" onClick={(event) => event.currentTarget.previousElementSibling?.click()}>选择文件</button>
+                  {replacingInvoice.pdfFileName ? <div className="shop-invoice-upload-name">{replacingInvoice.pdfFileName}</div> : null}
+                  <p>仅替换 PDF 文件，不变更发票关联订单。建议文件名使用 {replacingInvoice.invoiceNo}.pdf。</p>
+                </div>
+              </label>
+            </div>
+            <div className="shop-invoice-confirm-foot">
+              <button className="btn btn-reset" type="button" onClick={() => setReplacingInvoice(null)}>取消</button>
+              <button className="btn btn-dark" type="button" disabled={!replacingInvoice.pdfFileName} onClick={handleSubmitReplacePdf}>提交</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function ShopInvoicePage({
   activeShopTab = "发票管理",
   initialInvoiceStatusTab = "全部",
@@ -8218,7 +8699,9 @@ function ShopInvoicePage({
   onOpenInvoiceInfoTab,
   onCloseInvoiceInfoTab,
   onOpenInvoiceHistoryTab,
-  onCloseInvoiceHistoryTab
+  onCloseInvoiceHistoryTab,
+  onOpenBulkUploadTab,
+  onCloseBulkUploadTab
 }) {
   const [activeInvoiceStatusTab, setActiveInvoiceStatusTab] = useState("全部");
   const [markerFilter, setMarkerFilter] = useState("全部");
@@ -9366,6 +9849,10 @@ function ShopInvoicePage({
         </section>
       ) : null}
 
+      {activeShopTab === "批量上传发票" ? (
+        <ShopInvoiceBulkUploadPage onBack={() => onCloseBulkUploadTab?.()} onToast={setShopInvoiceNotice} />
+      ) : null}
+
       {activeShopTab === "发票管理" && activeInvoiceStatusTab === "发票设置" ? (
         <section className="content-card shop-invoice-settings-page">
           <div className="shop-invoice-settings-body">
@@ -9685,7 +10172,7 @@ function ShopInvoicePage({
             </div>
           </div>
         </section>
-      ) : activeInvoiceStatusTab !== "发票设置" ? (
+      ) : activeShopTab === "发票管理" && activeInvoiceStatusTab !== "发票设置" ? (
         <>
 
       <section className="content-card shop-invoice-filter-card">
@@ -9849,6 +10336,7 @@ function ShopInvoicePage({
                 </div>
               </label>
             ) : null}
+            <button className="btn btn-reset buyer-export-btn" type="button" onClick={() => onOpenBulkUploadTab?.()}>批量上传发票</button>
             <button className="btn btn-reset buyer-export-btn" type="button">导出查询结果</button>
             <div className={`shop-invoice-column-settings ${isColumnSettingOpen ? "is-open" : ""}`}>
               <button className="shop-invoice-column-trigger" ref={columnTriggerRef} type="button" onClick={() => setIsColumnSettingOpen((current) => !current)}>
@@ -12504,6 +12992,14 @@ export default function App() {
       onClick: () => setActiveShopTab("历史操作"),
       onClose: () => setActiveShopTab("发票管理")
     }] : []),
+    ...(activeShopTab === "批量上传发票" ? [{
+      key: "shop-invoice-bulk-upload",
+      label: "批量上传发票",
+      isCurrent: true,
+      closable: true,
+      onClick: () => setActiveShopTab("批量上传发票"),
+      onClose: () => setActiveShopTab("发票管理")
+    }] : []),
   ] : null;
 
   return (
@@ -12625,6 +13121,8 @@ export default function App() {
               onCloseInvoiceInfoTab={() => setActiveShopTab("发票管理")}
               onOpenInvoiceHistoryTab={() => setActiveShopTab("历史操作")}
               onCloseInvoiceHistoryTab={() => setActiveShopTab("发票管理")}
+              onOpenBulkUploadTab={() => setActiveShopTab("批量上传发票")}
+              onCloseBulkUploadTab={() => setActiveShopTab("发票管理")}
             />
           ) : (
             <>

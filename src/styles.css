@@ -429,6 +429,89 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .buyer-toolbar-left { display: flex; align-items: center; gap: 16px; }
 .buyer-toolbar-btn, .buyer-export-btn { min-width: 114px; }
 .shop-invoice-toolbar-right .buyer-export-btn { font-size: 16px; }
+.bulk-invoice-page { display: flex; flex-direction: column; gap: 14px; }
+.bulk-invoice-simple-page { gap: 18px; }
+.bulk-invoice-simple-card { min-height: 468px; padding: 24px 44px 34px; background: #fff; }
+.bulk-invoice-simple-tip { display: flex; align-items: center; gap: 8px; color: #333; font-size: 14px; }
+.bulk-invoice-simple-tip-icon { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; border-radius: 999px; background: #f0b429; color: #fff; font-size: 10px; font-weight: 700; }
+.bulk-invoice-step-strip { display: grid; grid-template-columns: minmax(160px, 1fr) minmax(120px, 2fr) minmax(160px, 1fr) minmax(120px, 2fr) minmax(160px, 1fr); align-items: start; margin: 26px 56px 34px; }
+.bulk-invoice-step { display: flex; flex-direction: column; align-items: center; text-align: center; color: #5b6472; }
+.bulk-invoice-step span { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 1px solid #c8cdd6; border-radius: 999px; background: #fff; color: #8b94a3; font-size: 15px; line-height: 1; }
+.bulk-invoice-step strong { margin-top: 12px; color: #333; font-size: 14px; font-weight: 700; }
+.bulk-invoice-step p { margin: 8px 0 0; max-width: 160px; color: #7b8494; font-size: 13px; line-height: 1.55; }
+.bulk-invoice-step button { margin-top: 8px; border: none; padding: 0; background: transparent; color: #ff6f18; font-size: 13px; text-decoration: underline; }
+.bulk-invoice-step-line { align-self: start; margin-top: 14px; border-top: 1px dashed #b9c0cc; }
+.bulk-invoice-simple-form { width: 760px; margin: 0 0 0 54px; }
+.bulk-invoice-simple-row { display: flex; align-items: center; gap: 12px; min-height: 48px; color: #333; font-size: 14px; }
+.bulk-invoice-simple-label { width: 96px; text-align: right; flex: none; }
+.bulk-invoice-simple-label i { margin-right: 4px; color: #ff4d4f; font-style: normal; }
+.bulk-invoice-simple-radio { display: inline-flex; align-items: center; gap: 6px; color: #222; }
+.bulk-invoice-simple-radio input { width: 14px; height: 14px; accent-color: #242424; }
+.bulk-invoice-simple-file { min-width: 112px; height: 34px; border: 1px solid #d8dde6; background: #fff; color: #333; font-size: 14px; }
+.bulk-invoice-simple-file-name { color: #4b5563; font-size: 13px; }
+.bulk-invoice-simple-progress { width: 410px; height: 8px; margin: 4px 0 8px 108px; background: #eef2f7; overflow: hidden; }
+.bulk-invoice-simple-progress span { display: block; height: 100%; background: #12c271; transition: width 0.2s ease; }
+.bulk-invoice-simple-notes { margin: 12px 0 20px 108px; color: #374151; font-size: 14px; line-height: 1.65; }
+.bulk-invoice-simple-notes strong { display: block; margin-bottom: 12px; color: #ff4d4f; font-weight: 700; }
+.bulk-invoice-simple-notes p { margin: 0; }
+.bulk-invoice-simple-notes p + p { margin-top: 2px; color: #ff4d4f; }
+.bulk-invoice-simple-submit { margin-left: 108px; min-width: 76px; height: 36px; border: none; background: #242424; color: #fff; font-size: 14px; }
+.bulk-invoice-simple-submit:disabled { background: #9ca3af; cursor: not-allowed; }
+.bulk-invoice-page-head { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 22px; border: 1px solid #eef0f4; background: #fff; }
+.bulk-invoice-page-head h2 { margin: 0; color: #111827; font-size: 20px; font-weight: 700; }
+.bulk-invoice-page-head p { margin: 8px 0 0; color: #6b7280; font-size: 14px; line-height: 1.6; }
+.bulk-invoice-nav { display: flex; align-items: center; gap: 0; border: 1px solid #eef0f4; background: #fff; padding: 0 18px; }
+.bulk-invoice-nav button { min-width: 122px; height: 46px; border: none; border-bottom: 2px solid transparent; background: transparent; color: #5b6472; font-size: 14px; }
+.bulk-invoice-nav button.is-active { border-bottom-color: #f0b429; color: #222; font-weight: 700; }
+.bulk-invoice-card { padding: 18px 20px 20px; }
+.bulk-invoice-upload-layout { display: grid; grid-template-columns: minmax(360px, 0.9fr) minmax(420px, 1.1fr); gap: 22px; align-items: stretch; }
+.bulk-invoice-structure, .bulk-invoice-uploader, .bulk-invoice-info-card, .bulk-invoice-pdf-card, .bulk-invoice-log-card { border: 1px solid #eef0f4; background: #fbfcfe; padding: 16px; }
+.bulk-invoice-structure h3, .bulk-invoice-section-head h3, .bulk-invoice-info-card h4, .bulk-invoice-pdf-card h4, .bulk-invoice-log-card h4 { margin: 0; color: #111827; font-size: 16px; font-weight: 700; }
+.bulk-invoice-structure pre { margin: 14px 0 0; padding: 14px 16px; background: #fff; border: 1px solid #e5e9f2; color: #334155; font-size: 14px; line-height: 1.7; }
+.bulk-invoice-rule-list { display: grid; gap: 8px; margin-top: 14px; color: #5b6472; font-size: 14px; line-height: 1.5; }
+.bulk-invoice-rule-list span::before { content: "•"; margin-right: 8px; color: #ff6f18; }
+.bulk-invoice-uploader { display: flex; flex-direction: column; justify-content: center; gap: 16px; background: #fff; }
+.bulk-invoice-upload-box { min-height: 142px; border: 1px dashed #c8d0dc; background: #fbfcff; color: #334155; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+.bulk-invoice-upload-box strong { font-size: 16px; font-weight: 700; }
+.bulk-invoice-upload-box span { color: #8b95a5; font-size: 14px; }
+.bulk-invoice-upload-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.bulk-invoice-progress { height: 8px; background: #eef2f7; overflow: hidden; }
+.bulk-invoice-progress span { display: block; height: 100%; background: #12c271; transition: width 0.2s ease; }
+.bulk-invoice-section-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.bulk-invoice-section-head p { margin: 6px 0 0; color: #6b7280; font-size: 14px; line-height: 1.6; }
+.bulk-invoice-summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+.bulk-invoice-summary-grid div { min-height: 76px; padding: 14px 16px; background: #f7f8fc; border: 1px solid #edf1f6; }
+.bulk-invoice-summary-grid span { display: block; color: #7b8494; font-size: 13px; }
+.bulk-invoice-summary-grid strong { display: block; margin-top: 10px; color: #111827; font-size: 18px; font-weight: 700; }
+.bulk-invoice-summary-grid strong.is-success { color: #12a86a; }
+.bulk-invoice-summary-grid strong.is-danger { color: #d14343; }
+.bulk-invoice-empty { min-height: 120px; display: flex; align-items: center; justify-content: center; border: 1px dashed #d6dde8; background: #fbfcfe; color: #8b95a5; font-size: 14px; }
+.bulk-invoice-table-shell { overflow-x: auto; }
+.bulk-invoice-result-table { min-width: 980px; }
+.bulk-invoice-result-table th:nth-child(1), .bulk-invoice-result-table td:nth-child(1) { width: 160px; }
+.bulk-invoice-status { display: inline-flex; align-items: center; justify-content: center; min-width: 72px; height: 24px; padding: 0 8px; font-size: 12px; }
+.bulk-invoice-status.is-success { background: #e8fff4; color: #0f8d5a; }
+.bulk-invoice-status.is-danger { background: #ffe8e6; color: #d14343; }
+.bulk-invoice-head-actions { display: flex; align-items: center; gap: 10px; }
+.bulk-invoice-detail-grid { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 16px; margin-bottom: 16px; }
+.bulk-invoice-info-row { display: grid; grid-template-columns: 132px minmax(0, 1fr); min-height: 40px; border-top: 1px solid #eef0f4; align-items: center; }
+.bulk-invoice-info-row:first-of-type { border-top: none; margin-top: 10px; }
+.bulk-invoice-info-row span { color: #6b7280; font-size: 14px; }
+.bulk-invoice-info-row strong { color: #111827; font-size: 14px; font-weight: 400; word-break: break-word; }
+.bulk-invoice-pdf-card { display: flex; flex-direction: column; align-items: stretch; gap: 10px; background: #fff; }
+.bulk-invoice-pdf-preview { height: 118px; display: flex; align-items: center; justify-content: center; border: 1px solid #e5e9f2; background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%); color: #d14343; font-size: 28px; font-weight: 700; }
+.bulk-invoice-pdf-card > strong { color: #111827; font-size: 14px; }
+.bulk-invoice-pdf-card > span { color: #7b8494; font-size: 13px; }
+.bulk-invoice-pdf-actions, .bulk-invoice-buyer-actions { display: flex; align-items: center; gap: 14px; }
+.bulk-invoice-rules, .bulk-invoice-buyer-tip { margin: 0 0 16px; border: 1px solid #ffbe8a; background: #fff5eb; padding: 12px 14px; color: #8f4d16; font-size: 14px; line-height: 1.6; }
+.bulk-invoice-rules strong { margin-right: 10px; color: #5f3a1f; }
+.bulk-invoice-order-table { min-width: 1180px; }
+.bulk-invoice-log-card { margin-top: 16px; background: #fff; }
+.bulk-invoice-log-card p { margin: 10px 0 0; color: #4b5563; font-size: 14px; line-height: 1.5; }
+.bulk-invoice-edit-modal { width: min(720px, calc(100vw - 48px)); }
+.bulk-invoice-replace-modal { width: min(560px, calc(100vw - 48px)); }
+.bulk-invoice-buyer-tip { margin-bottom: 14px; background: #f0f7ff; border-color: #b9d7ff; color: #24547f; }
+.bulk-invoice-buyer-actions { margin-top: 16px; justify-content: flex-end; }
 .buyer-table-shell { border: 1px solid #e0e4ea; }
 .buyer-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .buyer-table thead { background: #f5f7fa; }
