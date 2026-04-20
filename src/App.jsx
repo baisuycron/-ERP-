@@ -8627,8 +8627,8 @@ function ShopInvoiceBulkUploadPage({ onBack, onToast }) {
 
           <div className="bulk-invoice-simple-notes">
             <strong>注意事项：</strong>
-            <p>1、如需批量上传发票，请将 pdf 文件夹与 mapping.xlsx 打包上传；PDF 文件必须按“发票号码.pdf”命名，系统按 Excel 中的发票号码自动匹配同名 PDF。</p>
-            <p>2、mapping.xlsx 包含两个 Sheet：发票信息、订单关联；同一张发票关联多笔订单时，不允许部分失败。</p>
+            <p>1、如需批量上传发票，请将发票的PDF整理为文件夹，与订单.XLSX打包上传；PDF 文件必须按“发票号码.PDF”命名，系统按XLSX文档中的发票号码自动匹配同名 PDF。</p>
+            <p>2、订单.XLSX包含两个Sheet：发票信息、订单关联；同一张发票关联多笔订单时，不允许部分失败。</p>
             <p>3、任一订单校验失败时整张发票导入失败，不生成发票记录、不更新订单开票状态。</p>
           </div>
 
@@ -10336,7 +10336,7 @@ function ShopInvoicePage({
                 </div>
               </label>
             ) : null}
-            <button className="btn btn-reset buyer-export-btn" type="button" onClick={() => onOpenBulkUploadTab?.()}>批量上传发票</button>
+            <button className="btn btn-reset buyer-export-btn" type="button" onClick={() => onOpenBulkUploadTab?.()}>批量导入发票</button>
             <button className="btn btn-reset buyer-export-btn" type="button">导出查询结果</button>
             <div className={`shop-invoice-column-settings ${isColumnSettingOpen ? "is-open" : ""}`}>
               <button className="shop-invoice-column-trigger" ref={columnTriggerRef} type="button" onClick={() => setIsColumnSettingOpen((current) => !current)}>
@@ -12994,7 +12994,7 @@ export default function App() {
     }] : []),
     ...(activeShopTab === "批量上传发票" ? [{
       key: "shop-invoice-bulk-upload",
-      label: "批量上传发票",
+      label: "批量导入发票",
       isCurrent: true,
       closable: true,
       onClick: () => setActiveShopTab("批量上传发票"),
