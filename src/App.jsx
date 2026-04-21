@@ -21,6 +21,7 @@ const initialShopInvoiceFilters = {
   invoiceNo: "",
   invoiceTitle: "",
   taxpayerId: "",
+  shopInfo: "",
   buyerAccount: "",
   store: ""
 };
@@ -46,6 +47,38 @@ const normalizeShopInvoiceSelectionValue = (value) => {
   if (value === true) return "是";
   if (value === false) return "否";
   return normalizeShopInvoiceMode(value);
+};
+
+const isPersonalInvoiceTitle = (value) => String(value || "").includes("个人");
+const shouldHideInvoiceTitleExtendedFields = (invoiceType, invoiceTitle) => (
+  isPersonalInvoiceTitle(invoiceTitle) || String(invoiceType || "").includes("普通发票")
+);
+const getInvoiceTitleDisplayName = (value) => {
+  const text = String(value || "").trim();
+  const matched = text.match(/^个人[（(](.+)[）)]$/);
+  return matched ? matched[1].trim() : text;
+};
+const shopInvoiceSampleShopNames = [
+  "子初初家心选旗舰店",
+  "柚子生活家精选店",
+  "山野四季日用旗舰店",
+  "北岛厨房优选店",
+  "松果母婴生活馆",
+  "一颗柠檬家居店"
+];
+const shopInvoiceShopInfoByOrderNo = {
+  "2026040119104267": "子初初家心选旗舰店\n(ID:2389)",
+  "2026040315224679": "柚子生活家精选店\n(ID:2406)",
+  "2026040411083345": "山野四季日用旗舰店\n(ID:2423)"
+};
+const createShopInvoiceShopInfo = (orderNo) => {
+  const orderText = String(orderNo || "");
+  if (shopInvoiceShopInfoByOrderNo[orderText]) return shopInvoiceShopInfoByOrderNo[orderText];
+  const lastDigit = Number(orderText.slice(-1));
+  const sampleIndex = Number.isFinite(lastDigit) ? lastDigit % shopInvoiceSampleShopNames.length : 0;
+  const shopName = shopInvoiceSampleShopNames[sampleIndex];
+  const numericId = 2389 + (Number.isFinite(lastDigit) ? lastDigit * 17 : 0);
+  return `${shopName}\n(ID:${numericId})`;
 };
 
 const isShopInvoiceSingleInvoiceEnabled = (value) => normalizeShopInvoiceSelectionValue(value) === "是";
@@ -281,6 +314,8 @@ function buildShopInvoicePreviewSvg(detail) {
   const orderInfo = detail?.orderInfo || {};
   const summary = detail?.summary || {};
   const items = Array.isArray(detail?.items) ? detail.items.slice(0, 6) : [];
+  const isPersonalTitle = !!titleInfo.isPersonalTitle;
+  const hideExtendedTitleFields = !!titleInfo.hideExtendedTitleFields;
   const svgWidth = 1240;
   const svgHeight = 1754;
   const tableTop = 744;
@@ -319,12 +354,12 @@ function buildShopInvoicePreviewSvg(detail) {
 
     <rect x="72" y="462" width="1096" height="236" rx="18" fill="#ffffff" stroke="#e5e7eb" />
     <text x="96" y="516" font-size="24" font-weight="700" fill="#111827">购方信息</text>
-    <text x="96" y="566" font-size="22" fill="#4b5563">名称：${escapeXml(titleInfo.invoiceTitle || "-")}</text>
-    <text x="96" y="610" font-size="22" fill="#4b5563">纳税人识别号：${escapeXml(titleInfo.taxpayerId || "-")}</text>
-    <text x="96" y="654" font-size="22" fill="#4b5563">地址、电话：${escapeXml(`${titleInfo.registerAddress || "-"} ${titleInfo.registerPhone || ""}`.trim())}</text>
-    <text x="660" y="566" font-size="22" fill="#4b5563">开户行及账号：</text>
-    <text x="660" y="610" font-size="22" fill="#4b5563">${escapeXml(titleInfo.bankName || "-")}</text>
-    <text x="660" y="654" font-size="22" fill="#4b5563">${escapeXml(titleInfo.bankAccount || "-")}</text>
+    <text x="96" y="566" font-size="22" fill="#4b5563">名称：${escapeXml(getInvoiceTitleDisplayName(titleInfo.invoiceTitle) || "-")}</text>
+    ${isPersonalTitle ? "" : `<text x="96" y="610" font-size="22" fill="#4b5563">纳税人识别号：${escapeXml(titleInfo.taxpayerId || "-")}</text>`}
+    ${hideExtendedTitleFields ? "" : `<text x="96" y="654" font-size="22" fill="#4b5563">地址、电话：${escapeXml(`${titleInfo.registerAddress || "-"} ${titleInfo.registerPhone || ""}`.trim())}</text>`}
+    ${hideExtendedTitleFields ? "" : `<text x="660" y="566" font-size="22" fill="#4b5563">开户行及账号：</text>`}
+    ${hideExtendedTitleFields ? "" : `<text x="660" y="610" font-size="22" fill="#4b5563">${escapeXml(titleInfo.bankName || "-")}</text>`}
+    ${hideExtendedTitleFields ? "" : `<text x="660" y="654" font-size="22" fill="#4b5563">${escapeXml(titleInfo.bankAccount || "-")}</text>`}
 
     <rect x="72" y="${tableTop}" width="1096" height="64" rx="14" fill="#f8fafc" stroke="#e5e7eb" />
     <text x="96" y="${tableTop + 40}" font-size="22" font-weight="700" fill="#111827">商品/服务名称</text>
@@ -844,7 +879,7 @@ const platformCenterSidebarItems = [
   { key: "goods", label: "商品", icon: "goods" },
   { key: "trade", label: "交易", icon: "trade", children: [{ key: "trade-settings", label: "交易设置" }] },
   { key: "merchant", label: "商家", icon: "buyer" },
-  { key: "shop", label: "店铺", icon: "shop", badge: "99+" },
+  { key: "shop", label: "店铺", icon: "shop", badge: "99+", children: [{ key: "shop-invoice-management", label: "发票管理" }] },
   { key: "website", label: "网站", icon: "website" },
   { key: "system", label: "系统", icon: "system" },
   { key: "stats", label: "统计", icon: "stats" },
@@ -869,6 +904,7 @@ const platformTradeSettingsInvoiceRows = [
   { label: "订单开票申请超过", value: "5", suffix: "天未处理，卖家端生成超时未开票提醒", hint: "订单完成后开始计时" },
   { label: "开票申请超时前", value: "1", suffix: "天，提醒卖家开票即将超时" }
 ];
+const platformInvoiceManagementTabs = ["全部", "待开票", "已驳回", "已撤销", "已开票"];
 const platformCenterSummaryCards = [
   { title: "今日有效销售总额", value: "0", tone: "blue", icon: "summary-sales" },
   { title: "今日商家新增数", value: "1", tone: "yellow", icon: "summary-merchant" },
@@ -1626,6 +1662,64 @@ const shopInvoiceManagementRows = [
     afterSaleStatusDetail: "-",
     afterSaleExpired: "否",
     actions: ["发票详情", "确认开票", "驳回"]
+  },
+  {
+    orderNo: "2026041112083612",
+    invoiceType: "电子普通发票",
+    invoiceTitle: "个人（林晓）",
+    taxpayerId: "-",
+    orderStatus: "已完成",
+    orderAmount: "¥428.00",
+    afterSaleStatus: "-",
+    afterSaleAmount: "¥0.00",
+    amount: "¥428.00",
+    shouldInvoiceAmount: "¥428.00",
+    invoiceAmountWithTax: "¥428.00",
+    buyerAccount: "linxiao (ID:21532)",
+    paymentMethod: "先款后货",
+    store: "徐汇闪购店\n(ID:2232796)",
+    paidAt: "2026-04-11 12:08:36",
+    appliedAt: "2026-04-11 12:19:40",
+    modifiedAt: "2026-04-11 12:19:40",
+    applicationStatus: "已完成",
+    invoicedAt: "2026-04-12 09:16:00",
+    invoiceNo: "13216486617",
+    invoiceRemark: "个人抬头电子普票，开票完成后系统已自动发送邮箱。",
+    invoiceMethod: "系统",
+    invoiceStatus: "已开票",
+    invoiceStatusTone: "success",
+    afterSaleStatusDetail: "-",
+    afterSaleExpired: "否",
+    actions: ["发票详情", "修改发票"]
+  },
+  {
+    orderNo: "2026041115264805",
+    invoiceType: "电子普通发票",
+    invoiceTitle: "个人（周雨彤）",
+    taxpayerId: "-",
+    orderStatus: "已完成",
+    orderAmount: "¥986.00",
+    afterSaleStatus: "-",
+    afterSaleAmount: "¥0.00",
+    amount: "¥986.00",
+    shouldInvoiceAmount: "¥986.00",
+    invoiceAmountWithTax: "¥986.00",
+    buyerAccount: "zhouyt (ID:21548)",
+    paymentMethod: "先货后款",
+    store: "静安闪购店\n(ID:2232801)",
+    paidAt: "2026-04-11 15:26:48",
+    appliedAt: "2026-04-11 15:39:12",
+    modifiedAt: "2026-04-11 15:39:12",
+    applicationStatus: "已完成",
+    invoicedAt: "2026-04-12 10:08:00",
+    invoiceNo: "13216486618",
+    invoiceRemark: "个人抬头电子普票，支持下载电子发票文件。",
+    invoiceMethod: "手动",
+    invoiceStatus: "已开票",
+    invoiceStatusTone: "success",
+    afterSaleStatusDetail: "-",
+    afterSaleExpired: "否",
+    actions: ["发票详情", "修改发票"]
   }
 ];
 const shopInvoiceSingleInvoiceByOrderNo = {
@@ -1643,7 +1737,9 @@ const shopInvoiceSingleInvoiceByOrderNo = {
   "2026040909231674": "是",
   "2026040914175826": "否",
   "2026041014582635": "否",
-  "2026041010314407": "否"
+  "2026041010314407": "否",
+  "2026041112083612": "否",
+  "2026041115264805": "是"
 };
 const shopInvoiceBatchByOrderNo = {
   "2026040119104267": "KP202604-001",
@@ -1660,7 +1756,9 @@ const shopInvoiceBatchByOrderNo = {
   "2026040909231674": "KP202604-004",
   "2026040914175826": "KP202604-005",
   "2026041014582635": "KP202604-005",
-  "2026041010314407": "KP202604-006"
+  "2026041010314407": "KP202604-006",
+  "2026041112083612": "KP202604-007",
+  "2026041115264805": "KP202604-007"
 };
 const getShopInvoiceActions = (row) => {
   const baseActions = ["发票详情", "历史操作"];
@@ -1782,6 +1880,7 @@ const normalizedShopInvoiceManagementRows = shopInvoiceManagementRows.map((row) 
   const normalizedRow = {
     ...row,
     singleInvoice: normalizeShopInvoiceMode(row.singleInvoice || shopInvoiceSingleInvoiceByOrderNo[row.orderNo]),
+    shopInfo: row.shopInfo || createShopInvoiceShopInfo(row.orderNo),
     invoiceContent: row.invoiceContent || (["2026040315224679", "2026040716524309", "2026040814382551", "2026040909231674"].includes(row.orderNo) ? "商品明细" : "商品类别"),
     invoiceBatch: row.invoiceBatch || shopInvoiceBatchByOrderNo[row.orderNo] || "-",
     invoiceRemark: row.invoiceRemark || "-",
@@ -1799,9 +1898,24 @@ const normalizedShopInvoiceManagementRows = shopInvoiceManagementRows.map((row) 
 const shopInvoiceColumnDefinitions = [
   { key: "select", label: "", width: 44, alwaysVisible: true, frozen: true, renderHeader: () => <input type="checkbox" />, renderCell: () => <input type="checkbox" /> },
   { key: "orderNo", label: "订单号", width: 220, visible: true, frozen: true, renderCell: (item) => <button className="buyer-link-btn" type="button">{item.orderNo}</button> },
+  {
+    key: "shopInfo",
+    label: "店铺信息",
+    width: 190,
+    visible: true,
+    renderCell: (item) => {
+      const [shopName = "-", shopId = ""] = String(item.shopInfo || "").split("\n");
+      return (
+        <div className="shop-invoice-store-cell">
+          <div>{shopName}</div>
+          {shopId ? <div>{shopId}</div> : null}
+        </div>
+      );
+    }
+  },
   { key: "invoiceType", label: "发票类型", width: 160, visible: true, renderCell: (item) => item.invoiceType },
   { key: "paymentMethod", label: "付款方式", width: 120, visible: true, renderCell: (item) => item.paymentMethod || "-" },
-  { key: "invoiceTitle", label: "发票抬头", width: 200, visible: true, renderCell: (item) => item.invoiceTitle },
+  { key: "invoiceTitle", label: "发票抬头", width: 200, visible: true, renderCell: (item) => getInvoiceTitleDisplayName(item.invoiceTitle) },
   { key: "taxpayerId", label: "纳税人识别号", width: 180, visible: true, renderCell: (item) => item.taxpayerId },
   { key: "orderAmount", label: "订单总额", width: 120, visible: true, renderCell: (item) => item.orderAmount },
   {
@@ -2787,6 +2901,8 @@ function createShopInvoiceIssuedDetail(row) {
   if (!row) return null;
   const orderDetail = createShopInvoiceOrderDetail(row);
   const isIssued = row.invoiceStatus === "已开票";
+  const isPersonalTitle = isPersonalInvoiceTitle(row.invoiceTitle);
+  const hideExtendedTitleFields = shouldHideInvoiceTitleExtendedFields(row.invoiceType, row.invoiceTitle);
   const shouldHideInvoiceAmounts = ["待开票", "已驳回", "已撤销"].includes(row.invoiceStatus || row.applicationStatus);
   const statusExtraText = getShopInvoiceStatusExtraText(row);
   const invoiceTypeExtraText = getShopInvoiceTypeExtraText(row);
@@ -2813,7 +2929,9 @@ function createShopInvoiceIssuedDetail(row) {
       invoicedAt: row.invoicedAt
     },
     titleInfo: {
-      invoiceTitle: row.invoiceTitle,
+      isPersonalTitle,
+      hideExtendedTitleFields,
+      invoiceTitle: getInvoiceTitleDisplayName(row.invoiceTitle),
       invoiceTitleExtraText,
       taxpayerId: row.taxpayerId,
       registerAddress: "湖南省长沙市雨花区",
@@ -4319,11 +4437,18 @@ function BuyerPcMallInvoiceDetailPage({ detail, onBack, onPreview, onModifyInvoi
           <div className="shop-invoice-detail-title"><span>抬头信息</span></div>
           <div className="shop-invoice-detail-info-grid">
             <div className="shop-invoice-detail-info-row"><span>发票抬头</span><strong className="shop-invoice-status-detail">{detail.titleInfo.invoiceTitle}{detail.titleInfo.invoiceTitleExtraText ? <span className="shop-invoice-detail-alert">{detail.titleInfo.invoiceTitleExtraText}</span> : null}</strong></div>
-            <div className="shop-invoice-detail-info-row"><span>纳税人识别号</span><strong>{detail.titleInfo.taxpayerId}</strong></div>
-            <div className="shop-invoice-detail-info-row"><span>注册地址</span><strong>{detail.titleInfo.registerAddress}</strong></div>
-            <div className="shop-invoice-detail-info-row"><span>注册电话</span><strong>{detail.titleInfo.registerPhone}</strong></div>
-            <div className="shop-invoice-detail-info-row"><span>开户银行</span><strong>{detail.titleInfo.bankName}</strong></div>
-            <div className="shop-invoice-detail-info-row"><span>开户银行账号</span><strong>{detail.titleInfo.bankAccount}</strong></div>
+            {!detail.titleInfo.isPersonalTitle ? <div className="shop-invoice-detail-info-row"><span>纳税人识别号</span><strong>{detail.titleInfo.taxpayerId}</strong></div> : null}
+            {!detail.titleInfo.hideExtendedTitleFields ? <div className="shop-invoice-detail-info-row"><span>注册地址</span><strong>{detail.titleInfo.registerAddress}</strong></div> : null}
+            {!detail.titleInfo.hideExtendedTitleFields ? <div className="shop-invoice-detail-info-row"><span>注册电话</span><strong>{detail.titleInfo.registerPhone}</strong></div> : null}
+            {!detail.titleInfo.hideExtendedTitleFields ? <div className="shop-invoice-detail-info-row"><span>开户银行</span><strong>{detail.titleInfo.bankName}</strong></div> : null}
+            {!detail.titleInfo.hideExtendedTitleFields ? <div className="shop-invoice-detail-info-row"><span>开户银行账号</span><strong>{detail.titleInfo.bankAccount}</strong></div> : null}
+          </div>
+        </div>
+
+        <div className="shop-invoice-detail-section">
+          <div className="shop-invoice-detail-title"><span>备注信息</span></div>
+          <div className="shop-invoice-detail-info-grid">
+            <div className="shop-invoice-detail-info-row"><span>开票备注</span><strong>{detail.invoiceRemark || "-"}</strong></div>
           </div>
         </div>
 
@@ -7344,6 +7469,462 @@ function PlatformTradeSettingsPage() {
   );
 }
 
+function PlatformInvoiceManagementPage() {
+  const [rows, setRows] = useState(normalizedShopInvoiceManagementRows);
+  const [activeTab, setActiveTab] = useState("全部");
+  const [draftFilters, setDraftFilters] = useState(initialShopInvoiceFilters);
+  const [appliedFilters, setAppliedFilters] = useState(initialShopInvoiceFilters);
+  const [page, setPage] = useState(1);
+  const [detailOrderNo, setDetailOrderNo] = useState("");
+  const [detailMode, setDetailMode] = useState("invoice");
+  const [pageNotice, setPageNotice] = useState("");
+
+  useEffect(() => {
+    if (!pageNotice) return undefined;
+    const timerId = window.setTimeout(() => setPageNotice(""), 2200);
+    return () => window.clearTimeout(timerId);
+  }, [pageNotice]);
+
+  const invoiceTabCounts = useMemo(() => (
+    platformInvoiceManagementTabs.reduce((result, tab) => {
+      result[tab] = tab === "全部" ? rows.length : rows.filter((item) => item.invoiceStatus === tab).length;
+      return result;
+    }, {})
+  ), [rows]);
+
+  const summaryCards = useMemo(() => {
+    const pendingRows = rows.filter((item) => item.invoiceStatus === "待开票");
+    const rejectedRows = rows.filter((item) => item.invoiceStatus === "已驳回");
+    const invoicedRows = rows.filter((item) => item.invoiceStatus === "已开票");
+
+    return [
+      {
+        title: "待平台处理",
+        value: String(pendingRows.length),
+        caption: "待开票申请",
+        tone: "warning"
+      },
+      {
+        title: "超时提醒",
+        value: String(pendingRows.filter((item) => isShopInvoiceApplicationOverdue(item)).length),
+        caption: "超时未处理",
+        tone: "danger"
+      },
+      {
+        title: "本月已开票金额",
+        value: formatMoneyDisplay(invoicedRows.reduce((sum, item) => sum + parseMoneyValue(item.invoiceAmountWithTax || item.shouldInvoiceAmount), 0)),
+        caption: `已完成 ${invoicedRows.length} 笔`,
+        tone: "success"
+      },
+      {
+        title: "异常申请",
+        value: String(rejectedRows.length),
+        caption: "已驳回申请",
+        tone: "muted"
+      }
+    ];
+  }, [rows]);
+
+  const filteredRows = useMemo(() => rows.filter((item) => {
+    if (activeTab !== "全部" && item.invoiceStatus !== activeTab) return false;
+    if (appliedFilters.orderNo.trim() && !String(item.orderNo || "").includes(appliedFilters.orderNo.trim())) return false;
+    if (appliedFilters.invoiceTitle.trim() && !String(item.invoiceTitle || "").toLowerCase().includes(appliedFilters.invoiceTitle.trim().toLowerCase())) return false;
+    if (appliedFilters.taxpayerId.trim() && !String(item.taxpayerId || "").includes(appliedFilters.taxpayerId.trim())) return false;
+    if (appliedFilters.store.trim() && !`${item.shop || ""} ${item.store || ""}`.toLowerCase().includes(appliedFilters.store.trim().toLowerCase())) return false;
+    if (appliedFilters.invoiceBatch.trim() && !String(item.invoiceBatch || "").toLowerCase().includes(appliedFilters.invoiceBatch.trim().toLowerCase())) return false;
+    if (appliedFilters.invoiceStatus !== "全部" && item.invoiceStatus !== appliedFilters.invoiceStatus) return false;
+    return true;
+  }), [activeTab, appliedFilters, rows]);
+
+  const pageSize = 8;
+  const pageCount = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const pagedRows = filteredRows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const activeDetailRow = useMemo(() => rows.find((item) => item.orderNo === detailOrderNo) || null, [detailOrderNo, rows]);
+  const activeInvoiceDetail = useMemo(() => createShopInvoiceIssuedDetail(activeDetailRow), [activeDetailRow]);
+  const activeOrderDetail = useMemo(() => createShopInvoiceOrderDetail(activeDetailRow), [activeDetailRow]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [activeTab]);
+
+  const handleDraftFilterChange = (field, value) => {
+    setDraftFilters((current) => ({ ...current, [field]: value }));
+  };
+
+  const handleSearch = () => {
+    setAppliedFilters(draftFilters);
+    setPage(1);
+  };
+
+  const handleReset = () => {
+    setDraftFilters(initialShopInvoiceFilters);
+    setAppliedFilters(initialShopInvoiceFilters);
+    setPage(1);
+  };
+
+  const handleViewDetail = (row, mode = "invoice") => {
+    setDetailOrderNo(row.orderNo);
+    setDetailMode(mode);
+  };
+
+  const handleCloseDetail = () => {
+    setDetailOrderNo("");
+    setDetailMode("invoice");
+  };
+
+  const handleConfirmInvoice = (orderNo) => {
+    let didUpdate = false;
+
+    setRows((current) => current.map((item) => {
+      if (item.orderNo !== orderNo) return item;
+      if (item.invoiceStatus !== "待开票") return item;
+
+      didUpdate = true;
+      const completedAt = "2026-04-21 14:30:00";
+      const nextRow = {
+        ...item,
+        applicationStatus: "已完成",
+        invoiceStatus: "已开票",
+        invoiceStatusTone: "success",
+        invoiceNo: item.invoiceNo && item.invoiceNo !== "-" ? item.invoiceNo : `PLAT${String(orderNo).slice(-8)}`,
+        invoicedAt: completedAt,
+        invoiceAmountWithTax: item.invoiceAmountWithTax && item.invoiceAmountWithTax !== "-" ? item.invoiceAmountWithTax : item.shouldInvoiceAmount,
+        actions: ["发票详情", "修改发票"]
+      };
+
+      return {
+        ...nextRow,
+        historyRecords: appendShopInvoiceHistoryRecord(nextRow.historyRecords, {
+          key: `${orderNo}-platform-confirm-${completedAt}`,
+          type: "complete",
+          label: "平台确认开票",
+          time: completedAt,
+          description: `平台中心确认开票，发票号码 ${nextRow.invoiceNo}。`
+        })
+      };
+    }));
+
+    setPageNotice(didUpdate ? `订单 ${orderNo} 已确认开票。` : "仅待开票订单支持确认开票。");
+  };
+
+  const handleRejectInvoice = (orderNo) => {
+    let didUpdate = false;
+
+    setRows((current) => current.map((item) => {
+      if (item.orderNo !== orderNo) return item;
+      if (item.invoiceStatus !== "待开票") return item;
+
+      didUpdate = true;
+      const rejectedAt = "2026-04-21 14:35:00";
+      const nextRow = {
+        ...item,
+        applicationStatus: "已驳回",
+        invoiceStatus: "已驳回",
+        invoiceStatusTone: "danger",
+        rejectedAt,
+        rejectReason: "平台中心审核发现抬头主体与店铺资质不一致，请修正后重新提交。",
+        actions: ["发票详情"]
+      };
+
+      return {
+        ...nextRow,
+        historyRecords: appendShopInvoiceHistoryRecord(nextRow.historyRecords, {
+          key: `${orderNo}-platform-reject-${rejectedAt}`,
+          type: "reject",
+          label: "平台驳回开票申请",
+          time: rejectedAt,
+          description: nextRow.rejectReason
+        })
+      };
+    }));
+
+    setPageNotice(didUpdate ? `订单 ${orderNo} 已驳回。` : "仅待开票订单支持驳回。");
+  };
+
+  const handleModifyInvoice = (orderNo) => {
+    let didUpdate = false;
+
+    setRows((current) => current.map((item) => {
+      if (item.orderNo !== orderNo) return item;
+      if (item.invoiceStatus !== "已开票") return item;
+
+      didUpdate = true;
+      const modifiedAt = "2026-04-21 14:40:00";
+      const nextRow = {
+        ...item,
+        modifiedAt,
+        invoiceRemark: "平台中心已补充归档备注，请同步供应商留档。"
+      };
+
+      return {
+        ...nextRow,
+        historyRecords: appendShopInvoiceHistoryRecord(nextRow.historyRecords, {
+          key: `${orderNo}-platform-modify-${modifiedAt}`,
+          type: "modify_apply",
+          label: "平台修改发票信息",
+          time: modifiedAt,
+          description: "更新了发票备注与归档信息。"
+        })
+      };
+    }));
+
+    setPageNotice(didUpdate ? `订单 ${orderNo} 的发票信息已更新备注。` : "仅已开票订单支持修改发票。");
+  };
+
+  const renderDetailView = () => {
+    if (!activeDetailRow || !activeInvoiceDetail || !activeOrderDetail) return null;
+
+    if (detailMode === "history") {
+      return (
+        <section className="content-card shop-invoice-detail-card">
+          <div className="shop-invoice-detail-section">
+            <div className="shop-invoice-detail-title">
+              <span>操作记录</span>
+              <button className="shop-invoice-detail-return" type="button" onClick={handleCloseDetail}>← 返回</button>
+            </div>
+            <div className="shop-invoice-history-list">
+              {sortShopInvoiceHistoryRecords(activeDetailRow.historyRecords).map((record, index) => (
+                <div className="shop-invoice-history-item" key={record.key || `${record.label}-${record.time}`}>
+                  <div className="shop-invoice-history-axis" aria-hidden="true">
+                    <span className={`shop-invoice-history-dot ${index === 0 ? "is-latest" : ""}`} />
+                    {index < activeDetailRow.historyRecords.length - 1 ? <span className="shop-invoice-history-line" /> : null}
+                  </div>
+                  <div className="shop-invoice-history-card">
+                    <div className="shop-invoice-history-head">
+                      <strong>{record.label}</strong>
+                      <span>{record.time || "-"}</span>
+                    </div>
+                    {record.description ? <p>{record.description}</p> : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    if (detailMode === "order") {
+      return (
+        <section className="content-card shop-invoice-detail-card">
+          <div className="shop-invoice-detail-section">
+            <div className="shop-invoice-detail-title">
+              <span>订单信息</span>
+              <button className="shop-invoice-detail-return" type="button" onClick={handleCloseDetail}>← 返回</button>
+            </div>
+            <div className="shop-invoice-detail-info-grid">
+              <div className="shop-invoice-detail-info-row"><span>订单状态</span><strong>{activeOrderDetail.orderStatusText}</strong></div>
+              <div className="shop-invoice-detail-info-row"><span>订单编号</span><strong className="is-link">{activeOrderDetail.orderNo}</strong></div>
+              <div className="shop-invoice-detail-info-row"><span>售后状态</span><strong className="is-accent">{activeOrderDetail.afterSaleStatusText}</strong></div>
+              <div className="shop-invoice-detail-info-row"><span>收货人信息</span><strong>{activeOrderDetail.receiverInfo}</strong></div>
+              <div className="shop-invoice-detail-info-row"><span>收货地址</span><strong>{activeOrderDetail.address}</strong></div>
+              <div className="shop-invoice-detail-info-row"><span>支付时间</span><strong>{activeOrderDetail.paidAt}</strong></div>
+              <div className="shop-invoice-detail-info-row"><span>买家账号</span><strong>{activeOrderDetail.buyerAccount}</strong></div>
+              <div className="shop-invoice-detail-info-row"><span>闪购门店</span><strong>{activeOrderDetail.storeName}（{activeOrderDetail.storeId}）</strong></div>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    return (
+      <>
+        <section className="content-card shop-invoice-detail-card">
+          <div className="shop-invoice-detail-section">
+            <div className="shop-invoice-detail-title">
+              <span>发票信息</span>
+              <button className="shop-invoice-detail-return" type="button" onClick={handleCloseDetail}>← 返回</button>
+            </div>
+            <div className="shop-invoice-detail-info-grid">
+              <div className="shop-invoice-detail-info-row"><span>开票状态</span><strong>{activeInvoiceDetail.invoiceInfo.invoiceStatus}</strong></div>
+              <div className="shop-invoice-detail-info-row"><span>发票类型</span><strong>{activeInvoiceDetail.invoiceInfo.invoiceType}</strong></div>
+              <div className="shop-invoice-detail-info-row"><span>发票抬头</span><strong>{activeInvoiceDetail.titleInfo.invoiceTitle}</strong></div>
+              <div className="shop-invoice-detail-info-row"><span>纳税人识别号</span><strong>{activeInvoiceDetail.titleInfo.taxpayerId}</strong></div>
+              <div className="shop-invoice-detail-info-row"><span>申请时间</span><strong>{activeInvoiceDetail.invoiceInfo.appliedAt || "-"}</strong></div>
+              <div className="shop-invoice-detail-info-row"><span>开票时间</span><strong>{activeInvoiceDetail.invoiceInfo.invoicedAt || "-"}</strong></div>
+              <div className="shop-invoice-detail-info-row"><span>发票号码</span><strong>{activeInvoiceDetail.invoiceInfo.invoiceNo || "-"}</strong></div>
+              <div className="shop-invoice-detail-info-row"><span>发票金额（含税）</span><strong>{activeInvoiceDetail.invoiceInfo.invoiceAmountWithTax}</strong></div>
+            </div>
+          </div>
+
+          <div className="shop-invoice-detail-section">
+            <div className="shop-invoice-detail-title"><span>订单摘要</span></div>
+            <div className="shop-invoice-detail-info-grid">
+              <div className="shop-invoice-detail-info-row"><span>订单编号</span><strong className="is-link">{activeOrderDetail.orderNo}</strong></div>
+              <div className="shop-invoice-detail-info-row"><span>买家账号</span><strong>{activeOrderDetail.buyerAccount}</strong></div>
+              <div className="shop-invoice-detail-info-row"><span>订单总额</span><strong>{activeOrderDetail.summary.orderAmount}</strong></div>
+              <div className="shop-invoice-detail-info-row"><span>发票应开金额</span><strong className="is-accent">{activeOrderDetail.summary.shouldInvoiceAmount}</strong></div>
+            </div>
+          </div>
+        </section>
+
+        <div className="shop-invoice-issued-actions">
+          <div className="shop-invoice-issued-note">
+            <span className="shop-invoice-issued-note-label">
+              <span className="shop-invoice-issued-note-icon" aria-hidden="true">!</span>
+              <span>平台备注：</span>
+            </span>
+            <span className="shop-invoice-issued-note-text">{activeDetailRow.invoiceRemark || "平台侧暂无额外备注"}</span>
+          </div>
+          <div className="shop-invoice-issued-buttons">
+            {activeDetailRow.invoiceStatus === "待开票" ? <button className="btn btn-dark" type="button" onClick={() => handleConfirmInvoice(activeDetailRow.orderNo)}>确认开票</button> : null}
+            {activeDetailRow.invoiceStatus === "待开票" ? <button className="btn btn-dark" type="button" onClick={() => handleRejectInvoice(activeDetailRow.orderNo)}>驳回</button> : null}
+            {activeDetailRow.invoiceStatus === "已开票" ? <button className="btn btn-dark" type="button" onClick={() => handleModifyInvoice(activeDetailRow.orderNo)}>修改发票</button> : null}
+          </div>
+        </div>
+      </>
+    );
+  };
+
+  return (
+    <div className="platform-invoice-page">
+      {pageNotice ? <div className="page-toast">{pageNotice}</div> : null}
+
+      <section className="platform-invoice-summary-grid">
+        {summaryCards.map((item) => (
+          <article className={`platform-invoice-summary-card is-${item.tone}`} key={item.title}>
+            <span>{item.title}</span>
+            <strong>{item.value}</strong>
+            <p>{item.caption}</p>
+          </article>
+        ))}
+      </section>
+
+      {detailOrderNo ? renderDetailView() : (
+        <>
+          <section className="content-card platform-invoice-tabs-card">
+            <div className="platform-invoice-tabs">
+              {platformInvoiceManagementTabs.map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  className={`platform-invoice-tab ${activeTab === tab ? "is-active" : ""}`}
+                  onClick={() => setActiveTab(tab)}
+                >
+                  {tab}
+                  <em>{invoiceTabCounts[tab] || 0}</em>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="content-card platform-invoice-filter-card">
+            <div className="platform-invoice-filter-grid">
+              <label className="platform-invoice-field">
+                <span>订单号</span>
+                <input value={draftFilters.orderNo} onChange={(event) => handleDraftFilterChange("orderNo", event.target.value)} placeholder="请输入订单号" />
+              </label>
+              <label className="platform-invoice-field">
+                <span>发票抬头</span>
+                <input value={draftFilters.invoiceTitle} onChange={(event) => handleDraftFilterChange("invoiceTitle", event.target.value)} placeholder="请输入发票抬头" />
+              </label>
+              <label className="platform-invoice-field">
+                <span>纳税人识别号</span>
+                <input value={draftFilters.taxpayerId} onChange={(event) => handleDraftFilterChange("taxpayerId", event.target.value)} placeholder="请输入纳税人识别号" />
+              </label>
+              <label className="platform-invoice-field">
+                <span>店铺 / 门店</span>
+                <input value={draftFilters.store} onChange={(event) => handleDraftFilterChange("store", event.target.value)} placeholder="请输入店铺或门店名称" />
+              </label>
+              <label className="platform-invoice-field">
+                <span>开票批次</span>
+                <input value={draftFilters.invoiceBatch} onChange={(event) => handleDraftFilterChange("invoiceBatch", event.target.value)} placeholder="请输入开票批次" />
+              </label>
+              <label className="platform-invoice-field">
+                <span>开票状态</span>
+                <div className="platform-invoice-select-wrap">
+                  <select value={draftFilters.invoiceStatus} onChange={(event) => handleDraftFilterChange("invoiceStatus", event.target.value)}>
+                    <option value="全部">全部</option>
+                    <option value="待开票">待开票</option>
+                    <option value="已驳回">已驳回</option>
+                    <option value="已撤销">已撤销</option>
+                    <option value="已开票">已开票</option>
+                  </select>
+                </div>
+              </label>
+              <div className="platform-invoice-filter-actions">
+                <button className="btn btn-reset" type="button" onClick={handleReset}>重置</button>
+                <button className="btn btn-dark" type="button" onClick={handleSearch}>查询</button>
+              </div>
+            </div>
+          </section>
+
+          <section className="content-card platform-invoice-table-card">
+            <div className="platform-invoice-table-toolbar">
+              <div className="platform-invoice-table-title">
+                <h3>平台中心发票管理</h3>
+                <p>独立于供应商后台的审核视角，支持平台查看、确认、驳回与追踪发票申请。</p>
+              </div>
+              <div className="platform-invoice-table-meta">共 {filteredRows.length} 条记录</div>
+            </div>
+
+            <div className="platform-invoice-table-wrap">
+              <table className="platform-invoice-table">
+                <thead>
+                  <tr>
+                    <th>订单号</th>
+                    <th>店铺 / 门店</th>
+                    <th>发票抬头</th>
+                    <th>发票类型</th>
+                    <th>订单总额</th>
+                    <th>发票状态</th>
+                    <th>申请时间</th>
+                    <th>开票批次</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pagedRows.map((row) => (
+                    <tr key={row.orderNo}>
+                      <td>
+                        <button className="platform-invoice-link" type="button" onClick={() => handleViewDetail(row, "invoice")}>{row.orderNo}</button>
+                      </td>
+                      <td>
+                        <div className="platform-invoice-store-cell">
+                          <strong>{row.shop}</strong>
+                          <span>{String(row.store || "").replace(/\n/g, " ")}</span>
+                        </div>
+                      </td>
+                      <td>{row.invoiceTitle}</td>
+                      <td>{row.invoiceType}</td>
+                      <td>{row.orderAmount}</td>
+                      <td><span className={`platform-invoice-status-tag is-${row.invoiceStatusTone || "dark"}`}>{row.invoiceStatus}</span></td>
+                      <td>{row.appliedAt || "-"}</td>
+                      <td>{row.invoiceBatch || "-"}</td>
+                      <td>
+                        <div className="platform-invoice-action-cell">
+                          <button className="platform-invoice-text-btn" type="button" onClick={() => handleViewDetail(row, "invoice")}>发票详情</button>
+                          <button className="platform-invoice-text-btn" type="button" onClick={() => handleViewDetail(row, "order")}>订单信息</button>
+                          <button className="platform-invoice-text-btn" type="button" onClick={() => handleViewDetail(row, "history")}>历史操作</button>
+                          {row.invoiceStatus === "待开票" ? <button className="platform-invoice-text-btn is-primary" type="button" onClick={() => handleConfirmInvoice(row.orderNo)}>确认开票</button> : null}
+                          {row.invoiceStatus === "待开票" ? <button className="platform-invoice-text-btn" type="button" onClick={() => handleRejectInvoice(row.orderNo)}>驳回</button> : null}
+                          {row.invoiceStatus === "已开票" ? <button className="platform-invoice-text-btn" type="button" onClick={() => handleModifyInvoice(row.orderNo)}>修改发票</button> : null}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {pagedRows.length === 0 ? (
+                    <tr>
+                      <td className="platform-invoice-empty" colSpan="9">没有符合条件的发票记录</td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="platform-invoice-pagination">
+              <button type="button" disabled={currentPage <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>上一页</button>
+              <span>{currentPage} / {pageCount}</span>
+              <button type="button" disabled={currentPage >= pageCount} onClick={() => setPage((current) => Math.min(pageCount, current + 1))}>下一页</button>
+            </div>
+          </section>
+        </>
+      )}
+    </div>
+  );
+}
+
 function TabSection({ creating, detailing, onSwitchToList, currentMarketingPage }) {
   const tabs = creating ? [`新增${currentMarketingPage}`] : [`${currentMarketingPage}管理`, "参数配置", `${currentMarketingPage}详情`];
   return (
@@ -8694,6 +9275,7 @@ function ShopInvoicePage({
   initialInvoiceStatusTab = "全部",
   initialMarkerFilter = "全部",
   invoiceEntryRequestId = 0,
+  pageVariant = "supplier",
   onOpenOrderInfoTab,
   onCloseOrderInfoTab,
   onOpenInvoiceInfoTab,
@@ -8703,6 +9285,7 @@ function ShopInvoicePage({
   onOpenBulkUploadTab,
   onCloseBulkUploadTab
 }) {
+  const isPlatformVariant = pageVariant === "platform";
   const [activeInvoiceStatusTab, setActiveInvoiceStatusTab] = useState("全部");
   const [markerFilter, setMarkerFilter] = useState("全部");
   const [isColumnSettingOpen, setIsColumnSettingOpen] = useState(false);
@@ -8742,6 +9325,9 @@ function ShopInvoicePage({
   const confirmInvoiceDateInputRef = useRef(null);
   const modifyInvoiceFileInputRef = useRef(null);
   const modifyInvoiceDateInputRef = useRef(null);
+  const displayedInvoiceStatusTabs = useMemo(() => (
+    isPlatformVariant ? shopInvoiceStatusTabs.filter((tab) => tab !== "发票设置") : shopInvoiceStatusTabs
+  ), [isPlatformVariant]);
   const orderedSettingColumns = useMemo(() => (
     shopInvoiceColumnOrder
       .map((key) => shopInvoiceColumnDefinitions.find((column) => column.key === key))
@@ -8761,10 +9347,10 @@ function ShopInvoicePage({
     const visibleLeftColumns = leftZoneColumns.filter((column) => shopInvoiceColumnPrefs[column.key]?.visible !== false);
     const visibleMiddleColumns = middleZoneColumns.filter((column) => shopInvoiceColumnPrefs[column.key]?.visible !== false);
     const visibleRightColumns = rightZoneColumns.filter((column) => shopInvoiceColumnPrefs[column.key]?.visible !== false);
-    const shouldShowSelectColumn = ["全部", "待开票", "已开票"].includes(activeInvoiceStatusTab);
+    const shouldShowSelectColumn = !isPlatformVariant && ["全部", "待开票", "已开票"].includes(activeInvoiceStatusTab);
 
     return [shouldShowSelectColumn ? fixedSelectColumn : null, ...visibleLeftColumns, ...visibleMiddleColumns, ...visibleRightColumns].filter(Boolean);
-  }, [activeInvoiceStatusTab, leftZoneColumns, middleZoneColumns, rightZoneColumns, shopInvoiceColumnPrefs]);
+  }, [activeInvoiceStatusTab, isPlatformVariant, leftZoneColumns, middleZoneColumns, rightZoneColumns, shopInvoiceColumnPrefs]);
   const rightFrozenColumnKeys = useMemo(() => (
     visibleColumns.filter((column) => shopInvoiceColumnPrefs[column.key]?.freeze === "right").map((column) => column.key)
   ), [shopInvoiceColumnPrefs, visibleColumns]);
@@ -8828,6 +9414,9 @@ function ShopInvoicePage({
     const buyerAccountKeyword = appliedFilters.buyerAccount.trim().toLowerCase();
     if (buyerAccountKeyword && !item.buyerAccount.toLowerCase().includes(buyerAccountKeyword)) return false;
 
+    const shopInfoKeyword = appliedFilters.shopInfo.trim().toLowerCase();
+    if (shopInfoKeyword && !String(item.shopInfo || "").toLowerCase().includes(shopInfoKeyword)) return false;
+
     const storeKeyword = appliedFilters.store.trim().toLowerCase();
     if (storeKeyword && !item.store.toLowerCase().includes(storeKeyword)) return false;
     if (markerFilter === "即将超时" && !isShopInvoiceApplicationApproachingOverdue(item)) return false;
@@ -8868,12 +9457,12 @@ function ShopInvoicePage({
   const showInvoiceOverdueBadge = showOrderMarkerBadges && ["全部", "待开票"].includes(activeInvoiceStatusTab);
   const showModifiedBadge = showOrderMarkerBadges;
   const showResubmittedBadge = showOrderMarkerBadges && ["全部", "待开票"].includes(activeInvoiceStatusTab);
-  const showConfirmBatchToolbar = activeInvoiceStatusTab === "全部" || activeInvoiceStatusTab === "待开票";
-  const showPendingModifyBatchAction = activeInvoiceStatusTab === "全部";
-  const showModifyBatchToolbar = activeInvoiceStatusTab === "已开票";
-  const showBatchRejectAction = activeInvoiceStatusTab === "全部" || activeInvoiceStatusTab === "待开票";
+  const showConfirmBatchToolbar = !isPlatformVariant && (activeInvoiceStatusTab === "全部" || activeInvoiceStatusTab === "待开票");
+  const showPendingModifyBatchAction = !isPlatformVariant && activeInvoiceStatusTab === "全部";
+  const showModifyBatchToolbar = !isPlatformVariant && activeInvoiceStatusTab === "已开票";
+  const showBatchRejectAction = !isPlatformVariant && (activeInvoiceStatusTab === "全部" || activeInvoiceStatusTab === "待开票");
   const showMarkerFilter = activeInvoiceStatusTab === "全部" || activeInvoiceStatusTab === "待开票";
-  const showSelectableCheckboxes = showConfirmBatchToolbar || showModifyBatchToolbar;
+  const showSelectableCheckboxes = !isPlatformVariant && (showConfirmBatchToolbar || showModifyBatchToolbar);
   const activeSelectableRows = showModifyBatchToolbar
     ? selectableModifyRows
     : isAllInvoiceStatusTab
@@ -9100,6 +9689,12 @@ function ShopInvoicePage({
     setSelectedModifyInvoiceOrderNos([]);
     setPage(1);
   }, [initialInvoiceStatusTab, initialMarkerFilter, invoiceEntryRequestId]);
+
+  useEffect(() => {
+    if (!isPlatformVariant) return;
+    if (activeInvoiceStatusTab !== "发票设置") return;
+    setActiveInvoiceStatusTab("全部");
+  }, [activeInvoiceStatusTab, isPlatformVariant]);
 
   const handleResetFilters = () => {
     setDraftFilters(initialShopInvoiceFilters);
@@ -9790,7 +10385,9 @@ function ShopInvoicePage({
     if (column.key === "actions") {
       return (
         <div className="shop-invoice-actions">
-          {item.actions.map((action) => (
+          {item.actions.filter((action) => (
+            isPlatformVariant ? ["发票详情", "历史操作"].includes(action) : true
+          )).map((action) => (
             <button
               className="buyer-link-btn"
               key={action}
@@ -9833,7 +10430,7 @@ function ShopInvoicePage({
         <section className="content-card shop-invoice-tabs-card">
           <div className="shop-invoice-tabs-row">
             <div className="shop-invoice-tabs">
-              {shopInvoiceStatusTabs.map((status) => (
+              {displayedInvoiceStatusTabs.map((status) => (
                 <button
                   key={status}
                   className={`shop-invoice-tab ${activeInvoiceStatusTab === status ? "is-active" : ""}`}
@@ -9928,11 +10525,18 @@ function ShopInvoicePage({
               <div className="shop-invoice-detail-title"><span>抬头信息</span></div>
               <div className="shop-invoice-detail-info-grid">
                 <div className="shop-invoice-detail-info-row"><span>发票抬头</span><strong className="shop-invoice-status-detail">{activeInvoiceDetail.titleInfo.invoiceTitle}{activeInvoiceDetail.titleInfo.invoiceTitleExtraText ? <span className="shop-invoice-detail-alert">{activeInvoiceDetail.titleInfo.invoiceTitleExtraText}</span> : null}</strong></div>
-                <div className="shop-invoice-detail-info-row"><span>纳税人识别号</span><strong>{activeInvoiceDetail.titleInfo.taxpayerId}</strong></div>
-                <div className="shop-invoice-detail-info-row"><span>注册地址</span><strong>{activeInvoiceDetail.titleInfo.registerAddress}</strong></div>
-                <div className="shop-invoice-detail-info-row"><span>注册电话</span><strong>{activeInvoiceDetail.titleInfo.registerPhone}</strong></div>
-                <div className="shop-invoice-detail-info-row"><span>开户银行</span><strong>{activeInvoiceDetail.titleInfo.bankName}</strong></div>
-                <div className="shop-invoice-detail-info-row"><span>开户银行账号</span><strong>{activeInvoiceDetail.titleInfo.bankAccount}</strong></div>
+                {!activeInvoiceDetail.titleInfo.isPersonalTitle ? <div className="shop-invoice-detail-info-row"><span>纳税人识别号</span><strong>{activeInvoiceDetail.titleInfo.taxpayerId}</strong></div> : null}
+                {!activeInvoiceDetail.titleInfo.hideExtendedTitleFields ? <div className="shop-invoice-detail-info-row"><span>注册地址</span><strong>{activeInvoiceDetail.titleInfo.registerAddress}</strong></div> : null}
+                {!activeInvoiceDetail.titleInfo.hideExtendedTitleFields ? <div className="shop-invoice-detail-info-row"><span>注册电话</span><strong>{activeInvoiceDetail.titleInfo.registerPhone}</strong></div> : null}
+                {!activeInvoiceDetail.titleInfo.hideExtendedTitleFields ? <div className="shop-invoice-detail-info-row"><span>开户银行</span><strong>{activeInvoiceDetail.titleInfo.bankName}</strong></div> : null}
+                {!activeInvoiceDetail.titleInfo.hideExtendedTitleFields ? <div className="shop-invoice-detail-info-row"><span>开户银行账号</span><strong>{activeInvoiceDetail.titleInfo.bankAccount}</strong></div> : null}
+              </div>
+            </div>
+
+            <div className="shop-invoice-detail-section">
+              <div className="shop-invoice-detail-title"><span>备注信息</span></div>
+              <div className="shop-invoice-detail-info-grid">
+                <div className="shop-invoice-detail-info-row"><span>开票备注</span><strong>{activeInvoiceDetail.invoiceRemark || "-"}</strong></div>
               </div>
             </div>
 
@@ -10020,20 +10624,6 @@ function ShopInvoicePage({
               </div>
             </div>
           </section>
-          <div className="shop-invoice-issued-actions">
-            <div className="shop-invoice-issued-note">
-              <span className="shop-invoice-issued-note-label">
-                <span className="shop-invoice-issued-note-icon" aria-hidden="true">!</span>
-                <span>开票备注：</span>
-              </span>
-              <span className="shop-invoice-issued-note-text">{activeInvoiceDetail.invoiceRemark}</span>
-            </div>
-            <div className="shop-invoice-issued-buttons">
-              {activeInvoiceDetail.invoiceInfo.invoiceStatus === "已开票" ? <button className="btn btn-dark" type="button" onClick={() => handleOpenModifyInvoiceModal([activeInvoiceDetail.orderInfo.orderNo], "single")}>修改发票</button> : null}
-              {activeInvoiceDetail.invoiceInfo.invoiceStatus === "待开票" ? <button className="btn btn-dark" type="button" onClick={() => handleOpenConfirmInvoiceModal([activeInvoiceDetail.orderInfo.orderNo], "single")}>确认开票</button> : null}
-              {activeInvoiceDetail.invoiceInfo.invoiceStatus === "待开票" ? <button className="btn btn-dark" type="button" onClick={() => handleRejectInvoice(activeInvoiceDetail.orderInfo.orderNo)}>驳回</button> : null}
-            </div>
-          </div>
         </>
       ) : activeInvoiceHistory && activeShopTab === "历史操作" ? (
         <>
@@ -10199,16 +10789,6 @@ function ShopInvoicePage({
             <PcMallDateRangeField placeholder="开始日期 ～ 结束日期" value={draftFilters.appliedAtRange} onChange={(value) => handleDraftFilterChange("appliedAtRange", value)} />
           </label>
           <label className="shop-invoice-field">
-            <span>付款方式</span>
-            <div className="shop-invoice-select-wrap">
-              <select value={draftFilters.paymentMethod} onChange={(e) => handleDraftFilterChange("paymentMethod", e.target.value)}>
-                {shopInvoicePaymentMethodOptions.map((option) => (
-                  <option key={option}>{option}</option>
-                ))}
-              </select>
-            </div>
-          </label>
-          <label className="shop-invoice-field">
             <span>开票状态</span>
             <div className="shop-invoice-select-wrap">
               <select value={draftFilters.invoiceStatus} onChange={(e) => handleDraftFilterChange("invoiceStatus", e.target.value)}>
@@ -10275,6 +10855,22 @@ function ShopInvoicePage({
               <input placeholder="请输入纳税人识别号" value={draftFilters.taxpayerId} onChange={(e) => handleDraftFilterChange("taxpayerId", e.target.value)} />
             </div>
           </label>
+          <label className="shop-invoice-field shop-invoice-field-wide-label">
+            <span>店铺信息</span>
+            <div className="shop-invoice-input-wrap">
+              <input placeholder="请输入店铺名称/店铺ID，支持全模糊查询" value={draftFilters.shopInfo} onChange={(e) => handleDraftFilterChange("shopInfo", e.target.value)} />
+            </div>
+          </label>
+          <label className="shop-invoice-field shop-invoice-field-wide-label">
+            <span>付款方式</span>
+            <div className="shop-invoice-select-wrap">
+              <select value={draftFilters.paymentMethod} onChange={(e) => handleDraftFilterChange("paymentMethod", e.target.value)}>
+                {shopInvoicePaymentMethodOptions.map((option) => (
+                  <option key={option}>{option}</option>
+                ))}
+              </select>
+            </div>
+          </label>
           <label className="shop-invoice-field">
             <span>买家账号</span>
             <div className="shop-invoice-input-wrap">
@@ -10304,7 +10900,7 @@ function ShopInvoicePage({
       <section className="content-card shop-invoice-table-card">
         <div className="shop-invoice-toolbar">
           <div className="shop-invoice-toolbar-left">
-            {showConfirmBatchToolbar ? (
+            {!isPlatformVariant && showConfirmBatchToolbar ? (
               <>
                 <button className="btn btn-dark" type="button" onClick={() => handleOpenConfirmInvoiceModal()}>批量确认开票</button>
                 {showPendingModifyBatchAction ? <button className="btn btn-dark" type="button" onClick={() => handleOpenModifyInvoiceModal(selectedShopInvoiceOrderNos)}>批量修改开票</button> : null}
@@ -10314,7 +10910,7 @@ function ShopInvoicePage({
                 </div>
               </>
             ) : null}
-            {showModifyBatchToolbar ? (
+            {!isPlatformVariant && showModifyBatchToolbar ? (
               <>
                 <button className="btn btn-dark" type="button" onClick={() => handleOpenModifyInvoiceModal(selectedModifyInvoiceOrderNos)}>批量修改开票</button>
                 <div className="shop-invoice-toolbar-summary">
@@ -10336,7 +10932,7 @@ function ShopInvoicePage({
                 </div>
               </label>
             ) : null}
-            <button className="btn btn-reset buyer-export-btn" type="button" onClick={() => onOpenBulkUploadTab?.()}>批量导入发票</button>
+            {!isPlatformVariant ? <button className="btn btn-reset buyer-export-btn" type="button" onClick={() => onOpenBulkUploadTab?.()}>批量导入发票</button> : null}
             <button className="btn btn-reset buyer-export-btn" type="button">导出查询结果</button>
             <div className={`shop-invoice-column-settings ${isColumnSettingOpen ? "is-open" : ""}`}>
               <button className="shop-invoice-column-trigger" ref={columnTriggerRef} type="button" onClick={() => setIsColumnSettingOpen((current) => !current)}>
@@ -11886,6 +12482,7 @@ export default function App() {
   ));
   const [activeShopTab, setActiveShopTab] = useState("发票管理");
   const [platformCenterPage, setPlatformCenterPage] = useState("home");
+  const [platformShopTab, setPlatformShopTab] = useState("发票管理");
   const [buyerRows, setBuyerRows] = useState(buyerSeedRows);
   const [buyerFilters, setBuyerFilters] = useState(initialBuyerFilters);
   const [buyerPage, setBuyerPage] = useState(1);
@@ -12892,6 +13489,11 @@ export default function App() {
   }
 
   if (activePortalPage === "platform-center") {
+    const platformCurrentPageLabel = platformCenterPage === "trade-settings"
+      ? "交易设置"
+      : platformCenterPage === "shop-invoice-management"
+        ? platformShopTab
+        : "控制台";
     const platformCustomTabs = platformCenterPage === "trade-settings" ? [{
       key: "platform-trade-settings",
       label: "交易设置",
@@ -12899,7 +13501,47 @@ export default function App() {
       closable: true,
       onClick: () => setPlatformCenterPage("trade-settings"),
       onClose: () => setPlatformCenterPage("home")
-    }] : null;
+    }] : platformCenterPage === "shop-invoice-management" ? [{
+      key: "platform-shop-invoice-management",
+      label: "发票管理",
+      isCurrent: platformShopTab === "发票管理",
+      closable: false,
+      onClick: () => setPlatformCenterPage("shop-invoice-management"),
+      onClose: undefined
+    },
+    ...(platformShopTab === "订单信息" ? [{
+      key: "platform-shop-order-info",
+      label: "订单信息",
+      isCurrent: true,
+      closable: true,
+      onClick: () => setPlatformShopTab("订单信息"),
+      onClose: () => setPlatformShopTab("发票管理")
+    }] : []),
+    ...(platformShopTab === "发票信息" ? [{
+      key: "platform-shop-invoice-info",
+      label: "发票详情",
+      isCurrent: true,
+      closable: true,
+      onClick: () => setPlatformShopTab("发票信息"),
+      onClose: () => setPlatformShopTab("发票管理")
+    }] : []),
+    ...(platformShopTab === "历史操作" ? [{
+      key: "platform-shop-invoice-history",
+      label: "历史操作",
+      isCurrent: true,
+      closable: true,
+      onClick: () => setPlatformShopTab("历史操作"),
+      onClose: () => setPlatformShopTab("发票管理")
+    }] : []),
+    ...(platformShopTab === "批量上传发票" ? [{
+      key: "platform-shop-invoice-bulk-upload",
+      label: "批量导入发票",
+      isCurrent: true,
+      closable: true,
+      onClick: () => setPlatformShopTab("批量上传发票"),
+      onClose: () => setPlatformShopTab("发票管理")
+    }] : [])
+    ] : null;
 
     return (
       <div className="admin-shell platform-shell">
@@ -12913,13 +13555,19 @@ export default function App() {
           </div>
           <nav className="sidebar-nav platform-sidebar-nav">
             {platformCenterSidebarItems.map((item) => (
-              <div className={`sidebar-group platform-sidebar-group ${(item.key === "home" && platformCenterPage === "home") || (item.key === "trade" && platformCenterPage === "trade-settings") ? "is-active" : ""}`} key={item.key}>
+              <div className={`sidebar-group platform-sidebar-group ${item.key === "home" ? (platformCenterPage === "home" ? "is-active" : "") : item.children?.some((child) => child.key === platformCenterPage) ? "is-active" : ""}`} key={item.key}>
                 <a
-                  className={`sidebar-link platform-sidebar-link ${(item.key === "home" && platformCenterPage === "home") || (item.key === "trade" && platformCenterPage === "trade-settings") ? "is-active" : ""}`}
+                  className={`sidebar-link platform-sidebar-link ${item.key === "home" ? (platformCenterPage === "home" ? "is-active" : "") : item.children?.some((child) => child.key === platformCenterPage) ? "is-active" : ""}`}
                   href="#"
                   onClick={(event) => {
                     event.preventDefault();
-                    if (item.key === "home") setPlatformCenterPage("home");
+                    if (item.key === "home") {
+                      setPlatformCenterPage("home");
+                      return;
+                    }
+                    if (item.children?.length) {
+                      setPlatformCenterPage(item.children[0].key);
+                    }
                   }}
                 >
                   <span className="sidebar-icon"><SidebarIcon type={item.icon} /></span>
@@ -12947,14 +13595,27 @@ export default function App() {
 
         <section className="workspace platform-workspace">
           <Header
-            currentMarketingPage={platformCenterPage === "trade-settings" ? "交易设置" : "控制台"}
+            currentMarketingPage={platformCurrentPageLabel}
             homeTabLabel="控制台"
             onTopActionClick={handleTopActionClick}
             topActionItems={platformTopActions}
             customTabs={platformCustomTabs}
           />
           <main className="workspace-main platform-workspace-main">
-            {platformCenterPage === "trade-settings" ? <PlatformTradeSettingsPage /> : <PlatformCenterPage />}
+            {platformCenterPage === "trade-settings" ? <PlatformTradeSettingsPage /> : platformCenterPage === "shop-invoice-management" ? (
+              <ShopInvoicePage
+                activeShopTab={platformShopTab}
+                pageVariant="platform"
+                onOpenOrderInfoTab={() => setPlatformShopTab("订单信息")}
+                onCloseOrderInfoTab={() => setPlatformShopTab("发票管理")}
+                onOpenInvoiceInfoTab={() => setPlatformShopTab("发票信息")}
+                onCloseInvoiceInfoTab={() => setPlatformShopTab("发票管理")}
+                onOpenInvoiceHistoryTab={() => setPlatformShopTab("历史操作")}
+                onCloseInvoiceHistoryTab={() => setPlatformShopTab("发票管理")}
+                onOpenBulkUploadTab={() => setPlatformShopTab("批量上传发票")}
+                onCloseBulkUploadTab={() => setPlatformShopTab("发票管理")}
+              />
+            ) : <PlatformCenterPage />}
           </main>
         </section>
       </div>
