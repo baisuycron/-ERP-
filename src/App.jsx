@@ -1966,7 +1966,7 @@ const initialShopInvoiceColumnPrefs = shopInvoiceColumnDefinitions.reduce((resul
 const initialShopInvoiceColumnOrder = shopInvoiceColumnDefinitions.filter((column) => column.key !== "select").map((column) => column.key);
 const buyerPcMallAccountOptions = ["wujing146(总部)", "nfsq369(子账号)", "shawnee003(总部)", "lgq01(默认账号)"];
 const buyerPcMallStatusOptions = ["待申请", "已驳回", "已撤销"];
-const buyerPcMallAfterSaleStatusOptions = ["全部", "售后中", "部分退款", "售后关闭"];
+const buyerPcMallAfterSaleStatusOptions = ["售后中", "部分退款", "售后关闭"];
 const buyerPcMallStoreOptions = ["闪购一店", "闪购二店", "北京朝阳门店", "成都晨曦路门店"];
 const buyerPcMallStoreSearchOptions = [
   { value: "闪购一店", label: "闪购一店", meta: "ID：121301", searchText: "闪购一店 id:121301 id：121301 121301" },
@@ -4155,7 +4155,7 @@ function PcMallMultiSelect({ options, values, onChange, placeholder = "请选择
   };
 
   return (
-    <div className={`pc-mall-multi-select ${isOpen ? "is-open" : ""}`} ref={wrapperRef}>
+    <div className={`pc-mall-multi-select ${isOpen ? "is-open" : ""} ${values.length > 0 ? "has-clear" : ""}`} ref={wrapperRef}>
       <button className="pc-mall-multi-select-trigger" type="button" onClick={() => setIsOpen((current) => !current)}>
         {values.length > 0 ? (
           <span className="pc-mall-multi-select-tags">
@@ -4188,6 +4188,28 @@ function PcMallMultiSelect({ options, values, onChange, placeholder = "请选择
         ) : (
           <span className="pc-mall-multi-select-text">{placeholder}</span>
         )}
+        {values.length > 0 ? (
+          <span
+            aria-label="清空已选条件"
+            className="pc-mall-filter-clear-btn"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              onChange([]);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                event.stopPropagation();
+                onChange([]);
+              }
+            }}
+            role="button"
+            tabIndex={0}
+          >
+            清空
+          </span>
+        ) : null}
         <i aria-hidden="true" />
       </button>
       {isOpen ? (
@@ -4237,7 +4259,7 @@ function PcMallSearchSelect({ options, values, onChange, searchValue, onSearchCh
   };
 
   return (
-    <div className={`pc-mall-search-select ${isOpen ? "is-open" : ""}`} ref={wrapperRef}>
+    <div className={`pc-mall-search-select ${isOpen ? "is-open" : ""} ${values.length > 0 ? "has-clear" : ""}`} ref={wrapperRef}>
       <div className="pc-mall-search-select-trigger">
         <div className="pc-mall-search-select-input-wrap" onClick={() => setIsOpen(true)} role="presentation">
           {values.length > 0 ? (
@@ -4279,6 +4301,22 @@ function PcMallSearchSelect({ options, values, onChange, searchValue, onSearchCh
             onFocus={() => setIsOpen(true)}
           />
         </div>
+        {values.length > 0 ? (
+          <button
+            aria-label="清空已选条件"
+            className="pc-mall-filter-clear-btn"
+            type="button"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              onChange([]);
+              onSearchChange("");
+              setIsOpen(false);
+            }}
+          >
+            清空
+          </button>
+        ) : null}
         <i aria-hidden="true" />
       </div>
       {isOpen ? (
@@ -4371,7 +4409,7 @@ function BuyerPcMallInvoiceActionModal({ title, message, confirmText = "确定",
   );
 }
 
-function BuyerPcMallInvoiceDetailPage({ detail, onBack, onPreview, onModifyInvoiceInfo, onRevokeApplication }) {
+function BuyerPcMallInvoiceDetailPage({ detail, onPreview, onModifyInvoiceInfo, onRevokeApplication }) {
   if (!detail) return null;
 
   return (
@@ -4407,7 +4445,6 @@ function BuyerPcMallInvoiceDetailPage({ detail, onBack, onPreview, onModifyInvoi
         <div className="shop-invoice-detail-section">
           <div className="shop-invoice-detail-title">
             <span>发票信息</span>
-            <button className="shop-invoice-detail-return" type="button" onClick={onBack}>← 返回</button>
           </div>
           <div className="shop-invoice-detail-info-grid">
             <div className="shop-invoice-detail-info-row"><span>开票状态</span><strong className="shop-invoice-status-detail"><span className={`shop-invoice-mini-tag is-${detail.invoiceInfo.invoiceStatusTone || "dark"}`}>{detail.invoiceInfo.invoiceStatus}</span>{detail.invoiceInfo.statusExtraText ? <span className="shop-invoice-status-extra">{detail.invoiceInfo.statusExtraText}</span> : null}</strong></div>
@@ -4518,12 +4555,6 @@ function BuyerPcMallInvoiceDetailPage({ detail, onBack, onPreview, onModifyInvoi
         </div>
       </section>
 
-      <section className="shop-invoice-issued-actions">
-        <div className="shop-invoice-issued-note">
-          <span className="shop-invoice-issued-note-label"><span className="shop-invoice-issued-note-icon">!</span>开票备注</span>
-          <span className="shop-invoice-issued-note-text">{detail.invoiceRemark || detail.remark}</span>
-        </div>
-      </section>
     </>
   );
 }
@@ -5515,9 +5546,9 @@ function BuyerPcMallPage({ onPortalActionClick }) {
   const [selectedAppliedInvoiceOrderNos, setSelectedAppliedInvoiceOrderNos] = useState([]);
   const [selectedInvoicedInvoiceOrderNos, setSelectedInvoicedInvoiceOrderNos] = useState([]);
   const [selectedPendingAccounts, setSelectedPendingAccounts] = useState(["wujing146(总部)"]);
-  const [selectedPendingStatuses, setSelectedPendingStatuses] = useState(["待申请", "已驳回", "已撤销"]);
-  const [selectedPendingAfterSaleStatuses, setSelectedPendingAfterSaleStatuses] = useState(["全部"]);
-  const [selectedPendingPaymentMethod, setSelectedPendingPaymentMethod] = useState("全部");
+  const [selectedPendingStatuses, setSelectedPendingStatuses] = useState([]);
+  const [selectedPendingAfterSaleStatuses, setSelectedPendingAfterSaleStatuses] = useState([]);
+  const [selectedPendingPaymentMethod, setSelectedPendingPaymentMethod] = useState("");
   const [selectedPendingStores, setSelectedPendingStores] = useState([]);
   const [pendingStoreKeyword, setPendingStoreKeyword] = useState("");
   const [selectedAppliedAccounts, setSelectedAppliedAccounts] = useState([]);
@@ -6295,10 +6326,10 @@ function BuyerPcMallPage({ onPortalActionClick }) {
   const isAppliedTab = activeTab === "已申请开票";
   const isInvoicedTab = activeTab === "已开具发票";
   const buyerPcMallOrderTabs = useMemo(() => ([
-    { key: "可申请开票", label: `可申请开票(${invoiceRows.length})` },
-    { key: "已申请开票", label: `已申请开票(${appliedInvoiceRows.length})` },
-    { key: "已开具发票", label: `已开具发票(${invoicedInvoiceRows.length})` }
-  ]), [appliedInvoiceRows.length, invoiceRows.length, invoicedInvoiceRows.length]);
+    { key: "可申请开票", label: "可申请开票" },
+    { key: "已申请开票", label: "已申请开票" },
+    { key: "已开具发票", label: "已开具发票" }
+  ]), []);
   const currentInvoiceTabTotal = isPendingTab ? invoiceRows.length : isAppliedTab ? appliedInvoiceRows.length : invoicedInvoiceRows.length;
   const isBatchInvoiceView = invoicePageView === "batch";
   const isInvoiceTitleManagementView = invoicePageView === "title-management";
@@ -6570,7 +6601,13 @@ function BuyerPcMallPage({ onPortalActionClick }) {
 
         <section className={`pc-mall-content ${shouldEnableInvoiceDetailScroll ? "pc-mall-content-detail-scroll" : "pc-mall-content-batch"}`}>
           {batchInvoiceNotice ? <div className="page-toast">{batchInvoiceNotice}</div> : null}
-          <div className="pc-mall-breadcrumb">商家中心 <span>››</span> 发票管理{isInvoiceDetailView ? <><span>››</span> 发票详情</> : null}</div>
+          <div className="pc-mall-breadcrumb">
+            商家中心 <span>››</span>
+            {isInvoiceDetailView ? (
+              <button className="pc-mall-breadcrumb-link" type="button" onClick={handleCloseBuyerInvoiceDetail}>发票管理</button>
+            ) : " 发票管理"}
+            {isInvoiceDetailView ? <><span>››</span> 发票详情</> : null}
+          </div>
           <div className={`pc-mall-panel ${isInvoiceDetailView ? "pc-mall-panel-detail" : ""}`}>
             {!isInvoiceDetailView ? (
               <div className="pc-mall-panel-header">
@@ -6598,7 +6635,6 @@ function BuyerPcMallPage({ onPortalActionClick }) {
             {isInvoiceDetailView && activeBuyerInvoiceDetail ? (
               <BuyerPcMallInvoiceDetailPage
                 detail={activeBuyerInvoiceDetail}
-                onBack={handleCloseBuyerInvoiceDetail}
                 onPreview={(action) => handleBuyerInvoicePdfAction(activeBuyerInvoiceDetail, action)}
                 onModifyInvoiceInfo={handleOpenDetailModifyModal}
                 onRevokeApplication={handleOpenDetailRevokeModal}
@@ -6636,20 +6672,23 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                     </label>
                     <label className="pc-mall-filter-field">
                       <span>开票状态</span>
-                      <PcMallMultiSelect options={buyerPcMallStatusOptions} values={selectedPendingStatuses} onChange={setSelectedPendingStatuses} placeholder="请选择申请状态" />
+                      <PcMallMultiSelect options={buyerPcMallStatusOptions} values={selectedPendingStatuses} onChange={setSelectedPendingStatuses} placeholder="请选择" />
                     </label>
                     <label className="pc-mall-filter-field">
                       <span>售后状态</span>
-                      <PcMallMultiSelect options={buyerPcMallAfterSaleStatusOptions} values={selectedPendingAfterSaleStatuses} onChange={setSelectedPendingAfterSaleStatuses} placeholder="请选择售后状态" />
+                      <PcMallMultiSelect options={buyerPcMallAfterSaleStatusOptions} values={selectedPendingAfterSaleStatuses} onChange={setSelectedPendingAfterSaleStatuses} placeholder="请选择" />
                     </label>
                     <label className="pc-mall-filter-field">
                       <span>付款方式</span>
-                      <div className="pc-mall-select-wrap pc-mall-select-wrap-payment">
+                      <div className={`pc-mall-select-wrap pc-mall-select-wrap-payment ${selectedPendingPaymentMethod ? "has-clear" : ""}`}>
                         <select value={selectedPendingPaymentMethod} onChange={(event) => setSelectedPendingPaymentMethod(event.target.value)}>
-                          <option value="全部">全部</option>
+                          <option value="" hidden>请选择</option>
                           <option value="先货后款">先货后款</option>
                           <option value="先款后货">先款后货</option>
                         </select>
+                        {selectedPendingPaymentMethod ? (
+                          <button className="pc-mall-filter-clear-btn" type="button" onClick={() => setSelectedPendingPaymentMethod("")}>清空</button>
+                        ) : null}
                       </div>
                     </label>
                     <div className="pc-mall-filter-actions pc-mall-filter-actions-inline">
@@ -6812,12 +6851,15 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                     </label>
                     <label className="pc-mall-filter-field">
                       <span>需要单独开票</span>
-                      <div className="pc-mall-select-wrap">
+                      <div className={`pc-mall-select-wrap pc-mall-select-wrap-payment ${draftAppliedSingleInvoice ? "has-clear" : ""}`}>
                         <select value={draftAppliedSingleInvoice} onChange={(event) => setDraftAppliedSingleInvoice(event.target.value)}>
-                          <option value="">请选择</option>
+                          <option value="" hidden>请选择</option>
                           <option value="是">是</option>
                           <option value="否">否</option>
                         </select>
+                        {draftAppliedSingleInvoice ? (
+                          <button className="pc-mall-filter-clear-btn" type="button" onClick={() => setDraftAppliedSingleInvoice("")}>清空</button>
+                        ) : null}
                       </div>
                     </label>
                     <label className="pc-mall-filter-field">
@@ -6959,12 +7001,15 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                     </label>
                     <label className="pc-mall-filter-field">
                       <span>需要单独开票</span>
-                      <div className="pc-mall-select-wrap">
+                      <div className={`pc-mall-select-wrap pc-mall-select-wrap-payment ${draftInvoicedSingleInvoice ? "has-clear" : ""}`}>
                         <select value={draftInvoicedSingleInvoice} onChange={(event) => setDraftInvoicedSingleInvoice(event.target.value)}>
-                          <option value="">请选择</option>
+                          <option value="" hidden>请选择</option>
                           <option value="是">是</option>
                           <option value="否">否</option>
                         </select>
+                        {draftInvoicedSingleInvoice ? (
+                          <button className="pc-mall-filter-clear-btn" type="button" onClick={() => setDraftInvoicedSingleInvoice("")}>清空</button>
+                        ) : null}
                       </div>
                     </label>
                     <label className="pc-mall-filter-field">
@@ -7760,13 +7805,6 @@ function PlatformInvoiceManagementPage() {
         </section>
 
         <div className="shop-invoice-issued-actions">
-          <div className="shop-invoice-issued-note">
-            <span className="shop-invoice-issued-note-label">
-              <span className="shop-invoice-issued-note-icon" aria-hidden="true">!</span>
-              <span>平台备注：</span>
-            </span>
-            <span className="shop-invoice-issued-note-text">{activeDetailRow.invoiceRemark || "平台侧暂无额外备注"}</span>
-          </div>
           <div className="shop-invoice-issued-buttons">
             {activeDetailRow.invoiceStatus === "待开票" ? <button className="btn btn-dark" type="button" onClick={() => handleConfirmInvoice(activeDetailRow.orderNo)}>确认开票</button> : null}
             {activeDetailRow.invoiceStatus === "待开票" ? <button className="btn btn-dark" type="button" onClick={() => handleRejectInvoice(activeDetailRow.orderNo)}>驳回</button> : null}
@@ -10437,8 +10475,10 @@ function ShopInvoicePage({
                   type="button"
                   onClick={() => handleChangeInvoiceStatusTab(status)}
                 >
-                  <span>{status}</span>
-                  {!["全部", "已开票", "发票设置"].includes(status) ? <em className="shop-invoice-tab-badge">{invoiceStatusTabCounts[status] || 0}</em> : null}
+                  <span>
+                    {status}
+                    {!["全部", "已开票", "发票设置"].includes(status) ? `（${invoiceStatusTabCounts[status] || 0}）` : ""}
+                  </span>
                 </button>
               ))}
             </div>
@@ -10905,17 +10945,11 @@ function ShopInvoicePage({
                 <button className="btn btn-dark" type="button" onClick={() => handleOpenConfirmInvoiceModal()}>批量确认开票</button>
                 {showPendingModifyBatchAction ? <button className="btn btn-dark" type="button" onClick={() => handleOpenModifyInvoiceModal(selectedShopInvoiceOrderNos)}>批量修改开票</button> : null}
                 {showBatchRejectAction ? <button className="btn btn-dark" type="button" onClick={() => handleOpenRejectInvoiceModal()}>批量驳回</button> : null}
-                <div className="shop-invoice-toolbar-summary">
-                  <>已选中 {selectedConfirmRows.length} 笔待开票订单，发票应开金额合计：<strong>{formatMoneyDisplay(confirmInvoiceSummary.shouldInvoiceAmount)}</strong></>
-                </div>
               </>
             ) : null}
             {!isPlatformVariant && showModifyBatchToolbar ? (
               <>
                 <button className="btn btn-dark" type="button" onClick={() => handleOpenModifyInvoiceModal(selectedModifyInvoiceOrderNos)}>批量修改开票</button>
-                <div className="shop-invoice-toolbar-summary">
-                  <>已选中 {selectedModifyRows.length} 笔已开票订单，发票应开金额合计：<strong>{formatMoneyDisplay(modifyInvoiceSummary.shouldInvoiceAmount)}</strong></>
-                </div>
               </>
             ) : null}
           </div>
@@ -11802,7 +11836,7 @@ function AddBuyerModal({ open, groupOptions, form, discountInvalid, onFormChange
   );
 }
 
-function BuyerMiniAppMallPage({ onBackToPcMall }) {
+function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick }) {
   const [activeTab, setActiveTab] = useState("home");
   const [miniappView, setMiniappView] = useState("main");
   const [miniappOrderOverlay, setMiniappOrderOverlay] = useState("");
@@ -11822,6 +11856,11 @@ function BuyerMiniAppMallPage({ onBackToPcMall }) {
     { key: "cart", label: "购物车" },
     { key: "store", label: "店铺" },
     { key: "mine", label: "我的" }
+  ];
+  const systemEntryItems = [
+    { key: "platform-center", label: "平台中心", description: "进入平台中心页面" },
+    { key: "supplier-admin", label: "供应商后台", description: "进入供应商后台首页" },
+    { key: "pc-mall", label: "买家PC商城", description: "进入买家PC商城页面" }
   ];
   const mineSummaryItems = [
     { key: "coupon", count: 0, label: "优惠券", icon: "ticket" },
@@ -11924,6 +11963,17 @@ function BuyerMiniAppMallPage({ onBackToPcMall }) {
 
   return (
     <div className="miniapp-preview-shell">
+      <aside className="miniapp-system-entry-panel" aria-label="系统入口">
+        <div className="miniapp-system-entry-title">系统入口</div>
+        <div className="miniapp-system-entry-list">
+          {systemEntryItems.map((item) => (
+            <button className="miniapp-system-entry-btn" key={item.key} type="button" onClick={() => onPortalActionClick?.(item.key)}>
+              <span>{item.label}</span>
+              <em>{item.description}</em>
+            </button>
+          ))}
+        </div>
+      </aside>
       <div className="miniapp-phone-frame">
         <div className="miniapp-phone">
           <div className="miniapp-phone-inner">
@@ -13438,6 +13488,7 @@ export default function App() {
   const handleTopActionClick = (actionKey) => {
     if (actionKey === "platform-center") {
       setActivePortalPage("platform-center");
+      setPlatformCenterPage("home");
       setToastMessage("");
       return;
     }
@@ -13450,6 +13501,7 @@ export default function App() {
 
     if (actionKey === "supplier-admin") {
       setActivePortalPage("admin");
+      handleSwitchHomePage();
       setToastMessage("");
       return;
     }
@@ -13485,7 +13537,7 @@ export default function App() {
   }
 
   if (activePortalPage === "miniapp-mall") {
-    return <BuyerMiniAppMallPage onBackToPcMall={() => setActivePortalPage("buyer-pc-mall")} />;
+    return <BuyerMiniAppMallPage onBackToPcMall={() => setActivePortalPage("buyer-pc-mall")} onPortalActionClick={handleTopActionClick} />;
   }
 
   if (activePortalPage === "platform-center") {
