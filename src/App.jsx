@@ -844,10 +844,10 @@ const supplierDashboardNotices = [
   "新增供应商测试"
 ];
 const supplierDashboardPerformanceCards = [
-  { value: "0%", label: "订单48H发货率" },
-  { value: "0小时0分钟", label: "整体平均发货时长" },
-  { value: "1", label: "履约异常订单数量" },
-  { value: "50%", label: "履约异常订单率" }
+  { value: "0%", label: "子订单48H发货率", tooltip: "统计周期内，48H内发货子订单占支付子订单的比例" },
+  { value: "0小时0分钟", label: "子订单整体平台发货时长", tooltip: "统计周期内，所有子订单发货时长（发货日期 - 下单支付成功日期）之和 / 发货子订单总数（包含售后订单）" },
+  { value: "1", label: "履约异常子订单量", tooltip: "统计周期内，超48H发货子订单数+超48H未发货子订单数" },
+  { value: "50%", label: "子订单履约异常率", tooltip: "统计周期内，(超48h发货子订单数+超48H未发货子订单数) / 支付子订单" }
 ];
 const supplierDashboardAccountCards = [
   { value: "0", label: "账户问题待处理", muted: true },
@@ -2904,7 +2904,7 @@ function createShopInvoiceIssuedDetail(row) {
   const isPersonalTitle = isPersonalInvoiceTitle(row.invoiceTitle);
   const hideExtendedTitleFields = shouldHideInvoiceTitleExtendedFields(row.invoiceType, row.invoiceTitle);
   const shouldHideInvoiceAmounts = ["待开票", "已驳回", "已撤销"].includes(row.invoiceStatus || row.applicationStatus);
-  const statusExtraText = getShopInvoiceStatusExtraText(row);
+  const statusExtraText = row.invoiceStatus === "已驳回" ? "" : getShopInvoiceStatusExtraText(row);
   const invoiceTypeExtraText = getShopInvoiceTypeExtraText(row);
   const invoiceTitleExtraText = getShopInvoiceTitleExtraText(row);
   const invoiceAmountWithTax = shouldHideInvoiceAmounts
@@ -7272,7 +7272,7 @@ function SupplierDashboardPage({ onOpenInvoiceTodo }) {
 
       <section className="supplier-dashboard-card">
         <div className="supplier-dashboard-section-head">
-          <h3>履约服务数据看板</h3>
+          <h3>履约服务数据看板<span className="supplier-dashboard-section-note">（订单下有多少个SKU即代表多少笔子订单）</span></h3>
           <div className="supplier-dashboard-date-range">
             <span>{supplierDashboardDateRange.start}</span>
             <em>-</em>
@@ -7286,7 +7286,10 @@ function SupplierDashboardPage({ onOpenInvoiceTodo }) {
               <div className="supplier-dashboard-metric-value">{item.value}</div>
               <div className="supplier-dashboard-metric-label">
                 {item.label}
-                <span className="supplier-dashboard-tip">?</span>
+                <span className="pc-mall-inline-tooltip-wrap">
+                  <span className="supplier-dashboard-tip">?</span>
+                  {item.tooltip ? <span className="pc-mall-inline-tooltip supplier-dashboard-inline-tooltip">{item.tooltip}</span> : null}
+                </span>
               </div>
             </article>
           ))}
@@ -7514,6 +7517,20 @@ function PlatformTradeSettingsPage() {
   );
 }
 
+function ShopInvoiceRejectedReasonCard({ rejectedAt, rejectReason, onClose }) {
+  const reasonText = String(rejectReason || "").trim();
+  const rejectedTime = String(rejectedAt || "").trim();
+  if (!reasonText) return null;
+
+  return (
+    <aside className="shop-invoice-rejected-card" aria-label="驳回原因">
+      <button className="shop-invoice-rejected-card-close" type="button" onClick={onClose} aria-label="关闭驳回提示">×</button>
+      {rejectedTime ? <div className="shop-invoice-rejected-card-line">驳回日期：{rejectedTime}</div> : null}
+      <div className="shop-invoice-rejected-card-line">驳回原因：{reasonText}</div>
+    </aside>
+  );
+}
+
 function PlatformInvoiceManagementPage() {
   const [rows, setRows] = useState(normalizedShopInvoiceManagementRows);
   const [activeTab, setActiveTab] = useState("全部");
@@ -7523,6 +7540,7 @@ function PlatformInvoiceManagementPage() {
   const [detailOrderNo, setDetailOrderNo] = useState("");
   const [detailMode, setDetailMode] = useState("invoice");
   const [pageNotice, setPageNotice] = useState("");
+  const [isRejectedCardVisible, setIsRejectedCardVisible] = useState(true);
 
   useEffect(() => {
     if (!pageNotice) return undefined;
@@ -7592,6 +7610,10 @@ function PlatformInvoiceManagementPage() {
   useEffect(() => {
     setPage(1);
   }, [activeTab]);
+
+  useEffect(() => {
+    setIsRejectedCardVisible(true);
+  }, [detailMode, detailOrderNo]);
 
   const handleDraftFilterChange = (field, value) => {
     setDraftFilters((current) => ({ ...current, [field]: value }));
@@ -7775,6 +7797,9 @@ function PlatformInvoiceManagementPage() {
 
     return (
       <>
+        {activeDetailRow.invoiceStatus === "已驳回" && isRejectedCardVisible ? (
+          <ShopInvoiceRejectedReasonCard rejectedAt={activeDetailRow.rejectedAt} rejectReason={activeDetailRow.rejectReason} onClose={() => setIsRejectedCardVisible(false)} />
+        ) : null}
         <section className="content-card shop-invoice-detail-card">
           <div className="shop-invoice-detail-section">
             <div className="shop-invoice-detail-title">
@@ -7805,6 +7830,13 @@ function PlatformInvoiceManagementPage() {
         </section>
 
         <div className="shop-invoice-issued-actions">
+          <div className="shop-invoice-issued-note">
+            <span className="shop-invoice-issued-note-label">
+              <span className="shop-invoice-issued-note-icon" aria-hidden="true">i</span>
+              <span>开票备注</span>
+            </span>
+            <span className="shop-invoice-issued-note-text">{activeDetailRow.invoiceRemark || "-"}</span>
+          </div>
           <div className="shop-invoice-issued-buttons">
             {activeDetailRow.invoiceStatus === "待开票" ? <button className="btn btn-dark" type="button" onClick={() => handleConfirmInvoice(activeDetailRow.orderNo)}>确认开票</button> : null}
             {activeDetailRow.invoiceStatus === "待开票" ? <button className="btn btn-dark" type="button" onClick={() => handleRejectInvoice(activeDetailRow.orderNo)}>驳回</button> : null}
@@ -9324,12 +9356,14 @@ function ShopInvoicePage({
   onCloseBulkUploadTab
 }) {
   const isPlatformVariant = pageVariant === "platform";
+  const showShopInfoField = isPlatformVariant;
   const [activeInvoiceStatusTab, setActiveInvoiceStatusTab] = useState("全部");
   const [markerFilter, setMarkerFilter] = useState("全部");
   const [isColumnSettingOpen, setIsColumnSettingOpen] = useState(false);
   const [activeOrderDetailNo, setActiveOrderDetailNo] = useState("");
   const [activeInvoiceDetailNo, setActiveInvoiceDetailNo] = useState("");
   const [activeInvoiceHistoryNo, setActiveInvoiceHistoryNo] = useState("");
+  const [isRejectedCardVisible, setIsRejectedCardVisible] = useState(true);
   const [draftFilters, setDraftFilters] = useState(initialShopInvoiceFilters);
   const [appliedFilters, setAppliedFilters] = useState(initialShopInvoiceFilters);
   const [page, setPage] = useState(1);
@@ -9366,11 +9400,14 @@ function ShopInvoicePage({
   const displayedInvoiceStatusTabs = useMemo(() => (
     isPlatformVariant ? shopInvoiceStatusTabs.filter((tab) => tab !== "发票设置") : shopInvoiceStatusTabs
   ), [isPlatformVariant]);
+  const availableShopInvoiceColumnDefinitions = useMemo(() => (
+    shopInvoiceColumnDefinitions.filter((column) => showShopInfoField || column.key !== "shopInfo")
+  ), [showShopInfoField]);
   const orderedSettingColumns = useMemo(() => (
     shopInvoiceColumnOrder
-      .map((key) => shopInvoiceColumnDefinitions.find((column) => column.key === key))
+      .map((key) => availableShopInvoiceColumnDefinitions.find((column) => column.key === key))
       .filter(Boolean)
-  ), [shopInvoiceColumnOrder]);
+  ), [availableShopInvoiceColumnDefinitions, shopInvoiceColumnOrder]);
   const leftZoneColumns = useMemo(() => (
     orderedSettingColumns.filter((column) => column.key !== "actions" && shopInvoiceColumnPrefs[column.key]?.freeze === "left")
   ), [orderedSettingColumns, shopInvoiceColumnPrefs]);
@@ -9381,14 +9418,14 @@ function ShopInvoicePage({
     orderedSettingColumns.filter((column) => shopInvoiceColumnPrefs[column.key]?.freeze === "right")
   ), [orderedSettingColumns, shopInvoiceColumnPrefs]);
   const visibleColumns = useMemo(() => {
-    const fixedSelectColumn = shopInvoiceColumnDefinitions.find((column) => column.key === "select");
+    const fixedSelectColumn = availableShopInvoiceColumnDefinitions.find((column) => column.key === "select");
     const visibleLeftColumns = leftZoneColumns.filter((column) => shopInvoiceColumnPrefs[column.key]?.visible !== false);
     const visibleMiddleColumns = middleZoneColumns.filter((column) => shopInvoiceColumnPrefs[column.key]?.visible !== false);
     const visibleRightColumns = rightZoneColumns.filter((column) => shopInvoiceColumnPrefs[column.key]?.visible !== false);
     const shouldShowSelectColumn = !isPlatformVariant && ["全部", "待开票", "已开票"].includes(activeInvoiceStatusTab);
 
     return [shouldShowSelectColumn ? fixedSelectColumn : null, ...visibleLeftColumns, ...visibleMiddleColumns, ...visibleRightColumns].filter(Boolean);
-  }, [activeInvoiceStatusTab, isPlatformVariant, leftZoneColumns, middleZoneColumns, rightZoneColumns, shopInvoiceColumnPrefs]);
+  }, [activeInvoiceStatusTab, availableShopInvoiceColumnDefinitions, isPlatformVariant, leftZoneColumns, middleZoneColumns, rightZoneColumns, shopInvoiceColumnPrefs]);
   const rightFrozenColumnKeys = useMemo(() => (
     visibleColumns.filter((column) => shopInvoiceColumnPrefs[column.key]?.freeze === "right").map((column) => column.key)
   ), [shopInvoiceColumnPrefs, visibleColumns]);
@@ -9452,8 +9489,10 @@ function ShopInvoicePage({
     const buyerAccountKeyword = appliedFilters.buyerAccount.trim().toLowerCase();
     if (buyerAccountKeyword && !item.buyerAccount.toLowerCase().includes(buyerAccountKeyword)) return false;
 
-    const shopInfoKeyword = appliedFilters.shopInfo.trim().toLowerCase();
-    if (shopInfoKeyword && !String(item.shopInfo || "").toLowerCase().includes(shopInfoKeyword)) return false;
+    if (showShopInfoField) {
+      const shopInfoKeyword = appliedFilters.shopInfo.trim().toLowerCase();
+      if (shopInfoKeyword && !String(item.shopInfo || "").toLowerCase().includes(shopInfoKeyword)) return false;
+    }
 
     const storeKeyword = appliedFilters.store.trim().toLowerCase();
     if (storeKeyword && !item.store.toLowerCase().includes(storeKeyword)) return false;
@@ -9476,7 +9515,7 @@ function ShopInvoicePage({
     if (!matchDateRange(item.invoicedAt, appliedFilters.invoicedAtRange)) return false;
 
     return true;
-  }), [activeInvoiceStatusTab, appliedFilters, markerFilter, shopInvoiceRows]);
+  }), [activeInvoiceStatusTab, appliedFilters, markerFilter, shopInvoiceRows, showShopInfoField]);
   const pageCount = Math.max(1, Math.ceil(filteredRows.length / pageSize));
   const currentPage = Math.min(page, pageCount);
   const pagedRows = filteredRows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
@@ -9577,6 +9616,9 @@ function ShopInvoicePage({
   ), [activeOrderDetailNo, shopInvoiceRows]);
   const activeInvoiceDetail = useMemo(() => (
     createShopInvoiceIssuedDetail(shopInvoiceRows.find((item) => item.orderNo === activeInvoiceDetailNo))
+  ), [activeInvoiceDetailNo, shopInvoiceRows]);
+  const activeInvoiceRow = useMemo(() => (
+    shopInvoiceRows.find((item) => item.orderNo === activeInvoiceDetailNo) || null
   ), [activeInvoiceDetailNo, shopInvoiceRows]);
   const activeInvoiceHistory = useMemo(() => (
     shopInvoiceRows.find((item) => item.orderNo === activeInvoiceHistoryNo) || null
@@ -9712,6 +9754,10 @@ function ShopInvoicePage({
     if (activeShopTab === "发票信息" || !activeInvoiceDetailNo) return;
     setActiveInvoiceDetailNo("");
   }, [activeInvoiceDetailNo, activeShopTab]);
+
+  useEffect(() => {
+    setIsRejectedCardVisible(true);
+  }, [activeInvoiceDetailNo]);
 
   useEffect(() => {
     if (activeShopTab === "历史操作" || !activeInvoiceHistoryNo) return;
@@ -10532,6 +10578,9 @@ function ShopInvoicePage({
 
       {activeInvoiceDetail && activeShopTab === "发票信息" ? (
         <>
+          {activeInvoiceRow?.invoiceStatus === "已驳回" && isRejectedCardVisible ? (
+            <ShopInvoiceRejectedReasonCard rejectedAt={activeInvoiceRow.rejectedAt} rejectReason={activeInvoiceRow.rejectReason} onClose={() => setIsRejectedCardVisible(false)} />
+          ) : null}
           <section className="content-card shop-invoice-detail-card">
             <div className="shop-invoice-detail-section">
               <div className="shop-invoice-detail-title">
@@ -10895,12 +10944,14 @@ function ShopInvoicePage({
               <input placeholder="请输入纳税人识别号" value={draftFilters.taxpayerId} onChange={(e) => handleDraftFilterChange("taxpayerId", e.target.value)} />
             </div>
           </label>
-          <label className="shop-invoice-field shop-invoice-field-wide-label">
-            <span>店铺信息</span>
-            <div className="shop-invoice-input-wrap">
-              <input placeholder="请输入店铺名称/店铺ID，支持全模糊查询" value={draftFilters.shopInfo} onChange={(e) => handleDraftFilterChange("shopInfo", e.target.value)} />
-            </div>
-          </label>
+          {showShopInfoField ? (
+            <label className="shop-invoice-field shop-invoice-field-wide-label">
+              <span>店铺信息</span>
+              <div className="shop-invoice-input-wrap">
+                <input placeholder="请输入店铺名称/店铺ID，支持全模糊查询" value={draftFilters.shopInfo} onChange={(e) => handleDraftFilterChange("shopInfo", e.target.value)} />
+              </div>
+            </label>
+          ) : null}
           <label className="shop-invoice-field shop-invoice-field-wide-label">
             <span>付款方式</span>
             <div className="shop-invoice-select-wrap">

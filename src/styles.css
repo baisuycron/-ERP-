@@ -221,6 +221,31 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .shop-invoice-detail-section { margin: 14px 16px 0; border: 1px solid #eef0f4; background: #fff; }
 .shop-invoice-detail-title { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: #f5f7fa; color: #202020; font-size: 14px; font-weight: 700; }
 .shop-invoice-detail-return { border: none; padding: 0; background: transparent; color: #5b6472; font-size: 14px; font-weight: 400; }
+.shop-invoice-rejected-card {
+  position: fixed;
+  top: 88px;
+  right: 28px;
+  z-index: 260;
+  min-width: 320px;
+  max-width: min(520px, calc(100vw - 56px));
+  padding: 14px 40px 14px 16px;
+  background: rgba(36, 36, 36, 0.96);
+  color: #fff;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+}
+.shop-invoice-rejected-card-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  border: none;
+  padding: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+}
+.shop-invoice-rejected-card-line { color: rgba(255, 255, 255, 0.94); font-size: 13px; font-weight: 400; line-height: 1.6; word-break: break-word; }
+.shop-invoice-rejected-card-line + .shop-invoice-rejected-card-line { margin-top: 4px; }
 .shop-invoice-detail-info-grid { display: grid; grid-template-columns: 1fr; }
 .shop-invoice-detail-info-row { display: grid; grid-template-columns: 148px minmax(0, 1fr); min-height: 40px; border-top: 1px solid #eef0f4; }
 .shop-invoice-detail-info-row:first-child { border-top: none; }
@@ -1271,6 +1296,7 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
   .pc-mall-title-store-modal-foot { padding-left: 16px; padding-right: 16px; }
   .pc-mall-title-store-modal-table th,
   .pc-mall-title-store-modal-table td { padding: 12px 10px; font-size: 13px; }
+  .shop-invoice-rejected-card { top: 72px; right: 12px; min-width: 0; max-width: calc(100vw - 24px); width: calc(100vw - 24px); }
 }
 .pc-mall-batch-card { margin-top: 0; border: none; border-top: 1px solid #edf1f5; border-radius: 0; background: #fff; padding: 10px 0 12px; }
 .pc-mall-batch-card:first-child { border-top: none; padding-top: 8px; }
@@ -4451,6 +4477,12 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
   font-size: 10px;
   line-height: 1;
 }
+.supplier-dashboard-inline-tooltip {
+  min-width: 260px;
+  max-width: 360px;
+  white-space: normal;
+  text-align: left;
+}
 
 .supplier-dashboard-group {
   padding: 10px 0 2px;
@@ -4462,6 +4494,11 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 
 .supplier-dashboard-group h3 {
   padding: 0 16px 10px;
+}
+
+.supplier-dashboard-section-note {
+  color: #8e99a8;
+  font-weight: 400;
 }
 
 
