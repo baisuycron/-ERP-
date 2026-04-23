@@ -9240,19 +9240,20 @@ function ShopInvoiceBulkUploadPage({ onBack, onToast }) {
           <div className="bulk-invoice-step">
             <span>1</span>
             <strong>第一步</strong>
-            <p>准备发票 PDF 与订单映射表</p>
+            <p>准备发票PDF文件</p>
           </div>
           <div className="bulk-invoice-step-line" />
           <div className="bulk-invoice-step">
             <span>2</span>
             <strong>第二步</strong>
+            <p>下载模板，将发票号与订单号关联</p>
             <button type="button" onClick={handleDownloadTemplate}>下载模板</button>
           </div>
           <div className="bulk-invoice-step-line" />
           <div className="bulk-invoice-step">
             <span>3</span>
             <strong>第三步</strong>
-            <p>导入发票信息，上传文件并导入</p>
+            <p>发票PDF文件与订单XLSX文件打包压缩并导入</p>
           </div>
         </div>
 
@@ -12312,6 +12313,11 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick }) {
                     <div className="miniapp-invoice-grid">
                       <div className="miniapp-invoice-row"><span>收票人手机</span><strong>15151515151</strong></div>
                       <div className="miniapp-invoice-row"><span>收票人邮箱</span><strong>123@qq.com</strong></div>
+                    </div>
+
+                    <div className="miniapp-invoice-section-title">备注信息</div>
+                    <div className="miniapp-invoice-grid">
+                      <div className="miniapp-invoice-row"><span>开票备注</span><strong>-</strong></div>
                     </div>
 
                     <div className="miniapp-invoice-section-title">订单信息</div>
