@@ -11891,6 +11891,9 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick }) {
   const [activeTab, setActiveTab] = useState("home");
   const [miniappView, setMiniappView] = useState("main");
   const [miniappOrderOverlay, setMiniappOrderOverlay] = useState("");
+  const [isMiniappInvoiceEditConfirmOpen, setIsMiniappInvoiceEditConfirmOpen] = useState(false);
+  const [isMiniappInvoicePreviewOpen, setIsMiniappInvoicePreviewOpen] = useState(false);
+  const [isMiniappInvoiceEditSubmitted, setIsMiniappInvoiceEditSubmitted] = useState(false);
   const categoryItems = [
     { key: "beauty", label: "美妆护肤", tone: "pink", emoji: "💄" },
     { key: "digital", label: "数码家电", tone: "cyan", emoji: "📷" },
@@ -11996,6 +11999,22 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick }) {
         { label: "申请开票" },
         { label: "申请售后" }
       ]
+    },
+    {
+      key: "completed-sample",
+      store: "API测试店铺",
+      storeStatus: "待收货",
+      items: [
+        { key: "sample-1", image: "cover", title: "测试商品", subtitle: "", price: "10", quantity: 5, status: "" },
+        { key: "sample-2", image: "cover", title: "测试运费商品", subtitle: "", price: "10", quantity: 5, status: "待供应商审核" }
+      ],
+      summaryText: "共10件商品 实付",
+      summaryAmount: "105",
+      actions: [
+        { label: "确认收货", primary: true },
+        { label: "查看发票", toInvoiceEdit: true },
+        { label: "申请售后" }
+      ]
     }
   ];
   const invoiceTypeOptions = ["电子普通发票", "电子增值税专用发票"];
@@ -12003,6 +12022,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick }) {
   const isMineTab = activeTab === "mine";
   const isOrderListView = isMineTab && miniappView === "orders";
   const isInvoiceDetailView = isMineTab && miniappView === "invoice";
+  const isInvoiceEditView = isMineTab && miniappView === "invoice-edit";
   const isInvoiceTitleManagementView = isMineTab && miniappView === "invoice-titles";
   const isInvoiceTitleCreateView = isMineTab && miniappView === "invoice-title-create";
 
@@ -12029,11 +12049,11 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick }) {
         <div className="miniapp-phone">
           <div className="miniapp-phone-inner">
             <div className="miniapp-statusbar">
-              <span>{isInvoiceTitleCreateView ? "09:39:54" : isInvoiceTitleManagementView ? "09:44:04" : isInvoiceDetailView ? "16:29" : isOrderListView ? "00:07:15" : isMineTab ? "00:03:58" : "00:02:06"}</span>
+              <span>{isInvoiceTitleCreateView ? "09:39:54" : isInvoiceTitleManagementView ? "09:44:04" : isInvoiceEditView ? "16:31" : isInvoiceDetailView ? "16:29" : isOrderListView ? "00:07:15" : isMineTab ? "00:03:58" : "00:02:06"}</span>
               <div className="miniapp-status-icons">
                 <span>5G</span>
                 <span>▂▄▆█</span>
-                <span>{isInvoiceTitleCreateView ? "62" : isInvoiceTitleManagementView ? "61" : isInvoiceDetailView ? "84" : isMineTab ? "100" : "98"}</span>
+                <span>{isInvoiceTitleCreateView ? "62" : isInvoiceTitleManagementView ? "61" : isInvoiceEditView ? "83" : isInvoiceDetailView ? "84" : isMineTab ? "100" : "98"}</span>
               </div>
             </div>
 
@@ -12247,6 +12267,173 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick }) {
                   <button className="miniapp-invoice-submit" type="button">申请开票</button>
                 </div>
               </div>
+            ) : isInvoiceEditView ? (
+              <div className="miniapp-invoice-edit-page">
+                <header className="miniapp-order-header miniapp-invoice-header">
+                  <button className="miniapp-order-back" type="button" onClick={() => setMiniappView("orders")} aria-label="返回">
+                    <span />
+                  </button>
+                  <div className="miniapp-order-title">发票详情</div>
+                  <div className="miniapp-order-header-actions">
+                    <span>•••</span>
+                    <button type="button" aria-label="返回买家PC商城" onClick={() => onBackToPcMall?.()}>◎</button>
+                  </div>
+                </header>
+
+                <main className="miniapp-invoice-edit-content">
+                  <section className="miniapp-invoice-amount-card">
+                    <div className="miniapp-invoice-amount-head">
+                      <span>开票金额 ⓘ</span>
+                      <em>待开票</em>
+                    </div>
+                    <strong>-</strong>
+                  </section>
+
+                  <section className="miniapp-invoice-panel">
+                    <h2>电子普通发票</h2>
+
+                    <div className="miniapp-invoice-section-title">发票信息</div>
+                    <div className="miniapp-invoice-grid">
+                      <div className="miniapp-invoice-row"><span>发票内容</span><strong>商品类别</strong></div>
+                      <div className="miniapp-invoice-row"><span>申请时间</span><strong>2026-03-24 00:07:15</strong></div>
+                      <div className="miniapp-invoice-row"><span>申请开票金额</span><strong>¥ 15.57</strong></div>
+                      <div className="miniapp-invoice-row"><span>需要单独开票</span><strong>否</strong></div>
+                      <div className="miniapp-invoice-row"><span>开票时间</span><strong>-</strong></div>
+                      <div className="miniapp-invoice-row"><span>发票号码</span><strong>-</strong></div>
+                    </div>
+
+                    <div className="miniapp-invoice-section-title">发票抬头</div>
+                    <div className="miniapp-invoice-grid">
+                      <div className="miniapp-invoice-row"><span>发票抬头</span><strong>美团</strong></div>
+                      <div className="miniapp-invoice-row"><span>纳税人识别号</span><strong>123456789</strong></div>
+                    </div>
+
+                    <div className="miniapp-invoice-section-title">收票信息</div>
+                    <div className="miniapp-invoice-grid">
+                      <div className="miniapp-invoice-row"><span>收票人手机</span><strong>15151515151</strong></div>
+                      <div className="miniapp-invoice-row"><span>收票人邮箱</span><strong>123@qq.com</strong></div>
+                    </div>
+
+                    <div className="miniapp-invoice-section-title">订单信息</div>
+                    <div className="miniapp-invoice-grid">
+                      <div className="miniapp-invoice-row"><span>订单状态</span><strong>待收货</strong></div>
+                      <div className="miniapp-invoice-row"><span>订单号</span><strong>20260324单规格商品</strong></div>
+                      <div className="miniapp-invoice-row"><span>下单时间</span><strong>2026-03-24 00:07:15</strong></div>
+                      <div className="miniapp-invoice-row"><span>买家账号</span><strong>Shawnee003(ID: 18166)</strong></div>
+                      <div className="miniapp-invoice-row"><span>闪购门店</span><strong>农妇三拳</strong></div>
+                    </div>
+                  </section>
+                </main>
+
+                {!isMiniappInvoiceEditSubmitted ? (
+                  <div className="miniapp-invoice-footer">
+                    <div className="miniapp-invoice-edit-tip">温馨提示：仅能支持修改一次开票信息</div>
+                    <button className="miniapp-invoice-submit" type="button" onClick={() => setIsMiniappInvoiceEditConfirmOpen(true)}>修改发票信息</button>
+                  </div>
+                ) : null}
+
+                {isMiniappInvoiceEditConfirmOpen ? (
+                  <div className="miniapp-confirm-mask">
+                    <div className="miniapp-confirm-dialog">
+                      <div className="miniapp-confirm-body">
+                        <h3>修改发票信息</h3>
+                        <p>仅能支持修改一次开票信息，确定修改吗？</p>
+                      </div>
+                      <div className="miniapp-confirm-actions">
+                        <button className="miniapp-confirm-cancel" type="button" onClick={() => setIsMiniappInvoiceEditConfirmOpen(false)}>取消</button>
+                        <button
+                          className="miniapp-confirm-submit"
+                          type="button"
+                          onClick={() => {
+                            setIsMiniappInvoiceEditConfirmOpen(false);
+                            setIsMiniappInvoicePreviewOpen(true);
+                          }}
+                        >
+                          确定
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                {isMiniappInvoicePreviewOpen ? (
+                  <div className="miniapp-order-overlay">
+                    <div className="miniapp-order-sheet">
+                      <div className="miniapp-order-sheet-head">
+                        <strong>发票信息预览</strong>
+                        <button type="button" aria-label="关闭" onClick={() => setIsMiniappInvoicePreviewOpen(false)}>×</button>
+                      </div>
+
+                      <div className="miniapp-order-sheet-body">
+                        <section className="miniapp-order-preview-section">
+                          <h4>发票信息</h4>
+                          <div className="miniapp-order-preview-row"><span>发票类型</span><strong>电子普通发票</strong></div>
+                          <div className="miniapp-order-preview-row"><span>抬头类型</span><strong>企业</strong></div>
+                          <div className="miniapp-order-preview-row"><span>抬头名称</span><strong>美团</strong></div>
+                          <div className="miniapp-order-preview-row"><span>纳税人识别号</span><strong>123456789</strong></div>
+                          <div className="miniapp-order-preview-row"><span>闪购门店</span><strong>-</strong></div>
+                          <div className="miniapp-order-preview-row">
+                            <span>发票内容</span>
+                            <strong className="miniapp-order-preview-choice-group">
+                              <label className="miniapp-order-preview-choice">
+                                <input type="radio" name="invoicePreviewContent" defaultChecked />
+                                <span>商品类别</span>
+                              </label>
+                              <label className="miniapp-order-preview-choice">
+                                <input type="radio" name="invoicePreviewContent" />
+                                <span>商品明细</span>
+                              </label>
+                            </strong>
+                          </div>
+                          <div className="miniapp-order-preview-row">
+                            <span>需要单独开票</span>
+                            <strong className="miniapp-order-preview-choice-group">
+                              <label className="miniapp-order-preview-choice">
+                                <input type="radio" name="invoicePreviewSingle" />
+                                <span>是</span>
+                              </label>
+                              <label className="miniapp-order-preview-choice">
+                                <input type="radio" name="invoicePreviewSingle" defaultChecked />
+                                <span>否</span>
+                              </label>
+                            </strong>
+                          </div>
+                        </section>
+
+                        <section className="miniapp-order-preview-section">
+                          <h4>收票信息</h4>
+                          <div className="miniapp-order-preview-row"><span>收票人手机</span><strong>15151515151</strong></div>
+                          <div className="miniapp-order-preview-row"><span>收票人邮箱</span><strong>123@qq.com</strong></div>
+                        </section>
+
+                        <section className="miniapp-order-preview-section miniapp-order-preview-remark-section">
+                          <h4>开票备注</h4>
+                          <input className="miniapp-order-preview-input" type="text" placeholder="请输入开票备注" />
+                        </section>
+                      </div>
+
+                      <div className="miniapp-order-sheet-notice">
+                        <span>!</span>
+                        <p>请确保发票信息以及收票人信息准确无误</p>
+                      </div>
+
+                      <div className="miniapp-order-sheet-footer">
+                        <button className="miniapp-order-sheet-cancel" type="button" onClick={() => setIsMiniappInvoicePreviewOpen(false)}>返回</button>
+                        <button
+                          className="miniapp-order-sheet-submit"
+                          type="button"
+                          onClick={() => {
+                            setIsMiniappInvoicePreviewOpen(false);
+                            setIsMiniappInvoiceEditSubmitted(true);
+                          }}
+                        >
+                          提交
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
             ) : isOrderListView ? (
               <div className="miniapp-order-page">
                 <header className="miniapp-order-header">
@@ -12310,7 +12497,15 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick }) {
                             className={`miniapp-order-action-btn ${action.primary ? "is-primary" : ""}`}
                             key={action.label}
                             type="button"
-                            onClick={action.toInvoice ? () => setMiniappView("invoice") : action.label === "申请开票" ? () => setMiniappOrderOverlay("apply-invoice") : undefined}
+                            onClick={
+                              action.toInvoice
+                                ? () => setMiniappView("invoice")
+                                : action.toInvoiceEdit
+                                  ? () => setMiniappView("invoice-edit")
+                                  : action.label === "申请开票"
+                                    ? () => setMiniappOrderOverlay("apply-invoice")
+                                    : undefined
+                            }
                           >
                             {action.label}
                           </button>
@@ -12319,75 +12514,76 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick }) {
                     </section>
                   ))}
 
-                  {miniappOrderOverlay === "apply-invoice" ? (
-                    <div className="miniapp-order-overlay">
-                      <div className="miniapp-order-sheet">
-                        <div className="miniapp-order-sheet-head">
-                          <strong>发票信息预览</strong>
-                          <button type="button" aria-label="关闭" onClick={() => setMiniappOrderOverlay("")}>×</button>
-                        </div>
+                </main>
 
-                        <div className="miniapp-order-sheet-body">
-                          <section className="miniapp-order-preview-section">
-                            <h4>发票信息</h4>
-                            <div className="miniapp-order-preview-row"><span>发票类型</span><strong>电子普通发票</strong></div>
-                            <div className="miniapp-order-preview-row"><span>抬头类型</span><strong>企业</strong></div>
-                            <div className="miniapp-order-preview-row"><span>抬头名称</span><strong>美团</strong></div>
-                            <div className="miniapp-order-preview-row"><span>纳税人识别号</span><strong>123456789</strong></div>
-                            <div className="miniapp-order-preview-row"><span>闪购门店</span><strong>-</strong></div>
-                            <div className="miniapp-order-preview-row">
-                              <span>发票内容</span>
-                              <strong className="miniapp-order-preview-choice-group">
-                                <label className="miniapp-order-preview-choice">
-                                  <input type="radio" name="invoiceContent" defaultChecked />
-                                  <span>商品类别</span>
-                                </label>
-                                <label className="miniapp-order-preview-choice">
-                                  <input type="radio" name="invoiceContent" />
-                                  <span>商品明细</span>
-                                </label>
-                              </strong>
-                            </div>
-                            <div className="miniapp-order-preview-row">
-                              <span>需要单独开票</span>
-                              <strong className="miniapp-order-preview-choice-group">
-                                <label className="miniapp-order-preview-choice">
-                                  <input type="radio" name="singleInvoice" />
-                                  <span>是</span>
-                                </label>
-                                <label className="miniapp-order-preview-choice">
-                                  <input type="radio" name="singleInvoice" defaultChecked />
-                                  <span>否</span>
-                                </label>
-                              </strong>
-                            </div>
-                          </section>
+                {miniappOrderOverlay === "apply-invoice" ? (
+                  <div className="miniapp-order-overlay">
+                    <div className="miniapp-order-sheet">
+                      <div className="miniapp-order-sheet-head">
+                        <strong>发票信息预览</strong>
+                        <button type="button" aria-label="关闭" onClick={() => setMiniappOrderOverlay("")}>×</button>
+                      </div>
 
-                          <section className="miniapp-order-preview-section">
-                            <h4>收票信息</h4>
-                            <div className="miniapp-order-preview-row"><span>收票人手机</span><strong>15151515151</strong></div>
-                            <div className="miniapp-order-preview-row"><span>收票人邮箱</span><strong>123@qq.com</strong></div>
-                          </section>
+                      <div className="miniapp-order-sheet-body">
+                        <section className="miniapp-order-preview-section">
+                          <h4>发票信息</h4>
+                          <div className="miniapp-order-preview-row"><span>发票类型</span><strong>电子普通发票</strong></div>
+                          <div className="miniapp-order-preview-row"><span>抬头类型</span><strong>企业</strong></div>
+                          <div className="miniapp-order-preview-row"><span>抬头名称</span><strong>美团</strong></div>
+                          <div className="miniapp-order-preview-row"><span>纳税人识别号</span><strong>123456789</strong></div>
+                          <div className="miniapp-order-preview-row"><span>闪购门店</span><strong>-</strong></div>
+                          <div className="miniapp-order-preview-row">
+                            <span>发票内容</span>
+                            <strong className="miniapp-order-preview-choice-group">
+                              <label className="miniapp-order-preview-choice">
+                                <input type="radio" name="invoiceContent" defaultChecked />
+                                <span>商品类别</span>
+                              </label>
+                              <label className="miniapp-order-preview-choice">
+                                <input type="radio" name="invoiceContent" />
+                                <span>商品明细</span>
+                              </label>
+                            </strong>
+                          </div>
+                          <div className="miniapp-order-preview-row">
+                            <span>需要单独开票</span>
+                            <strong className="miniapp-order-preview-choice-group">
+                              <label className="miniapp-order-preview-choice">
+                                <input type="radio" name="singleInvoice" />
+                                <span>是</span>
+                              </label>
+                              <label className="miniapp-order-preview-choice">
+                                <input type="radio" name="singleInvoice" defaultChecked />
+                                <span>否</span>
+                              </label>
+                            </strong>
+                          </div>
+                        </section>
 
-                          <section className="miniapp-order-preview-section miniapp-order-preview-remark-section">
-                            <h4>开票备注</h4>
-                            <input className="miniapp-order-preview-input" type="text" placeholder="请输入开票备注" />
-                          </section>
-                        </div>
+                        <section className="miniapp-order-preview-section">
+                          <h4>收票信息</h4>
+                          <div className="miniapp-order-preview-row"><span>收票人手机</span><strong>15151515151</strong></div>
+                          <div className="miniapp-order-preview-row"><span>收票人邮箱</span><strong>123@qq.com</strong></div>
+                        </section>
 
-                        <div className="miniapp-order-sheet-notice">
-                          <span>!</span>
-                          <p>请确保发票信息以及收票人信息准确无误</p>
-                        </div>
+                        <section className="miniapp-order-preview-section miniapp-order-preview-remark-section">
+                          <h4>开票备注</h4>
+                          <input className="miniapp-order-preview-input" type="text" placeholder="请输入开票备注" />
+                        </section>
+                      </div>
 
-                        <div className="miniapp-order-sheet-footer">
-                          <button className="miniapp-order-sheet-cancel" type="button" onClick={() => setMiniappOrderOverlay("")}>返回</button>
-                          <button className="miniapp-order-sheet-submit" type="button">提交</button>
-                        </div>
+                      <div className="miniapp-order-sheet-notice">
+                        <span>!</span>
+                        <p>请确保发票信息以及收票人信息准确无误</p>
+                      </div>
+
+                      <div className="miniapp-order-sheet-footer">
+                        <button className="miniapp-order-sheet-cancel" type="button" onClick={() => setMiniappOrderOverlay("")}>返回</button>
+                        <button className="miniapp-order-sheet-submit" type="button">提交</button>
                       </div>
                     </div>
-                  ) : null}
-                </main>
+                  </div>
+                ) : null}
               </div>
             ) : isMineTab ? (
               <>
@@ -12544,7 +12740,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick }) {
               </>
             )}
 
-            {!isOrderListView && !isInvoiceDetailView && !isInvoiceTitleManagementView && !isInvoiceTitleCreateView ? (
+            {!isOrderListView && !isInvoiceDetailView && !isInvoiceEditView && !isInvoiceTitleManagementView && !isInvoiceTitleCreateView ? (
               <nav className="miniapp-tabbar">
                 {tabItems.map((item) => (
                   <button className={`miniapp-tabbar-item ${item.key === activeTab ? "is-active" : ""}`} key={item.key} type="button" onClick={() => handleTabSwitch(item.key)}>
