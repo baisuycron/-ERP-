@@ -1450,6 +1450,8 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .pc-mall-batch-select-wrap { position: relative; }
 .pc-mall-batch-select-wrap::after { content: ""; position: absolute; right: 18px; top: 50%; width: 10px; height: 10px; border-right: 1.5px solid #c7cdd6; border-bottom: 1.5px solid #c7cdd6; transform: translateY(-70%) rotate(45deg); pointer-events: none; }
 .pc-mall-batch-select-wrap select { width: 100%; height: 32px; border: 1px solid #eef1f5; border-radius: 2px; padding: 0 40px 0 12px; color: #111827; font-size: 12px; background: #fff; appearance: none; }
+.pc-mall-batch-select-wrap select.is-placeholder { color: #a8b0bd; }
+.pc-mall-batch-select-wrap select option { color: #111827; }
 .pc-mall-batch-select-wrap select:focus { border-color: #f0b429; box-shadow: 0 0 0 3px rgba(240, 180, 41, 0.12); }
 .pc-mall-batch-special-tip { grid-column: 2; margin: -2px 0 0; color: #b8b8b8; font-size: 12px; line-height: 1.5; }
 .pc-mall-batch-card.is-special-layout { padding-top: 10px; padding-bottom: 12px; }
@@ -1480,6 +1482,11 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .pc-mall-batch-card.is-special-layout .pc-mall-batch-select-wrap select.is-error {
   border-color: #ff4d4f;
   box-shadow: none;
+}
+.pc-mall-batch-select-wrap select.is-error:focus,
+.pc-mall-batch-card.is-special-layout .pc-mall-batch-select-wrap select.is-error:focus {
+  border-color: #ff4d4f;
+  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.12);
 }
 .pc-mall-batch-card.is-special-layout .pc-mall-text-btn { right: 12px; color: #ff7a1a; font-size: 12px; font-weight: 400; }
 .pc-mall-batch-field .pc-mall-store-search-select .pc-mall-search-select-input-wrap {
@@ -1703,19 +1710,30 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
   display: flex;
   align-items: center;
   gap: 4px;
+  width: 100%;
   min-width: 0;
   margin-left: -2px;
+}
+.pc-mall-batch-table-select-wrap {
+  justify-content: space-between;
 }
 .pc-mall-batch-title-field .pc-mall-batch-table-select-wrap,
 .pc-mall-batch-table-select-wrap .pc-mall-batch-select-wrap {
   flex: 1;
   min-width: 0;
 }
+.pc-mall-batch-table-select-wrap .pc-mall-batch-title-select-compact {
+  flex: 0 0 132px;
+  width: 132px;
+}
+.pc-mall-batch-title-select-row {
+  gap: 8px;
+}
 .pc-mall-batch-table-select-wrap .pc-mall-batch-title-view-wrap { flex: none; }
 .pc-mall-batch-title-text {
-  flex: none;
+  flex: 1;
   min-width: 0;
-  max-width: calc(100% - 28px);
+  max-width: none;
   color: #111827;
   font-size: 14px;
   line-height: 1.5;
