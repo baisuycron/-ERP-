@@ -52,6 +52,33 @@ const shopInvoicePaymentMethodOptions = ["全部", "先货后款", "先款后货
 const shopInvoiceAfterSaleInProgressStatuses = ["待供应商审核", "待买家寄货", "待供应商收货", "待平台确认", "退款中", "售后审核中"];
 const shopInvoiceAfterSaleClosedStatuses = ["供应商拒绝", "平台驳回", "买家取消"];
 const shopInvoiceAfterSaleSuccessStatuses = ["退款成功"];
+const miniappFilterDateRangeOptions = [
+  { value: "recent-1m", label: "近一个月" },
+  { value: "recent-3m", label: "近三个月" },
+  { value: "recent-6m", label: "近半年" }
+];
+const miniappBuyerAccountOptions = ["全部", "Shawnee（总部）", "Shawnee01"];
+const initialMiniappPendingFilters = {
+  keyword: "",
+  dateRange: "recent-1m",
+  buyerAccounts: ["全部"],
+  paymentMethod: "全部",
+  afterSaleStatus: "全部"
+};
+const initialMiniappAppliedFilters = {
+  keyword: "",
+  dateRange: "recent-1m",
+  buyerAccounts: ["全部"],
+  invoiceType: "全部",
+  separateInvoiceRequired: "全部"
+};
+const initialMiniappInvoicedFilters = {
+  keyword: "",
+  dateRange: "recent-1m",
+  buyerAccounts: ["全部"],
+  invoiceType: "全部",
+  separateInvoiceRequired: "全部"
+};
 
 const normalizeShopInvoiceMode = (value) => {
   if (value === "单独开票" || value === "是") return "是";
@@ -116,6 +143,39 @@ function formatMoneyDisplay(value) {
 
 function formatCurrentDateTime() {
   return new Date().toLocaleString("sv-SE", { hour12: false });
+}
+
+function getMiniappRangeStartDate(rangeValue, endDate = new Date()) {
+  const nextDate = new Date(endDate);
+  if (rangeValue === "recent-6m") {
+    nextDate.setMonth(nextDate.getMonth() - 6);
+    return nextDate;
+  }
+  if (rangeValue === "recent-3m") {
+    nextDate.setMonth(nextDate.getMonth() - 3);
+    return nextDate;
+  }
+  nextDate.setMonth(nextDate.getMonth() - 1);
+  return nextDate;
+}
+
+function formatMiniappDateInputValue(value) {
+  return new Date(value).toLocaleDateString("sv-SE");
+}
+
+function getMiniappBuyerAccountLabel(value) {
+  const text = String(value || "");
+  const lastDigit = Number(text.replace(/\D/g, "").slice(-1));
+  return Number.isFinite(lastDigit) && lastDigit % 2 === 0 ? "Shawnee01" : "Shawnee（总部）";
+}
+
+function toggleMiniappBuyerAccountSelection(currentValues, nextValue) {
+  if (nextValue === "全部") return ["全部"];
+  const values = Array.isArray(currentValues) ? currentValues.filter((item) => item !== "全部") : [];
+  const nextValues = values.includes(nextValue)
+    ? values.filter((item) => item !== nextValue)
+    : [...values, nextValue];
+  return nextValues.length > 0 ? nextValues : ["全部"];
 }
 
 function getShopInvoiceOrderAfterSaleSummary(statuses) {
@@ -410,6 +470,11 @@ function loadImage(src) {
 }
 
 async function buildShopInvoicePreviewPdfUrl(detail) {
+  const pdfBlob = await buildShopInvoicePreviewPdfBlob(detail);
+  return URL.createObjectURL(pdfBlob);
+}
+
+async function buildShopInvoicePreviewPdfBlob(detail) {
   const svgMarkup = buildShopInvoicePreviewSvg(detail);
   const svgDataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgMarkup)}`;
   const image = await loadImage(svgDataUrl);
@@ -426,8 +491,7 @@ async function buildShopInvoicePreviewPdfUrl(detail) {
   context.drawImage(image, 0, 0);
 
   const jpegDataUrl = canvas.toDataURL("image/jpeg", 0.92);
-  const pdfBlob = buildPdfBlobFromJpegDataUrl(jpegDataUrl, canvas.width, canvas.height);
-  return URL.createObjectURL(pdfBlob);
+  return buildPdfBlobFromJpegDataUrl(jpegDataUrl, canvas.width, canvas.height);
 }
 
 function renderInvoicePreviewLoading(previewWindow, title) {
@@ -491,6 +555,111 @@ function downloadBlobUrl(blobUrl, fileName) {
   document.body.appendChild(anchor);
   anchor.click();
   document.body.removeChild(anchor);
+}
+
+function createCrc32Table() {
+  const table = new Uint32Array(256);
+  for (let index = 0; index < 256; index += 1) {
+    let value = index;
+    for (let bit = 0; bit < 8; bit += 1) {
+      value = (value & 1) ? (0xedb88320 ^ (value >>> 1)) : (value >>> 1);
+    }
+    table[index] = value >>> 0;
+  }
+  return table;
+}
+
+const crc32Table = createCrc32Table();
+const zipTextEncoder = new TextEncoder();
+
+function calculateCrc32(bytes) {
+  let crc = 0xffffffff;
+  for (let index = 0; index < bytes.length; index += 1) {
+    crc = crc32Table[(crc ^ bytes[index]) & 0xff] ^ (crc >>> 8);
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function getZipDosDateTime(date = new Date()) {
+  const year = Math.max(1980, date.getFullYear());
+  const dosTime = ((date.getHours() & 0x1f) << 11) | ((date.getMinutes() & 0x3f) << 5) | Math.floor(date.getSeconds() / 2);
+  const dosDate = (((year - 1980) & 0x7f) << 9) | (((date.getMonth() + 1) & 0x0f) << 5) | (date.getDate() & 0x1f);
+  return { dosDate, dosTime };
+}
+
+function normalizeZipEntryName(value, fallback = "invoice.pdf") {
+  const normalized = String(value || fallback)
+    .replace(/[\\:*?"<>|]/g, "_")
+    .replace(/\//g, "_")
+    .trim();
+  return normalized || fallback;
+}
+
+async function createZipBlobFromEntries(entries) {
+  const localChunks = [];
+  const centralChunks = [];
+  let offset = 0;
+  const { dosDate, dosTime } = getZipDosDateTime();
+
+  for (const entry of entries) {
+    const fileName = normalizeZipEntryName(entry.name);
+    const fileNameBytes = zipTextEncoder.encode(fileName);
+    const dataBytes = new Uint8Array(await entry.blob.arrayBuffer());
+    const crc32 = calculateCrc32(dataBytes);
+
+    const localHeader = new ArrayBuffer(30);
+    const localView = new DataView(localHeader);
+    localView.setUint32(0, 0x04034b50, true);
+    localView.setUint16(4, 20, true);
+    localView.setUint16(6, 0x0800, true);
+    localView.setUint16(8, 0, true);
+    localView.setUint16(10, dosTime, true);
+    localView.setUint16(12, dosDate, true);
+    localView.setUint32(14, crc32, true);
+    localView.setUint32(18, dataBytes.length, true);
+    localView.setUint32(22, dataBytes.length, true);
+    localView.setUint16(26, fileNameBytes.length, true);
+    localView.setUint16(28, 0, true);
+
+    localChunks.push(new Uint8Array(localHeader), fileNameBytes, dataBytes);
+
+    const centralHeader = new ArrayBuffer(46);
+    const centralView = new DataView(centralHeader);
+    centralView.setUint32(0, 0x02014b50, true);
+    centralView.setUint16(4, 20, true);
+    centralView.setUint16(6, 20, true);
+    centralView.setUint16(8, 0x0800, true);
+    centralView.setUint16(10, 0, true);
+    centralView.setUint16(12, dosTime, true);
+    centralView.setUint16(14, dosDate, true);
+    centralView.setUint32(16, crc32, true);
+    centralView.setUint32(20, dataBytes.length, true);
+    centralView.setUint32(24, dataBytes.length, true);
+    centralView.setUint16(28, fileNameBytes.length, true);
+    centralView.setUint16(30, 0, true);
+    centralView.setUint16(32, 0, true);
+    centralView.setUint16(34, 0, true);
+    centralView.setUint16(36, 0, true);
+    centralView.setUint32(38, 0, true);
+    centralView.setUint32(42, offset, true);
+
+    centralChunks.push(new Uint8Array(centralHeader), fileNameBytes);
+    offset += 30 + fileNameBytes.length + dataBytes.length;
+  }
+
+  const centralSize = centralChunks.reduce((sum, chunk) => sum + chunk.length, 0);
+  const endHeader = new ArrayBuffer(22);
+  const endView = new DataView(endHeader);
+  endView.setUint32(0, 0x06054b50, true);
+  endView.setUint16(4, 0, true);
+  endView.setUint16(6, 0, true);
+  endView.setUint16(8, entries.length, true);
+  endView.setUint16(10, entries.length, true);
+  endView.setUint32(12, centralSize, true);
+  endView.setUint32(16, offset, true);
+  endView.setUint16(20, 0, true);
+
+  return new Blob([...localChunks, ...centralChunks, new Uint8Array(endHeader)], { type: "application/zip" });
 }
 
 function isShopInvoiceApplicationOverdue(row, overdueDays = 5) {
@@ -6789,6 +6958,42 @@ function BuyerPcMallPage({ onPortalActionClick }) {
     setBatchInvoiceNotice("已开具发票查询数据导出成功");
   };
 
+  const handleBulkDownloadInvoicedInvoices = async () => {
+    if (selectedInvoicedInvoiceOrderNos.length === 0) {
+      setBatchInvoiceNotice("请先勾选已开具发票订单，再进行批量下载。");
+      return;
+    }
+
+    try {
+      const selectedOrderSet = new Set(selectedInvoicedInvoiceOrderNos);
+      const selectedRows = invoicedInvoiceRows.filter((item) => selectedOrderSet.has(item.orderNo));
+      const zipEntries = [];
+
+      for (const row of selectedRows) {
+        const detail = createBuyerPcMallInvoiceDetail(row, "invoiced");
+        if (!detail?.invoiceInfo?.canPreviewPdf) continue;
+        const pdfBlob = await buildShopInvoicePreviewPdfBlob(detail);
+        zipEntries.push({
+          name: getInvoicePdfFileName(detail),
+          blob: pdfBlob
+        });
+      }
+
+      if (zipEntries.length === 0) {
+        setBatchInvoiceNotice("所选订单暂无可下载的发票 PDF。");
+        return;
+      }
+
+      const zipBlob = await createZipBlobFromEntries(zipEntries);
+      const zipUrl = URL.createObjectURL(zipBlob);
+      downloadBlobUrl(zipUrl, `已开具发票-${zipEntries.length}份.zip`);
+      window.setTimeout(() => URL.revokeObjectURL(zipUrl), 30 * 1000);
+      setBatchInvoiceNotice(`已开始下载${zipEntries.length}份发票压缩包`);
+    } catch (error) {
+      setBatchInvoiceNotice("批量下载发票失败，请稍后重试");
+    }
+  };
+
   const isPendingTab = activeTab === "可申请开票";
   const isAppliedTab = activeTab === "已申请开票";
   const isInvoicedTab = activeTab === "已开具发票";
@@ -7717,8 +7922,10 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                   </div>
                 </section>
 
-                <div className="pc-mall-table-toolbar">
+                <div className="pc-mall-table-toolbar pc-mall-table-toolbar-applied">
                   <div className="pc-mall-toolbar-left">
+                    <button className="pc-mall-batch-btn" type="button" onClick={handleBulkDownloadInvoicedInvoices}>批量下载发票</button>
+                    <div className="pc-mall-toolbar-summary">已选中 {selectedInvoicedInvoiceSummary.count} 笔订单，开票金额合计： <strong>{`￥${selectedInvoicedInvoiceSummary.totalAmount.toFixed(2)}`}</strong></div>
                   </div>
                   <div className="pc-mall-toolbar-right">
                     <button className="pc-mall-batch-btn pc-mall-batch-btn-secondary" type="button" onClick={handleExportInvoicedQueryData}>查询数据导出</button>
@@ -7729,6 +7936,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                   <table className="pc-mall-table pc-mall-table-applied pc-mall-table-invoiced">
                     <thead>
                       <tr>
+                        <th><input type="checkbox" checked={allInvoicedInvoiceRowsSelected} onChange={(e) => handleToggleAllInvoicedInvoiceRows(e.target.checked)} /></th>
                         <th>订单号</th>
                         <th>发票抬头</th>
                         <th>发票类型</th>
@@ -7755,6 +7963,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                     <tbody>
                       {displayedInvoicedInvoiceRows.map((item) => (
                         <tr key={item.orderNo}>
+                          <td><input type="checkbox" checked={selectedInvoicedInvoiceOrderNos.includes(item.orderNo)} onChange={() => handleToggleInvoicedInvoiceRow(item.orderNo)} /></td>
                           <td><button className="pc-mall-order-link" type="button">{item.orderNo}</button></td>
                           <td>{item.invoiceTitle}</td>
                           <td><span className={`pc-mall-invoice-tag is-${item.invoiceTypeTone}`}>{item.invoiceType}</span></td>
@@ -12838,6 +13047,11 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   const [miniappOrderOverlay, setMiniappOrderOverlay] = useState("");
   const [isMiniappInvoiceEditConfirmOpen, setIsMiniappInvoiceEditConfirmOpen] = useState(false);
   const [isMiniappInvoicePreviewOpen, setIsMiniappInvoicePreviewOpen] = useState(false);
+  const [miniappInvoicePreviewRecordId, setMiniappInvoicePreviewRecordId] = useState("");
+  const [miniappInvoicePreviewScale, setMiniappInvoicePreviewScale] = useState(1);
+  const [miniappInvoicePreviewRotation, setMiniappInvoicePreviewRotation] = useState(0);
+  const [isMiniappPdfCopyDialogOpen, setIsMiniappPdfCopyDialogOpen] = useState(false);
+  const [miniappInvoicePreviewNotice, setMiniappInvoicePreviewNotice] = useState("");
   const [isMiniappInvoiceEditSubmitted, setIsMiniappInvoiceEditSubmitted] = useState(false);
   const [miniappInvoiceAssistantTab, setMiniappInvoiceAssistantTab] = useState("pending");
   const [selectedMiniappInvoiceOrderIds, setSelectedMiniappInvoiceOrderIds] = useState([]);
@@ -12860,6 +13074,13 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   });
   const [miniappAppliedModifyPickerField, setMiniappAppliedModifyPickerField] = useState("");
   const [miniappAppliedModifyPickerValue, setMiniappAppliedModifyPickerValue] = useState("");
+  const [miniappOpenFilterSheet, setMiniappOpenFilterSheet] = useState("");
+  const [miniappPendingDraftFilters, setMiniappPendingDraftFilters] = useState(initialMiniappPendingFilters);
+  const [miniappPendingFilters, setMiniappPendingFilters] = useState(initialMiniappPendingFilters);
+  const [miniappAppliedDraftFilters, setMiniappAppliedDraftFilters] = useState(initialMiniappAppliedFilters);
+  const [miniappAppliedFilters, setMiniappAppliedFilters] = useState(initialMiniappAppliedFilters);
+  const [miniappInvoicedDraftFilters, setMiniappInvoicedDraftFilters] = useState(initialMiniappInvoicedFilters);
+  const [miniappInvoicedFilters, setMiniappInvoicedFilters] = useState(initialMiniappInvoicedFilters);
   const categoryItems = [
     { key: "beauty", label: "美妆护肤", tone: "pink", emoji: "💄" },
     { key: "digital", label: "数码家电", tone: "cyan", emoji: "📷" },
@@ -13269,6 +13490,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   const isInvoiceBatchApplyView = isMineTab && miniappView === "invoice-batch-apply";
   const isInvoiceServiceChatView = isMineTab && miniappView === "invoice-service-chat";
   const isInvoiceAppliedModifyView = isMineTab && miniappView === "invoice-applied-modify";
+  const isMiniappInvoicePreviewPageView = isMineTab && miniappView === "invoice-preview";
   const isMiniappInvoiceOrderDetailView = isMineTab && miniappView === "invoice-order-detail";
   const isInvoiceDetailView = isMineTab && miniappView === "invoice";
   const isInvoiceEditView = isMineTab && miniappView === "invoice-edit";
@@ -13294,6 +13516,8 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       return {
         id: item.id,
         orderNo: item.orderNo || item.storeName,
+        buyerAccount: item.buyerAccount || getMiniappBuyerAccountLabel(item.orderNo || item.id),
+        invoiceBatch: item.invoiceBatch || "KPPC260508220001",
         orderedAt: item.orderedAt,
         applicationTime: item.orderedAt,
         storeName: item.storeName,
@@ -13319,6 +13543,8 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       return {
         id: item.id,
         orderNo: item.orderNo || item.storeName,
+        buyerAccount: item.buyerAccount || getMiniappBuyerAccountLabel(item.orderNo || item.id),
+        invoiceBatch: item.invoiceBatch || "KPPC260508220001",
         orderedAt: item.orderedAt,
         applicationTime: item.orderedAt,
         invoicedAt: item.invoicedAt || "-",
@@ -13334,6 +13560,50 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       };
     })
   ), [miniappInvoicedRecordItems, miniappInvoiceTitleMetaByTitle]);
+  const displayedMiniappAppliedInvoiceOrderCards = useMemo(() => {
+    const keyword = miniappAppliedFilters.keyword.trim().toLowerCase();
+    const startDate = getMiniappRangeStartDate(miniappAppliedFilters.dateRange);
+    return miniappAppliedInvoiceOrderCards.filter((item) => {
+      const searchText = [
+        item.orderNo,
+        item.storeName,
+        item.pickupStore,
+        item.title,
+        item.buyerAccount
+      ].join(" ").toLowerCase();
+      if (keyword && !searchText.includes(keyword)) return false;
+      if (!miniappAppliedFilters.buyerAccounts.includes("全部") && !miniappAppliedFilters.buyerAccounts.includes(item.buyerAccount)) return false;
+      if (miniappAppliedFilters.invoiceType !== "全部" && item.invoiceType !== miniappAppliedFilters.invoiceType) return false;
+      if (miniappAppliedFilters.separateInvoiceRequired !== "全部" && item.separateInvoiceRequired !== miniappAppliedFilters.separateInvoiceRequired) return false;
+      const appliedAt = Date.parse(String(item.applicationTime || "").replace(/-/g, "/"));
+      if (!Number.isNaN(appliedAt) && appliedAt < startDate.getTime()) return false;
+      return true;
+    });
+  }, [miniappAppliedFilters, miniappAppliedInvoiceOrderCards]);
+  const displayedMiniappInvoicedInvoiceOrderCards = useMemo(() => {
+    const keyword = miniappInvoicedFilters.keyword.trim().toLowerCase();
+    const startDate = getMiniappRangeStartDate(miniappInvoicedFilters.dateRange);
+    return miniappInvoicedInvoiceOrderCards.filter((item) => {
+      const searchText = [
+        item.orderNo,
+        item.storeName,
+        item.pickupStore,
+        item.invoiceNo,
+        item.title,
+        item.buyerAccount
+      ].join(" ").toLowerCase();
+      if (keyword && !searchText.includes(keyword)) return false;
+      if (!miniappInvoicedFilters.buyerAccounts.includes("全部") && !miniappInvoicedFilters.buyerAccounts.includes(item.buyerAccount)) return false;
+      if (miniappInvoicedFilters.invoiceType !== "全部" && item.invoiceType !== miniappInvoicedFilters.invoiceType) return false;
+      if (miniappInvoicedFilters.separateInvoiceRequired !== "全部" && item.separateInvoiceRequired !== miniappInvoicedFilters.separateInvoiceRequired) return false;
+      const invoicedAt = Date.parse(String(item.invoicedAt || "").replace(/-/g, "/"));
+      if (!Number.isNaN(invoicedAt) && invoicedAt < startDate.getTime()) return false;
+      return true;
+    });
+  }, [miniappInvoicedFilters, miniappInvoicedInvoiceOrderCards]);
+  const activeMiniappInvoicePreviewRecord = useMemo(() => (
+    miniappInvoicedRecordItems.find((item) => item.id === miniappInvoicePreviewRecordId) || null
+  ), [miniappInvoicePreviewRecordId, miniappInvoicedRecordItems]);
   const miniappInvoiceOrderDetailSeedByOrderNo = useMemo(() => ({
     "2026032400007151": {
       receiverName: "快速",
@@ -13353,97 +13623,8 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       orderPaid: 39.1,
       invoiceActionLabel: "查看发票",
       afterSaleDeadline: "2026/05/09 16:06后不能发起售后"
-    }
-  }), []);
-  const activeMiniappInvoiceOrderDetail = useMemo(() => {
-    if (!miniappInvoiceOrderDetailNo) return null;
-    const helperSeedEntry = Object.entries(miniappBatchInvoiceSeedByOrderId).find(([, item]) => item.orderNo === miniappInvoiceOrderDetailNo);
-    const helperOrder = helperSeedEntry
-      ? miniappInvoiceAssistantOrders.find((item) => item.id === helperSeedEntry[0])
-      : null;
-    const recordOrder = miniappInvoiceRecordItems.find((item) => item.orderNo === miniappInvoiceOrderDetailNo);
-    const buyerRow = buyerPcMallInvoiceRows.find((item) => item.orderNo === miniappInvoiceOrderDetailNo);
-    const detailSeed = miniappInvoiceOrderDetailSeedByOrderNo[miniappInvoiceOrderDetailNo] || {};
-    const storeName = recordOrder?.storeName
-      || buyerRow?.shop
-      || helperOrder?.storeName
-      || "订单店铺";
-    const cleanStoreName = String(storeName).replace(/\([^)]*\)\s*$/, "").trim();
-    const fallbackBuyerPrice = String(buyerRow?.price || "0").replace(/[^\d.]/g, "");
-    const orderAmount = Number(
-      recordOrder?.amount
-      ?? recordOrder?.applyAmount
-      ?? helperSeedEntry?.[1]?.orderAmount
-      ?? helperOrder?.invoiceAmount
-      ?? fallbackBuyerPrice
-      ?? 0
-    );
-    const quantity = Number(detailSeed.quantity || helperOrder?.itemCount || 1);
-    const goodsAmount = Number(detailSeed.goodsAmount ?? orderAmount);
-    const fullReductionAmount = Number(detailSeed.fullReductionAmount ?? 0);
-    const discountAmount = Number(detailSeed.discountAmount ?? 0);
-    const shippingFee = Number(detailSeed.shippingFee ?? 0);
-    const orderTotal = Number(detailSeed.orderTotal ?? Math.max(goodsAmount - fullReductionAmount - discountAmount + shippingFee, 0));
-    const orderPaid = Number(detailSeed.orderPaid ?? orderTotal);
-    const unitPrice = Number(detailSeed.unitPrice ?? (quantity > 0 ? goodsAmount / quantity : goodsAmount));
-    const status = recordOrder?.status === "已开票" ? "已开票" : recordOrder?.status === "待开票" ? "已申请" : "已完成";
-    return {
-      orderNo: miniappInvoiceOrderDetailNo,
-      orderStatusText: buyerRow?.orderStatus || "已完成",
-      storeStatusText: buyerRow?.orderStatus || "已完成",
-      storeName: cleanStoreName || "订单店铺",
-      receiverName: detailSeed.receiverName || "快速",
-      receiverPhone: detailSeed.receiverPhone || "15151515151",
-      receiverAddress: detailSeed.receiverAddress || "北京市朝阳区酒仙桥街道望京东路 1 号 1 单元 101",
-      productName: detailSeed.productName || buyerRow?.product || `${cleanStoreName}商品`,
-      productSpec: detailSeed.productSpec || buyerRow?.spec || "默认规格",
-      productStatus: detailSeed.productStatus || "已发",
-      imageTone: detailSeed.imageTone || buyerRow?.productTone || recordOrder?.images?.[0] || helperOrder?.images?.[0] || "cover",
-      unitPrice,
-      quantity,
-      goodsAmount,
-      fullReductionAmount,
-      discountAmount,
-      shippingFee,
-      orderTotal,
-      orderPaid,
-      paymentMethod: recordOrder?.paymentMethod || helperOrder?.paymentMethod || buyerRow?.paymentMethod || "先款后货",
-      paymentChannel: detailSeed.paymentChannel || "美团(网联微信小程序支付)",
-      paymentStatus: detailSeed.paymentStatus || "已付款",
-      pickupStore: recordOrder?.pickupStore || helperSeedEntry?.[1]?.pickupStore || `${buyerRow?.store || "-"}${buyerRow?.storeId || ""}` || "-",
-      title: recordOrder?.title || detailSeed.title || helperSeedEntry?.[1]?.defaultTitleValue || "美团",
-      invoiceType: recordOrder?.invoiceType || detailSeed.invoiceType || miniappInvoiceTitleMetaByTitle[recordOrder?.title || helperSeedEntry?.[1]?.defaultTitleValue || ""]?.invoiceType || "电子普通发票",
-      separateInvoiceRequired: recordOrder?.separateInvoiceRequired || detailSeed.separateInvoiceRequired || "否",
-      invoiceActionLabel: detailSeed.invoiceActionLabel || "查看发票",
-      invoiceStatus: status,
-      afterSaleDeadline: detailSeed.afterSaleDeadline || `${String(recordOrder?.orderedAt || helperOrder?.orderedAt || buyerRow?.time || "2026/05/09 16:06").replace(/-/g, "/")}后不能发起售后`
-    };
-  }, [
-    miniappBatchInvoiceSeedByOrderId,
-    miniappInvoiceAssistantOrders,
-    miniappInvoiceOrderDetailNo,
-    miniappInvoiceOrderDetailSeedByOrderNo,
-    miniappInvoiceRecordItems,
-    miniappInvoiceTitleMetaByTitle
-  ]);
-  const isMiniappInvoicePendingTab = miniappInvoiceAssistantTab === "pending";
-  const isMiniappInvoiceAppliedTab = miniappInvoiceAssistantTab === "applied";
-  const isMiniappInvoiceInvoicedTab = miniappInvoiceAssistantTab === "invoiced";
-  const isMiniappInvoicePageAllSelected = selectableMiniappInvoiceOrders.length > 0
-    && selectableMiniappInvoiceOrders.every((item) => selectedMiniappInvoiceOrderIds.includes(item.id));
-  const hasSelectedMiniappAppliedRecords = selectedMiniappAppliedRecordIds.length > 0;
-  const isMiniappAppliedPageAllSelected = miniappAppliedInvoiceOrderCards.length > 0
-    && miniappAppliedInvoiceOrderCards.every((item) => selectedMiniappAppliedRecordIds.includes(item.id));
-  const selectedMiniappInvoiceSummary = useMemo(() => {
-    const selectedSet = new Set(selectedMiniappInvoiceOrderIds);
-    return miniappInvoiceAssistantOrders.reduce((summary, item) => {
-      if (!selectedSet.has(item.id)) return summary;
-      return {
-        totalAmount: summary.totalAmount + Number(item.footerAmount || 0),
-        orderCount: summary.orderCount + Number(item.footerOrderCount || 0)
-      };
-    }, { totalAmount: 0, orderCount: 0 });
-  }, [miniappInvoiceAssistantOrders, selectedMiniappInvoiceOrderIds]);
+      }
+    }), []);
   const miniappBatchInvoiceSeedByOrderId = useMemo(() => ({
     "invoice-helper-1": {
       orderNo: "20260212022895768",
@@ -13542,6 +13723,194 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       receiverEmail: "buyer@corp.com"
     }
   }), []);
+  const displayedMiniappPendingOrders = useMemo(() => {
+    const keyword = miniappPendingFilters.keyword.trim().toLowerCase();
+    const startDate = getMiniappRangeStartDate(miniappPendingFilters.dateRange);
+    return miniappInvoiceAssistantOrders.filter((item) => {
+      const seed = miniappBatchInvoiceSeedByOrderId[item.id] || {};
+      const buyerAccount = getMiniappBuyerAccountLabel(seed.orderNo || item.id);
+      const searchText = [
+        seed.orderNo,
+        item.storeName,
+        seed.pickupStore,
+        item.paymentMethod,
+        buyerAccount
+      ].join(" ").toLowerCase();
+      if (keyword && !searchText.includes(keyword)) return false;
+      if (!miniappPendingFilters.buyerAccounts.includes("全部") && !miniappPendingFilters.buyerAccounts.includes(buyerAccount)) return false;
+      if (miniappPendingFilters.paymentMethod !== "全部" && item.paymentMethod !== miniappPendingFilters.paymentMethod) return false;
+      if (miniappPendingFilters.afterSaleStatus !== "全部" && (seed.afterSaleStatus || "-") !== miniappPendingFilters.afterSaleStatus) return false;
+      const orderedAt = Date.parse(String(item.orderedAt || "").replace(/-/g, "/"));
+      if (!Number.isNaN(orderedAt) && orderedAt < startDate.getTime()) return false;
+      return true;
+    });
+  }, [miniappBatchInvoiceSeedByOrderId, miniappInvoiceAssistantOrders, miniappPendingFilters]);
+  const activeMiniappInvoicePreviewDetail = useMemo(() => {
+    if (!activeMiniappInvoicePreviewRecord) return null;
+    const titleMeta = miniappInvoiceTitleMetaByTitle[activeMiniappInvoicePreviewRecord.title] || {};
+    const detailSeed = miniappInvoiceOrderDetailSeedByOrderNo[activeMiniappInvoicePreviewRecord.orderNo] || {};
+    const productRows = buyerPcMallProductDetailSeed[activeMiniappInvoicePreviewRecord.orderNo] || [{
+      product: "多规格（普）商品A【批量造...】",
+      spec: "默认规格",
+      unitPrice: formatMoneyDisplay(activeMiniappInvoicePreviewRecord.amount || 0),
+      quantity: "1",
+      subtotal: formatMoneyDisplay(activeMiniappInvoicePreviewRecord.amount || 0)
+    }];
+    const invoiceAmountWithTax = formatMoneyDisplay(activeMiniappInvoicePreviewRecord.amount || 0);
+    const invoiceAmountWithoutTax = formatMoneyDisplay(Math.max(Number(activeMiniappInvoicePreviewRecord.amount || 0) - 0.04, 0));
+
+    return {
+      invoiceInfo: {
+        invoiceNo: activeMiniappInvoicePreviewRecord.invoiceNo || "-",
+        invoiceType: activeMiniappInvoicePreviewRecord.invoiceType || titleMeta.invoiceType || "电子普通发票",
+        invoicedAt: activeMiniappInvoicePreviewRecord.invoicedAt || "-",
+        invoiceAmountWithTax,
+        invoiceAmountWithoutTax
+      },
+      titleInfo: {
+        invoiceTitle: activeMiniappInvoicePreviewRecord.title || "-",
+        taxpayerId: titleMeta.taxNo || "-",
+        isPersonalTitle: isPersonalInvoiceTitle(activeMiniappInvoicePreviewRecord.title),
+        hideExtendedTitleFields: shouldHideInvoiceTitleExtendedFields(
+          activeMiniappInvoicePreviewRecord.invoiceType || titleMeta.invoiceType || "",
+          activeMiniappInvoicePreviewRecord.title || ""
+        )
+      },
+      orderInfo: {
+        orderNo: activeMiniappInvoicePreviewRecord.orderNo || "-",
+        buyerAccount: "Shawnee003(ID: 18166)",
+        orderStatus: "已完成",
+        paidAt: activeMiniappInvoicePreviewRecord.orderedAt || "-"
+      },
+      summary: {
+        orderAmount: formatMoneyDisplay(activeMiniappInvoicePreviewRecord.amount || 0),
+        afterSaleAmount: formatMoneyDisplay(0),
+        applyInvoiceAmount: invoiceAmountWithTax,
+        shouldInvoiceAmount: invoiceAmountWithTax
+      },
+      items: productRows.map((item) => ({
+        product: item.product || "-",
+        spec: item.spec || "-",
+        unitPrice: item.unitPrice || "-",
+        quantity: item.quantity || "-",
+        subtotal: item.subtotal || "-"
+      })),
+      receiverInfo: {
+        phone: detailSeed.receiverPhone || "15151515151",
+        email: activeMiniappInvoicePreviewRecord.receiverEmail || "123@qq.com"
+      }
+    };
+  }, [
+    activeMiniappInvoicePreviewRecord,
+    buyerPcMallProductDetailSeed,
+    miniappInvoiceOrderDetailSeedByOrderNo,
+    miniappInvoiceTitleMetaByTitle
+  ]);
+  const activeMiniappInvoicePreviewImageUrl = useMemo(() => {
+    if (!activeMiniappInvoicePreviewDetail) return "";
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(buildShopInvoicePreviewSvg(activeMiniappInvoicePreviewDetail))}`;
+  }, [activeMiniappInvoicePreviewDetail]);
+  const activeMiniappInvoicePreviewPdfLink = useMemo(() => {
+    const invoiceNo = String(activeMiniappInvoicePreviewRecord?.invoiceNo || "").trim();
+    if (!invoiceNo) return "";
+    return `https://download.shandianbangbang.com/invoice/${invoiceNo}.pdf`;
+  }, [activeMiniappInvoicePreviewRecord]);
+  const activeMiniappInvoiceOrderDetail = useMemo(() => {
+    if (!miniappInvoiceOrderDetailNo) return null;
+    const helperSeedEntry = Object.entries(miniappBatchInvoiceSeedByOrderId).find(([, item]) => item.orderNo === miniappInvoiceOrderDetailNo);
+    const helperOrder = helperSeedEntry
+      ? miniappInvoiceAssistantOrders.find((item) => item.id === helperSeedEntry[0])
+      : null;
+    const recordOrder = miniappInvoiceRecordItems.find((item) => item.orderNo === miniappInvoiceOrderDetailNo);
+    const buyerRow = buyerPcMallInvoiceRows.find((item) => item.orderNo === miniappInvoiceOrderDetailNo);
+    const detailSeed = miniappInvoiceOrderDetailSeedByOrderNo[miniappInvoiceOrderDetailNo] || {};
+    const storeName = recordOrder?.storeName
+      || buyerRow?.shop
+      || helperOrder?.storeName
+      || "订单店铺";
+    const cleanStoreName = String(storeName).replace(/\([^)]*\)\s*$/, "").trim();
+    const fallbackBuyerPrice = String(buyerRow?.price || "0").replace(/[^\d.]/g, "");
+    const orderAmount = Number(
+      recordOrder?.amount
+      ?? recordOrder?.applyAmount
+      ?? helperSeedEntry?.[1]?.orderAmount
+      ?? helperOrder?.invoiceAmount
+      ?? fallbackBuyerPrice
+      ?? 0
+    );
+    const quantity = Number(detailSeed.quantity || helperOrder?.itemCount || 1);
+    const goodsAmount = Number(detailSeed.goodsAmount ?? orderAmount);
+    const fullReductionAmount = Number(detailSeed.fullReductionAmount ?? 0);
+    const discountAmount = Number(detailSeed.discountAmount ?? 0);
+    const shippingFee = Number(detailSeed.shippingFee ?? 0);
+    const orderTotal = Number(detailSeed.orderTotal ?? Math.max(goodsAmount - fullReductionAmount - discountAmount + shippingFee, 0));
+    const orderPaid = Number(detailSeed.orderPaid ?? orderTotal);
+    const unitPrice = Number(detailSeed.unitPrice ?? (quantity > 0 ? goodsAmount / quantity : goodsAmount));
+    const status = recordOrder?.status === "已开票" ? "已开票" : recordOrder?.status === "待开票" ? "已申请" : "已完成";
+    return {
+      orderNo: miniappInvoiceOrderDetailNo,
+      orderStatusText: buyerRow?.orderStatus || "已完成",
+      storeStatusText: buyerRow?.orderStatus || "已完成",
+      storeName: cleanStoreName || "订单店铺",
+      receiverName: detailSeed.receiverName || "快速",
+      receiverPhone: detailSeed.receiverPhone || "15151515151",
+      receiverAddress: detailSeed.receiverAddress || "北京市朝阳区酒仙桥街道望京东路 1 号 1 单元 101",
+      productName: detailSeed.productName || buyerRow?.product || `${cleanStoreName}商品`,
+      productSpec: detailSeed.productSpec || buyerRow?.spec || "默认规格",
+      productStatus: detailSeed.productStatus || "已发",
+      imageTone: detailSeed.imageTone || buyerRow?.productTone || recordOrder?.images?.[0] || helperOrder?.images?.[0] || "cover",
+      unitPrice,
+      quantity,
+      goodsAmount,
+      fullReductionAmount,
+      discountAmount,
+      shippingFee,
+      orderTotal,
+      orderPaid,
+      paymentMethod: recordOrder?.paymentMethod || helperOrder?.paymentMethod || buyerRow?.paymentMethod || "先款后货",
+      paymentChannel: detailSeed.paymentChannel || "美团(网联微信小程序支付)",
+      paymentStatus: detailSeed.paymentStatus || "已付款",
+      pickupStore: recordOrder?.pickupStore || helperSeedEntry?.[1]?.pickupStore || `${buyerRow?.store || "-"}${buyerRow?.storeId || ""}` || "-",
+      title: recordOrder?.title || detailSeed.title || helperSeedEntry?.[1]?.defaultTitleValue || "美团",
+      invoiceType: recordOrder?.invoiceType || detailSeed.invoiceType || miniappInvoiceTitleMetaByTitle[recordOrder?.title || helperSeedEntry?.[1]?.defaultTitleValue || ""]?.invoiceType || "电子普通发票",
+      separateInvoiceRequired: recordOrder?.separateInvoiceRequired || detailSeed.separateInvoiceRequired || "否",
+      invoiceActionLabel: detailSeed.invoiceActionLabel || "查看发票",
+      invoiceStatus: status,
+      afterSaleDeadline: detailSeed.afterSaleDeadline || `${String(recordOrder?.orderedAt || helperOrder?.orderedAt || buyerRow?.time || "2026/05/09 16:06").replace(/-/g, "/")}后不能发起售后`
+    };
+  }, [
+    miniappBatchInvoiceSeedByOrderId,
+    miniappInvoiceAssistantOrders,
+    miniappInvoiceOrderDetailNo,
+    miniappInvoiceOrderDetailSeedByOrderNo,
+    miniappInvoiceRecordItems,
+    miniappInvoiceTitleMetaByTitle
+  ]);
+  useEffect(() => {
+    if (!miniappInvoicePreviewNotice) return undefined;
+    const timer = window.setTimeout(() => {
+      setMiniappInvoicePreviewNotice("");
+    }, 2400);
+    return () => window.clearTimeout(timer);
+  }, [miniappInvoicePreviewNotice]);
+  const isMiniappInvoicePendingTab = miniappInvoiceAssistantTab === "pending";
+  const isMiniappInvoiceAppliedTab = miniappInvoiceAssistantTab === "applied";
+  const isMiniappInvoiceInvoicedTab = miniappInvoiceAssistantTab === "invoiced";
+  const isMiniappInvoicePageAllSelected = displayedMiniappPendingOrders.length > 0
+    && displayedMiniappPendingOrders.every((item) => selectedMiniappInvoiceOrderIds.includes(item.id));
+  const hasSelectedMiniappAppliedRecords = selectedMiniappAppliedRecordIds.length > 0;
+  const isMiniappAppliedPageAllSelected = displayedMiniappAppliedInvoiceOrderCards.length > 0
+    && displayedMiniappAppliedInvoiceOrderCards.every((item) => selectedMiniappAppliedRecordIds.includes(item.id));
+  const selectedMiniappInvoiceSummary = useMemo(() => {
+    const selectedSet = new Set(selectedMiniappInvoiceOrderIds);
+    return miniappInvoiceAssistantOrders.reduce((summary, item) => {
+      if (!selectedSet.has(item.id)) return summary;
+      return {
+        totalAmount: summary.totalAmount + Number(item.footerAmount || 0),
+        orderCount: summary.orderCount + Number(item.footerOrderCount || 0)
+      };
+    }, { totalAmount: 0, orderCount: 0 });
+  }, [miniappInvoiceAssistantOrders, selectedMiniappInvoiceOrderIds]);
   const miniappServiceOrderMetaById = useMemo(() => ({
     "invoice-helper-1": { orderStatus: "已完成", serviceAgentName: "蓝月亮旗舰店客服" },
     "invoice-helper-2": { orderStatus: "已完成", serviceAgentName: "松鼠便利店客服" },
@@ -13672,8 +14041,8 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   const handleToggleMiniappInvoicePage = () => {
     setSelectedMiniappInvoiceOrderIds((current) => (
       isMiniappInvoicePageAllSelected
-        ? current.filter((item) => !selectableMiniappInvoiceOrders.some((order) => order.id === item))
-        : selectableMiniappInvoiceOrders.map((item) => item.id)
+        ? current.filter((item) => !displayedMiniappPendingOrders.some((order) => order.id === item))
+        : displayedMiniappPendingOrders.map((item) => item.id)
     ));
   };
   const handleToggleMiniappAppliedRecord = (recordId) => {
@@ -13686,10 +14055,100 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   const handleToggleMiniappAppliedPage = () => {
     setSelectedMiniappAppliedRecordIds((current) => (
       isMiniappAppliedPageAllSelected
-        ? current.filter((item) => !miniappAppliedInvoiceOrderCards.some((record) => record.id === item))
-        : miniappAppliedInvoiceOrderCards.map((item) => item.id)
-    ));
+        ? current.filter((item) => !displayedMiniappAppliedInvoiceOrderCards.some((record) => record.id === item))
+        : displayedMiniappAppliedInvoiceOrderCards.map((item) => item.id)
+      ));
   };
+  const handleOpenMiniappFilterSheet = useCallback(() => {
+    if (isMiniappInvoicePendingTab) {
+      setMiniappPendingDraftFilters(miniappPendingFilters);
+      setMiniappOpenFilterSheet("pending");
+      return;
+    }
+    if (isMiniappInvoiceAppliedTab) {
+      setMiniappAppliedDraftFilters(miniappAppliedFilters);
+      setMiniappOpenFilterSheet("applied");
+      return;
+    }
+    if (isMiniappInvoiceInvoicedTab) {
+      setMiniappInvoicedDraftFilters(miniappInvoicedFilters);
+      setMiniappOpenFilterSheet("invoiced");
+    }
+  }, [
+    isMiniappInvoiceAppliedTab,
+    isMiniappInvoiceInvoicedTab,
+    isMiniappInvoicePendingTab,
+    miniappAppliedFilters,
+    miniappInvoicedFilters,
+    miniappPendingFilters
+  ]);
+  const handleResetMiniappFilterSheet = useCallback(() => {
+    if (miniappOpenFilterSheet === "pending") {
+      setMiniappPendingDraftFilters(initialMiniappPendingFilters);
+      setMiniappPendingFilters(initialMiniappPendingFilters);
+      setSelectedMiniappInvoiceOrderIds([]);
+      return;
+    }
+    if (miniappOpenFilterSheet === "applied") {
+      setMiniappAppliedDraftFilters(initialMiniappAppliedFilters);
+      setMiniappAppliedFilters(initialMiniappAppliedFilters);
+      setSelectedMiniappAppliedRecordIds([]);
+      return;
+    }
+    if (miniappOpenFilterSheet === "invoiced") {
+      setMiniappInvoicedDraftFilters(initialMiniappInvoicedFilters);
+      setMiniappInvoicedFilters(initialMiniappInvoicedFilters);
+    }
+  }, [miniappOpenFilterSheet]);
+  const handleConfirmMiniappFilterSheet = useCallback(() => {
+    if (miniappOpenFilterSheet === "pending") {
+      setMiniappPendingFilters(miniappPendingDraftFilters);
+      setSelectedMiniappInvoiceOrderIds([]);
+    }
+    if (miniappOpenFilterSheet === "applied") {
+      setMiniappAppliedFilters(miniappAppliedDraftFilters);
+      setSelectedMiniappAppliedRecordIds([]);
+    }
+    if (miniappOpenFilterSheet === "invoiced") {
+      setMiniappInvoicedFilters(miniappInvoicedDraftFilters);
+    }
+    setMiniappOpenFilterSheet("");
+  }, [
+    miniappAppliedDraftFilters,
+    miniappInvoicedDraftFilters,
+    miniappOpenFilterSheet,
+    miniappPendingDraftFilters
+  ]);
+  const handleOpenMiniappInvoicePreview = useCallback((recordId) => {
+    setMiniappInvoicePreviewRecordId(recordId);
+    setMiniappInvoicePreviewScale(1);
+    setMiniappInvoicePreviewRotation(0);
+    setIsMiniappPdfCopyDialogOpen(false);
+    setMiniappInvoicePreviewNotice("");
+    setMiniappView("invoice-preview");
+  }, []);
+  const handleCopyMiniappPdfLink = useCallback(async () => {
+    if (!activeMiniappInvoicePreviewPdfLink) return;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(activeMiniappInvoicePreviewPdfLink);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = activeMiniappInvoicePreviewPdfLink;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "absolute";
+        textarea.style.left = "-9999px";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+      setIsMiniappPdfCopyDialogOpen(false);
+      setMiniappInvoicePreviewNotice("PDF链接已复制，可在浏览器中打开并下载文件");
+    } catch (error) {
+      setMiniappInvoicePreviewNotice("复制失败，请稍后重试");
+    }
+  }, [activeMiniappInvoicePreviewPdfLink]);
   const handleOpenMiniappAppliedCancelConfirm = () => {
     if (!hasSelectedMiniappAppliedRecords) {
       setMiniappBatchErrorToast("请先勾选已申请开票订单，再进行撤销。");
@@ -13784,6 +14243,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
 
   return (
     <div className="miniapp-preview-shell">
+      {miniappInvoicePreviewNotice ? <div className="page-toast">{miniappInvoicePreviewNotice}</div> : null}
       <aside className="miniapp-system-entry-panel" aria-label="系统入口">
         <div className="miniapp-system-entry-title">系统入口</div>
         <div className="miniapp-system-entry-list">
@@ -14183,7 +14643,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                       <button className={`miniapp-assistant-tab ${isMiniappInvoiceAppliedTab ? "is-active" : ""}`} type="button" onClick={() => setMiniappInvoiceAssistantTab("applied")}>已申请开票</button>
                       <button className={`miniapp-assistant-tab ${isMiniappInvoiceInvoicedTab ? "is-active" : ""}`} type="button" onClick={() => setMiniappInvoiceAssistantTab("invoiced")}>已开具发票</button>
                     </div>
-                    <button className="miniapp-assistant-filter-btn" type="button">
+                    <button className="miniapp-assistant-filter-btn" type="button" onClick={handleOpenMiniappFilterSheet}>
                       <span>☰</span>
                       <strong>筛选</strong>
                     </button>
@@ -14191,7 +14651,22 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
 
                   {isMiniappInvoicePendingTab ? (
                     <div className="miniapp-assistant-order-list">
-                      {miniappInvoiceAssistantOrders.map((item) => {
+                      {displayedMiniappPendingOrders.length === 0 ? (
+                        <div className="miniapp-assistant-empty-state">
+                          <div className="miniapp-assistant-empty-illustration" aria-hidden="true">
+                            <span className="miniapp-assistant-empty-head" />
+                            <span className="miniapp-assistant-empty-ear is-left" />
+                            <span className="miniapp-assistant-empty-ear is-right" />
+                            <span className="miniapp-assistant-empty-body" />
+                            <span className="miniapp-assistant-empty-eye" />
+                            <span className="miniapp-assistant-empty-arm" />
+                            <span className="miniapp-assistant-empty-leg is-left" />
+                            <span className="miniapp-assistant-empty-leg is-right" />
+                            <span className="miniapp-assistant-empty-question">?</span>
+                          </div>
+                          <div className="miniapp-assistant-empty-text">还没有相关数据哦，可尝试切换筛选条件~</div>
+                        </div>
+                      ) : displayedMiniappPendingOrders.map((item) => {
                         const isSelected = selectedMiniappInvoiceOrderIds.includes(item.id);
                         const isDisabled = isMiniappInvoiceOrderDisabled(item);
                         return (
@@ -14251,7 +14726,22 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                     </div>
                   ) : isMiniappInvoiceAppliedTab ? (
                     <div className="miniapp-assistant-order-list">
-                      {miniappAppliedInvoiceOrderCards.map((item) => (
+                      {displayedMiniappAppliedInvoiceOrderCards.length === 0 ? (
+                        <div className="miniapp-assistant-empty-state">
+                          <div className="miniapp-assistant-empty-illustration" aria-hidden="true">
+                            <span className="miniapp-assistant-empty-head" />
+                            <span className="miniapp-assistant-empty-ear is-left" />
+                            <span className="miniapp-assistant-empty-ear is-right" />
+                            <span className="miniapp-assistant-empty-body" />
+                            <span className="miniapp-assistant-empty-eye" />
+                            <span className="miniapp-assistant-empty-arm" />
+                            <span className="miniapp-assistant-empty-leg is-left" />
+                            <span className="miniapp-assistant-empty-leg is-right" />
+                            <span className="miniapp-assistant-empty-question">?</span>
+                          </div>
+                          <div className="miniapp-assistant-empty-text">还没有相关数据哦，可尝试切换筛选条件~</div>
+                        </div>
+                      ) : displayedMiniappAppliedInvoiceOrderCards.map((item) => (
                         <section className="miniapp-assistant-order-card is-record-view is-batch-display" key={item.id}>
                           <button
                             className={`miniapp-assistant-record-check ${selectedMiniappAppliedRecordIds.includes(item.id) ? "is-selected" : ""}`}
@@ -14270,6 +14760,10 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                               <span className="miniapp-batch-after-sale-tag is-warning">已申请</span>
                             </div>
                             <div className="miniapp-batch-grid">
+                              <div className="miniapp-batch-field is-store">
+                                <span>开票批次</span>
+                                <strong>{item.invoiceBatch}</strong>
+                              </div>
                               <div className="miniapp-batch-field is-store is-contact-entry">
                                 <span>店铺名称</span>
                                 <strong>{item.storeName}</strong>
@@ -14310,7 +14804,22 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                     </div>
                   ) : isMiniappInvoiceInvoicedTab ? (
                     <div className="miniapp-assistant-order-list">
-                      {miniappInvoicedInvoiceOrderCards.map((item) => (
+                      {displayedMiniappInvoicedInvoiceOrderCards.length === 0 ? (
+                        <div className="miniapp-assistant-empty-state">
+                          <div className="miniapp-assistant-empty-illustration" aria-hidden="true">
+                            <span className="miniapp-assistant-empty-head" />
+                            <span className="miniapp-assistant-empty-ear is-left" />
+                            <span className="miniapp-assistant-empty-ear is-right" />
+                            <span className="miniapp-assistant-empty-body" />
+                            <span className="miniapp-assistant-empty-eye" />
+                            <span className="miniapp-assistant-empty-arm" />
+                            <span className="miniapp-assistant-empty-leg is-left" />
+                            <span className="miniapp-assistant-empty-leg is-right" />
+                            <span className="miniapp-assistant-empty-question">?</span>
+                          </div>
+                          <div className="miniapp-assistant-empty-text">还没有相关数据哦，可尝试切换筛选条件~</div>
+                        </div>
+                      ) : displayedMiniappInvoicedInvoiceOrderCards.map((item) => (
                         <section className="miniapp-assistant-order-card is-record-view is-batch-display is-invoiced-view" key={item.id}>
                           <article className="miniapp-batch-card miniapp-assistant-applied-batch-card">
                             <div className="miniapp-batch-card-head">
@@ -14321,6 +14830,10 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                               <span className="miniapp-batch-after-sale-tag is-success">已开票</span>
                             </div>
                             <div className="miniapp-batch-grid">
+                              <div className="miniapp-batch-field is-store">
+                                <span>开票批次</span>
+                                <strong>{item.invoiceBatch}</strong>
+                              </div>
                               <div className="miniapp-batch-field is-store is-contact-entry">
                                 <span>店铺名称</span>
                                 <strong>{item.storeName}</strong>
@@ -14344,7 +14857,10 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                               </div>
                               <div className="miniapp-batch-field is-store">
                                 <span>发票号码</span>
-                                <strong>{item.invoiceNo}</strong>
+                                <strong className="miniapp-batch-inline-action-value">
+                                  <span>{item.invoiceNo}</span>
+                                  <button className="miniapp-batch-preview-link" type="button" onClick={() => handleOpenMiniappInvoicePreview(item.id)}>预览</button>
+                                </strong>
                               </div>
                               <div className="miniapp-batch-field is-store">
                                 <span>闪购门店</span>
@@ -14383,6 +14899,189 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                     </div>
                   )}
                 </main>
+
+                {miniappOpenFilterSheet ? (
+                  <div className="miniapp-order-overlay miniapp-filter-overlay" onClick={() => setMiniappOpenFilterSheet("")}>
+                    <div className="miniapp-filter-sheet" onClick={(event) => event.stopPropagation()}>
+                      <div className="miniapp-filter-sheet-head">
+                        <strong>筛选</strong>
+                      </div>
+                      <div className="miniapp-filter-sheet-body">
+                        {miniappOpenFilterSheet === "pending" ? (
+                          <>
+                            <label className="miniapp-filter-field">
+                              <span>关键字搜索</span>
+                              <input value={miniappPendingDraftFilters.keyword} onChange={(event) => setMiniappPendingDraftFilters((current) => ({ ...current, keyword: event.target.value }))} placeholder="请输入订单号/店铺名称/闪购门店" />
+                            </label>
+                            <div className="miniapp-filter-field">
+                              <span>支付时间</span>
+                              <div className="miniapp-filter-chip-row">
+                                {miniappFilterDateRangeOptions.map((item) => (
+                                  <button className={`miniapp-filter-chip ${miniappPendingDraftFilters.dateRange === item.value ? "is-active" : ""}`} key={`pending-${item.value}`} type="button" onClick={() => setMiniappPendingDraftFilters((current) => ({ ...current, dateRange: item.value }))}>{item.label}</button>
+                                ))}
+                              </div>
+                              <div className="miniapp-filter-date-row">
+                                <strong>{formatMiniappDateInputValue(getMiniappRangeStartDate(miniappPendingDraftFilters.dateRange))}</strong>
+                                <em>-</em>
+                                <strong>{formatMiniappDateInputValue(new Date())}</strong>
+                              </div>
+                            </div>
+                            <div className="miniapp-filter-field">
+                              <span>下单账号（多选）</span>
+                              <div className="miniapp-filter-chip-row">
+                                {miniappBuyerAccountOptions.map((item) => (
+                                  <button
+                                    className={`miniapp-filter-chip ${miniappPendingDraftFilters.buyerAccounts.includes(item) ? "is-active" : ""}`}
+                                    key={`pending-account-${item}`}
+                                    type="button"
+                                    onClick={() => setMiniappPendingDraftFilters((current) => ({
+                                      ...current,
+                                      buyerAccounts: toggleMiniappBuyerAccountSelection(current.buyerAccounts, item)
+                                    }))}
+                                  >
+                                    {item}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="miniapp-filter-field">
+                              <span>付款方式</span>
+                              <div className="miniapp-filter-chip-row">
+                                {["全部", "先款后货", "先货后款"].map((item) => (
+                                  <button className={`miniapp-filter-chip ${miniappPendingDraftFilters.paymentMethod === item ? "is-active" : ""}`} key={`pending-payment-${item}`} type="button" onClick={() => setMiniappPendingDraftFilters((current) => ({ ...current, paymentMethod: item }))}>{item}</button>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="miniapp-filter-field">
+                              <span>售后状态</span>
+                              <div className="miniapp-filter-chip-row">
+                                {["全部", "售后中", "部分退款", "售后关闭"].map((item) => (
+                                  <button className={`miniapp-filter-chip ${miniappPendingDraftFilters.afterSaleStatus === item ? "is-active" : ""}`} key={`pending-after-sale-${item}`} type="button" onClick={() => setMiniappPendingDraftFilters((current) => ({ ...current, afterSaleStatus: item }))}>{item}</button>
+                                ))}
+                              </div>
+                            </div>
+                          </>
+                        ) : null}
+
+                        {miniappOpenFilterSheet === "applied" ? (
+                          <>
+                            <label className="miniapp-filter-field">
+                              <span>关键字搜索</span>
+                              <input value={miniappAppliedDraftFilters.keyword} onChange={(event) => setMiniappAppliedDraftFilters((current) => ({ ...current, keyword: event.target.value }))} placeholder="请输入订单号/店铺名称/发票抬头/闪购门店" />
+                            </label>
+                            <div className="miniapp-filter-field">
+                              <span>申请时间</span>
+                              <div className="miniapp-filter-chip-row">
+                                {miniappFilterDateRangeOptions.map((item) => (
+                                  <button className={`miniapp-filter-chip ${miniappAppliedDraftFilters.dateRange === item.value ? "is-active" : ""}`} key={`applied-${item.value}`} type="button" onClick={() => setMiniappAppliedDraftFilters((current) => ({ ...current, dateRange: item.value }))}>{item.label}</button>
+                                ))}
+                              </div>
+                              <div className="miniapp-filter-date-row">
+                                <strong>{formatMiniappDateInputValue(getMiniappRangeStartDate(miniappAppliedDraftFilters.dateRange))}</strong>
+                                <em>-</em>
+                                <strong>{formatMiniappDateInputValue(new Date())}</strong>
+                              </div>
+                            </div>
+                            <div className="miniapp-filter-field">
+                              <span>下单账号（多选）</span>
+                              <div className="miniapp-filter-chip-row">
+                                {miniappBuyerAccountOptions.map((item) => (
+                                  <button
+                                    className={`miniapp-filter-chip ${miniappAppliedDraftFilters.buyerAccounts.includes(item) ? "is-active" : ""}`}
+                                    key={`applied-account-${item}`}
+                                    type="button"
+                                    onClick={() => setMiniappAppliedDraftFilters((current) => ({
+                                      ...current,
+                                      buyerAccounts: toggleMiniappBuyerAccountSelection(current.buyerAccounts, item)
+                                    }))}
+                                  >
+                                    {item}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="miniapp-filter-field">
+                              <span>发票类型</span>
+                              <div className="miniapp-filter-chip-row">
+                                {["全部", "电子普通发票", "电子增值税专用发票"].map((item) => (
+                                  <button className={`miniapp-filter-chip ${miniappAppliedDraftFilters.invoiceType === item ? "is-active" : ""}`} key={`applied-type-${item}`} type="button" onClick={() => setMiniappAppliedDraftFilters((current) => ({ ...current, invoiceType: item }))}>{item}</button>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="miniapp-filter-field">
+                              <span>需要单独开票</span>
+                              <div className="miniapp-filter-chip-row">
+                                {["全部", "是", "否"].map((item) => (
+                                  <button className={`miniapp-filter-chip ${miniappAppliedDraftFilters.separateInvoiceRequired === item ? "is-active" : ""}`} key={`applied-single-${item}`} type="button" onClick={() => setMiniappAppliedDraftFilters((current) => ({ ...current, separateInvoiceRequired: item }))}>{item}</button>
+                                ))}
+                              </div>
+                            </div>
+                          </>
+                        ) : null}
+
+                        {miniappOpenFilterSheet === "invoiced" ? (
+                          <>
+                            <label className="miniapp-filter-field">
+                              <span>关键字搜索</span>
+                              <input value={miniappInvoicedDraftFilters.keyword} onChange={(event) => setMiniappInvoicedDraftFilters((current) => ({ ...current, keyword: event.target.value }))} placeholder="请输入订单号/发票号码/店铺名称/闪购门店" />
+                            </label>
+                            <div className="miniapp-filter-field">
+                              <span>开票时间</span>
+                              <div className="miniapp-filter-chip-row">
+                                {miniappFilterDateRangeOptions.map((item) => (
+                                  <button className={`miniapp-filter-chip ${miniappInvoicedDraftFilters.dateRange === item.value ? "is-active" : ""}`} key={`invoiced-${item.value}`} type="button" onClick={() => setMiniappInvoicedDraftFilters((current) => ({ ...current, dateRange: item.value }))}>{item.label}</button>
+                                ))}
+                              </div>
+                              <div className="miniapp-filter-date-row">
+                                <strong>{formatMiniappDateInputValue(getMiniappRangeStartDate(miniappInvoicedDraftFilters.dateRange))}</strong>
+                                <em>-</em>
+                                <strong>{formatMiniappDateInputValue(new Date())}</strong>
+                              </div>
+                            </div>
+                            <div className="miniapp-filter-field">
+                              <span>下单账号（多选）</span>
+                              <div className="miniapp-filter-chip-row">
+                                {miniappBuyerAccountOptions.map((item) => (
+                                  <button
+                                    className={`miniapp-filter-chip ${miniappInvoicedDraftFilters.buyerAccounts.includes(item) ? "is-active" : ""}`}
+                                    key={`invoiced-account-${item}`}
+                                    type="button"
+                                    onClick={() => setMiniappInvoicedDraftFilters((current) => ({
+                                      ...current,
+                                      buyerAccounts: toggleMiniappBuyerAccountSelection(current.buyerAccounts, item)
+                                    }))}
+                                  >
+                                    {item}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="miniapp-filter-field">
+                              <span>发票类型</span>
+                              <div className="miniapp-filter-chip-row">
+                                {["全部", "电子普通发票", "电子增值税专用发票"].map((item) => (
+                                  <button className={`miniapp-filter-chip ${miniappInvoicedDraftFilters.invoiceType === item ? "is-active" : ""}`} key={`invoiced-type-${item}`} type="button" onClick={() => setMiniappInvoicedDraftFilters((current) => ({ ...current, invoiceType: item }))}>{item}</button>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="miniapp-filter-field">
+                              <span>需要单独开票</span>
+                              <div className="miniapp-filter-chip-row">
+                                {["全部", "是", "否"].map((item) => (
+                                  <button className={`miniapp-filter-chip ${miniappInvoicedDraftFilters.separateInvoiceRequired === item ? "is-active" : ""}`} key={`invoiced-single-${item}`} type="button" onClick={() => setMiniappInvoicedDraftFilters((current) => ({ ...current, separateInvoiceRequired: item }))}>{item}</button>
+                                ))}
+                              </div>
+                            </div>
+                          </>
+                        ) : null}
+                      </div>
+                      <div className="miniapp-filter-sheet-footer">
+                        <button className="miniapp-filter-sheet-reset" type="button" onClick={handleResetMiniappFilterSheet}>重置</button>
+                        <button className="miniapp-filter-sheet-confirm" type="button" onClick={handleConfirmMiniappFilterSheet}>确定</button>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
 
                 {isMiniappInvoicePendingTab ? (
                   <div className="miniapp-assistant-footer">
@@ -14591,6 +15290,66 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                 <div className="miniapp-title-footer">
                   <button className="miniapp-title-create-btn" type="button" onClick={() => setMiniappView("invoice-title-create")}>+ 新增发票抬头</button>
                 </div>
+              </div>
+            ) : isMiniappInvoicePreviewPageView ? (
+              <div className="miniapp-invoice-preview-page">
+                <header className="miniapp-order-header miniapp-invoice-header miniapp-invoice-preview-header">
+                  <button className="miniapp-order-back" type="button" onClick={() => {
+                    setIsMiniappPdfCopyDialogOpen(false);
+                    setMiniappView("invoice-helper");
+                  }} aria-label="返回">
+                    <span />
+                  </button>
+                  <div className="miniapp-order-title">1/1</div>
+                  <div className="miniapp-order-header-actions">
+                    <span>•••</span>
+                    <button type="button" aria-label="返回买家PC商城" onClick={() => onBackToPcMall?.()}>◎</button>
+                  </div>
+                </header>
+
+                <main className="miniapp-invoice-preview-content">
+                  <div className="miniapp-invoice-preview-notice">
+                    <span>◔</span>
+                    <strong>复制PDF链接，在浏览器中打开并下载文件</strong>
+                  </div>
+
+                  <div className="miniapp-invoice-preview-canvas">
+                    {activeMiniappInvoicePreviewImageUrl ? (
+                      <img
+                        className="miniapp-invoice-preview-image"
+                        src={activeMiniappInvoicePreviewImageUrl}
+                        alt="发票预览"
+                        style={{ transform: `translate(-50%, -50%) scale(${miniappInvoicePreviewScale}) rotate(${miniappInvoicePreviewRotation}deg)` }}
+                      />
+                    ) : (
+                      <div className="miniapp-invoice-preview-empty">暂无可预览的发票</div>
+                    )}
+                  </div>
+
+                  <div className="miniapp-invoice-preview-tools">
+                    <button type="button" onClick={() => setMiniappInvoicePreviewScale((value) => Math.min(Number((value + 0.1).toFixed(2)), 2))}>＋</button>
+                    <button type="button" onClick={() => setMiniappInvoicePreviewScale((value) => Math.max(Number((value - 0.1).toFixed(2)), 0.6))}>－</button>
+                    <button type="button" onClick={() => setMiniappInvoicePreviewRotation((value) => (value + 90) % 360)}>↻</button>
+                  </div>
+                </main>
+
+                <div className="miniapp-invoice-preview-footer miniapp-invoice-preview-footer-single">
+                  <button className="miniapp-invoice-preview-download-btn" type="button" onClick={() => setIsMiniappPdfCopyDialogOpen(true)}>下载发票PDF</button>
+                </div>
+
+                {isMiniappPdfCopyDialogOpen ? (
+                  <div className="miniapp-preview-dialog-mask">
+                    <div className="miniapp-preview-dialog">
+                      <button className="miniapp-preview-dialog-close" type="button" aria-label="关闭" onClick={() => setIsMiniappPdfCopyDialogOpen(false)}>×</button>
+                      <h3>提示</h3>
+                      <p>您需要复制pdf链接，在浏览器中打开并下载文件。</p>
+                      <div className="miniapp-preview-dialog-actions">
+                        <button type="button" onClick={() => setIsMiniappPdfCopyDialogOpen(false)}>取消</button>
+                        <button className="is-primary" type="button" onClick={handleCopyMiniappPdfLink}>复制链接</button>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             ) : isInvoiceDetailView ? (
               <div className="miniapp-invoice-page">
@@ -15332,10 +16091,10 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                 <button className="miniapp-batch-cancel-btn" type="button" onClick={() => setMiniappView("invoice-helper")}>取消</button>
                 <button className="miniapp-batch-submit-btn" type="button" onClick={handleConfirmMiniappAppliedModify}>确定</button>
               </div>
-            ) : !isOrderListView && !isInvoiceAssistantView && !isInvoiceBatchApplyView && !isInvoiceAppliedModifyView && !isMiniappInvoiceOrderDetailView && !isInvoiceServiceChatView && !isInvoiceDetailView && !isInvoiceEditView && !isInvoiceTitleManagementView && !isInvoiceTitleCreateView && !isWholesaleDetailView && !isWholesaleCheckoutView ? (
-              <nav className="miniapp-tabbar">
-                {tabItems.map((item) => (
-                  <button className={`miniapp-tabbar-item ${item.key === activeTab ? "is-active" : ""}`} key={item.key} type="button" onClick={() => handleTabSwitch(item.key)}>
+              ) : !isOrderListView && !isInvoiceAssistantView && !isInvoiceBatchApplyView && !isInvoiceAppliedModifyView && !isMiniappInvoiceOrderDetailView && !isInvoiceServiceChatView && !isMiniappInvoicePreviewPageView && !isInvoiceDetailView && !isInvoiceEditView && !isInvoiceTitleManagementView && !isInvoiceTitleCreateView && !isWholesaleDetailView && !isWholesaleCheckoutView ? (
+                <nav className="miniapp-tabbar">
+                  {tabItems.map((item) => (
+                    <button className={`miniapp-tabbar-item ${item.key === activeTab ? "is-active" : ""}`} key={item.key} type="button" onClick={() => handleTabSwitch(item.key)}>
                     <span className={`miniapp-tabbar-icon is-${item.key}`} />
                     <span>{item.label}</span>
                   </button>
