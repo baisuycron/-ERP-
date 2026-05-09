@@ -608,6 +608,80 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .buyer-action-links { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
 .buyer-action-links button { border: none; padding: 0; background: transparent; color: #ff7a00; font-size: 14px; }
 .buyer-pagination { display: flex; align-items: center; justify-content: center; gap: 12px; padding-top: 18px; color: #666; font-size: 14px; }
+.todo-page { display: flex; flex-direction: column; gap: 14px; }
+.todo-filter-card { padding: 22px 18px 18px; }
+.todo-filter-row { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr) auto; gap: 16px 22px; align-items: center; }
+.todo-filter-field { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.todo-filter-field span { width: 62px; color: #202020; font-size: 14px; text-align: right; white-space: nowrap; flex: none; }
+.todo-filter-field input, .todo-filter-field select { width: 100%; height: 36px; padding: 0 16px; border: 1px solid #e1e5ec; background: #fff; color: #202020; font-size: 14px; }
+.todo-filter-actions { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+.todo-table-card { min-height: 640px; padding: 14px 16px 18px; }
+.todo-table-shell { overflow-x: auto; }
+.todo-table { min-width: 1180px; }
+.todo-table th, .todo-table td { height: 52px; padding: 0 18px; }
+.todo-table th:nth-child(1), .todo-table td:nth-child(1) { width: 260px; }
+.todo-table td:nth-child(1) { padding-left: 19px; }
+.todo-table th:nth-child(2), .todo-table td:nth-child(2) { width: 170px; }
+.todo-table th:nth-child(3), .todo-table td:nth-child(3) { width: 120px; }
+.todo-table th:nth-child(4), .todo-table td:nth-child(4) { width: 120px; }
+.todo-table th:nth-child(5), .todo-table td:nth-child(5) { width: 250px; }
+.todo-table th:nth-child(6), .todo-table td:nth-child(6) { width: 250px; }
+.todo-table th:nth-child(7), .todo-table td:nth-child(7) { width: 110px; }
+.todo-title-cell { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.todo-title-cell span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.todo-title-cell em { display: inline-flex; align-items: center; justify-content: center; min-width: 30px; height: 28px; padding: 0 8px; background: #ff7a00; color: #fff; font-style: normal; font-size: 16px; line-height: 1; }
+.todo-title-cell strong { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 26px; border-radius: 4px; background: #ff3b30; color: #fff; font-size: 14px; font-weight: 700; }
+.todo-action-link { border: none; padding: 0; background: transparent; color: #ff7a00; font-size: 14px; }
+.todo-detail-inline-link { display: block; margin-top: 6px; border: none; padding: 0; background: transparent; color: #ff7a00; font-size: 14px; text-align: left; }
+.todo-pagination { justify-content: center; padding-top: 18px; }
+.todo-pagination-ellipsis { color: #9ca3af; }
+.platform-todo-page { display: flex; flex-direction: column; gap: 14px; }
+.platform-todo-filter-card { padding: 18px 16px 16px; }
+.platform-todo-filter-head { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+.platform-todo-collapse { border: none; padding: 0; background: transparent; color: #202020; font-size: 14px; }
+.platform-todo-collapse span { font-size: 12px; }
+.platform-todo-filter-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 24px; align-items: center; }
+.platform-todo-filter-field { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.platform-todo-filter-field span { width: 86px; color: #202020; font-size: 14px; text-align: right; white-space: nowrap; flex: none; }
+.platform-todo-filter-field input, .platform-todo-filter-field select { width: 100%; height: 36px; padding: 0 12px; border: 1px solid #e1e5ec; background: #fff; color: #202020; font-size: 14px; }
+.platform-todo-input-with-suffix { display: grid; grid-template-columns: minmax(0, 1fr) 38px; width: 100%; }
+.platform-todo-input-with-suffix input { border-right: none; }
+.platform-todo-input-with-suffix em { display: flex; align-items: center; justify-content: center; height: 36px; border: 1px solid #e1e5ec; color: #202020; font-style: normal; font-size: 14px; }
+.platform-todo-filter-actions { display: flex; justify-content: flex-end; gap: 10px; grid-column: 4; }
+.platform-todo-table-card { min-height: 640px; padding: 14px 16px 18px; }
+.platform-todo-toolbar { display: flex; align-items: center; margin-bottom: 14px; }
+.platform-todo-table-shell { overflow-x: auto; }
+.platform-todo-table { min-width: 1360px; }
+.platform-todo-table th, .platform-todo-table td { height: 75px; padding: 0 14px; }
+.platform-todo-table th:nth-child(1), .platform-todo-table td:nth-child(1) { width: 280px; }
+.platform-todo-table td:nth-child(1) { padding-left: 20px; }
+.platform-todo-table th:nth-child(2), .platform-todo-table td:nth-child(2) { width: 220px; }
+.platform-todo-table th:nth-child(3), .platform-todo-table td:nth-child(3) { width: 140px; }
+.platform-todo-table th:nth-child(4), .platform-todo-table td:nth-child(4) { width: 120px; }
+.platform-todo-table th:nth-child(5), .platform-todo-table td:nth-child(5) { width: 120px; }
+.platform-todo-table th:nth-child(6), .platform-todo-table td:nth-child(6) { width: 220px; }
+.platform-todo-table th:nth-child(7), .platform-todo-table td:nth-child(7) { width: 220px; }
+.platform-todo-table th:nth-child(8), .platform-todo-table td:nth-child(8) { width: 118px; }
+.platform-todo-action-links { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.platform-todo-action-item { position: relative; display: inline-flex; }
+.platform-todo-delete-popover { position: absolute; right: 0; bottom: calc(100% + 8px); width: 196px; padding: 14px 14px 12px; border: 1px solid #edf0f4; background: #fff; box-shadow: 0 14px 30px rgba(15, 23, 42, 0.12); z-index: 5; }
+.platform-todo-confirm-popover { width: 210px; }
+.platform-todo-delete-popover strong { display: block; color: #202020; font-size: 14px; font-weight: 400; }
+.platform-todo-delete-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
+.platform-todo-delete-actions button { min-width: 58px; height: 30px; border: 1px solid #d8dce3; background: #fff; color: #202020; font-size: 14px; }
+.platform-todo-delete-actions button:last-child { border-color: #242424; background: #242424; color: #fff; }
+.platform-todo-empty { height: 140px; color: #98a2b3; text-align: center; }
+.platform-todo-detail-overlay { position: fixed; inset: 0; z-index: 240; pointer-events: none; }
+.platform-todo-detail-mask { position: absolute; inset: 0; border: none; background: rgba(17, 24, 39, 0.35); pointer-events: auto; }
+.platform-todo-detail-drawer { position: absolute; top: 0; right: 0; width: min(570px, 42vw); min-width: 420px; height: 100%; background: #fff; box-shadow: -12px 0 28px rgba(15, 23, 42, 0.14); pointer-events: auto; overflow-y: auto; }
+.platform-todo-detail-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-bottom: 1px solid #eef0f4; }
+.platform-todo-detail-header h3 { margin: 0; color: #202020; font-size: 16px; font-weight: 700; }
+.platform-todo-detail-close { border: none; background: transparent; color: #9aa3b2; font-size: 26px; line-height: 1; }
+.platform-todo-detail-body { padding: 28px 32px; }
+.platform-todo-detail-row { display: flex; align-items: flex-start; gap: 12px; color: #202020; font-size: 14px; line-height: 1.9; }
+.platform-todo-detail-row + .platform-todo-detail-row { margin-top: 16px; }
+.platform-todo-detail-row span { white-space: nowrap; flex: none; }
+.platform-todo-detail-row strong { font-weight: 400; color: #202020; word-break: break-word; }
 .buyer-import-page { padding-top: 12px; }
 .buyer-import-card { min-height: 404px; padding: 14px 16px 40px; }
 .buyer-import-tip { padding: 20px 22px 16px; background: #f7f9fd; border: 1px solid #f0f2f7; }
@@ -7282,6 +7356,11 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .miniapp-wholesale-entry-card em { display: block; margin-top: 6px; color: #ff6a00; font-style: normal; font-size: 12px; line-height: 1.6; }
 .miniapp-wholesale-entry-btn { min-width: 92px; height: 38px; background: #111827; color: #fff; font-size: 14px; }
 .miniapp-wholesale-inline-link { min-width: 88px; height: 32px; background: #fff1e8; color: #ff6a00; font-size: 13px; }
+
+@media (max-width: 1320px) {
+  .platform-todo-filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .platform-todo-filter-actions { grid-column: auto; }
+}
 
 
 

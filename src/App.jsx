@@ -1259,7 +1259,16 @@ const platformCenterSidebarItems = [
   { key: "goods", label: "商品", icon: "goods" },
   { key: "trade", label: "交易", icon: "trade", children: [{ key: "trade-settings", label: "交易设置" }] },
   { key: "merchant", label: "商家", icon: "buyer" },
-  { key: "shop", label: "店铺", icon: "shop", badge: "99+", children: [{ key: "shop-invoice-management", label: "发票管理" }] },
+  {
+    key: "shop",
+    label: "店铺",
+    icon: "shop",
+    badge: "99+",
+    children: [
+      { key: "shop-invoice-management", label: "发票管理" },
+      { key: "shop-todo-management", label: "待办管理" }
+    ]
+  },
   { key: "website", label: "网站", icon: "website" },
   { key: "system", label: "系统", icon: "system" },
   { key: "stats", label: "统计", icon: "stats" },
@@ -1396,6 +1405,90 @@ const buyerSeedRows = [
 const buyerGroupOptions = buyerGroups;
 const initialBuyerFilters = { id: "", account: "", accountType: "", identity: "" };
 const initialNewBuyerForm = { buyerIds: "", group: "", discount: "" };
+const todoCategoryOptions = ["全部", "合同/协议", "专享价活动", "商品管理", "发票管理"];
+const todoStatusOptions = ["全部", "待处理", "已完成"];
+const todoSeedRows = [
+  { id: "todo-001", title: "待签署补充协议提醒", urgentCount: 14, category: "合同/协议", status: "待处理", createdBy: "系统", createdAt: "2026-03-12 22:29:07", completedAt: "", showUrgentBadge: false },
+  { id: "todo-002", title: "待签署补充协议提醒", urgentCount: 0, category: "合同/协议", status: "待处理", createdBy: "系统", createdAt: "2026-04-24 14:53:30", completedAt: "" },
+  { id: "todo-003", title: "专享价活动商品规格失效提醒", urgentCount: 0, category: "专享价活动", status: "待处理", createdBy: "系统", createdAt: "2026-04-10 10:17:11", completedAt: "" },
+  { id: "todo-004", title: "专享价活动商品规格失效提醒", urgentCount: 0, category: "专享价活动", status: "已完成", createdBy: "系统", createdAt: "2026-04-10 10:09:43", completedAt: "2026-04-10 10:17:01" },
+  { id: "todo-005", title: "即将超时的开票申请提醒", urgentCount: 0, category: "发票管理", status: "待处理", createdBy: "系统", createdAt: "2026-04-07 16:40:29", completedAt: "" },
+  { id: "todo-007", title: "已超时的开票申请提醒", urgentCount: 1, category: "发票管理", status: "已完成", createdBy: "系统", createdAt: "2026-04-03 17:16:53", completedAt: "2026-05-08 17:53:02", showUrgentBadge: true },
+  { id: "todo-008", title: "待签署补充协议提醒", urgentCount: 0, category: "合同/协议", status: "待处理", createdBy: "系统", createdAt: "2026-04-03 17:13:59", completedAt: "" },
+  { id: "todo-009", title: "待签署合同提醒", urgentCount: 0, category: "合同/协议", status: "已完成", createdBy: "系统", createdAt: "2026-04-03 17:04:26", completedAt: "2026-04-03 17:14:39" },
+  { id: "todo-010", title: "待签署合同提醒", urgentCount: 0, category: "合同/协议", status: "已完成", createdBy: "系统", createdAt: "2026-04-03 14:02:36", completedAt: "2026-04-03 16:58:29" },
+  { id: "todo-011", title: "待签署补充协议提醒", urgentCount: 0, category: "合同/协议", status: "已完成", createdBy: "系统", createdAt: "2026-04-03 10:41:47", completedAt: "2026-04-03 16:50:48" },
+  { id: "todo-012", title: "待签署合同提醒", urgentCount: 0, category: "合同/协议", status: "已完成", createdBy: "系统", createdAt: "2026-04-03 10:22:50", completedAt: "2026-04-03 10:26:52" },
+  { id: "todo-013", title: "待签署补充协议提醒", urgentCount: 0, category: "合同/协议", status: "已完成", createdBy: "系统", createdAt: "2026-04-03 09:37:06", completedAt: "2026-04-03 09:37:54" },
+  { id: "todo-014", title: "待签署补充协议提醒", urgentCount: 0, category: "合同/协议", status: "已完成", createdBy: "系统", createdAt: "2026-04-03 09:18:23", completedAt: "2026-04-03 09:18:55" },
+  { id: "todo-015", title: "待签署合同提醒", urgentCount: 0, category: "合同/协议", status: "已完成", createdBy: "系统", createdAt: "2026-04-03 08:48:28", completedAt: "2026-04-03 08:49:13" },
+  { id: "todo-016", title: "待更新商品库存预警处理", urgentCount: 3, category: "商品管理", status: "待处理", createdBy: "运营", createdAt: "2026-04-02 16:28:43", completedAt: "" },
+  { id: "todo-017", title: "即将超时的开票申请提醒", urgentCount: 0, category: "发票管理", status: "待处理", createdBy: "系统", createdAt: "2026-04-02 14:12:09", completedAt: "" },
+  { id: "todo-018", title: "专享价活动待补充库存", urgentCount: 0, category: "专享价活动", status: "待处理", createdBy: "运营", createdAt: "2026-04-01 19:20:16", completedAt: "" },
+  { id: "todo-019", title: "待更新商品主图审核意见", urgentCount: 0, category: "商品管理", status: "已完成", createdBy: "系统", createdAt: "2026-04-01 17:42:31", completedAt: "2026-04-01 18:16:20" },
+  { id: "todo-020", title: "即将超时与已超时的开票申请提醒", urgentCount: 2, category: "发票管理", status: "待处理", createdBy: "平台", createdAt: "2026-04-01 14:30:55", completedAt: "" },
+  { id: "todo-021", title: "待确认专享价活动档期", urgentCount: 0, category: "专享价活动", status: "已完成", createdBy: "运营", createdAt: "2026-03-31 10:16:04", completedAt: "2026-03-31 11:02:43" },
+  { id: "todo-022", title: "待签署补充协议提醒", urgentCount: 0, category: "合同/协议", status: "待处理", createdBy: "系统", createdAt: "2026-03-30 09:58:10", completedAt: "" },
+  { id: "todo-023", title: "待更新商品咨询回复", urgentCount: 0, category: "商品管理", status: "已完成", createdBy: "客服", createdAt: "2026-03-29 13:44:09", completedAt: "2026-03-29 14:02:55" },
+  { id: "todo-024", title: "已超时的开票申请提醒", urgentCount: 0, category: "发票管理", status: "已完成", createdBy: "系统", createdAt: "2026-03-28 18:22:41", completedAt: "2026-03-28 18:43:27" }
+];
+const todoDetailContentById = {
+  "todo-001": { text: "该开票申请即将超时，请尽快核对并处理。", actionLabel: "" },
+  "todo-002": { text: "存在即将超时与已超时的开票申请，请尽快处理。", actionLabel: "" },
+  "todo-003": { text: "专享价活动商品规格已失效，请及时处理。", actionLabel: "" },
+  "todo-004": { text: "专享价活动商品规格失效提醒已处理完成。", actionLabel: "" },
+  "todo-005": { text: "您有10笔即将超时的开票申请，请及时签署！", actionLabel: "去处理" },
+  "todo-006": { text: "您有10笔即将超时与已超时的开票申请，请及时签署！", actionLabel: "去处理" },
+  "todo-007": { text: "您有10笔已超时的开票申请，请及时签署！", actionLabel: "去处理" },
+  "todo-017": { text: "该开票申请即将超时，请尽快核对并处理。", actionLabel: "" },
+  "todo-020": { text: "存在即将超时与已超时的开票申请，请尽快处理。", actionLabel: "" },
+  "todo-024": { text: "该开票申请已超时，请尽快处理。", actionLabel: "" }
+};
+const initialTodoFilters = { title: "", category: "全部", status: "全部" };
+const platformTodoCategoryOptions = ["全部", "合同/协议", "资质审核", "发票管理", "店铺治理"];
+const platformTodoStatusOptions = ["全部", "待处理", "已完成"];
+const initialPlatformTodoFilters = {
+  storeId: "",
+  storeName: "",
+  category: "全部",
+  status: "全部",
+  title: "",
+  overdueDays: "",
+  todoCount: ""
+};
+const platformTodoSeedRows = [
+  { id: "platform-todo-001", title: "待签署补充协议提醒", shopId: "S10001", shopName: "农妇三拳", urgentCount: 14, category: "合同/协议", status: "待处理", createdBy: "系统", createdAt: "2026-03-12 22:29:07", completedAt: "", overdueDays: 3, todoCount: 14 },
+  { id: "platform-todo-002", title: "待签署补充协议提醒", shopId: "S10002", shopName: "xingyu店铺", urgentCount: 0, category: "合同/协议", status: "待处理", createdBy: "系统", createdAt: "2026-05-08 19:28:48", completedAt: "", overdueDays: 1, todoCount: 1 },
+  { id: "platform-todo-003", title: "待签署合同提醒", shopId: "S10003", shopName: "皇甫帅店铺名", urgentCount: 0, category: "合同/协议", status: "待处理", createdBy: "系统", createdAt: "2026-05-08 17:44:13", completedAt: "", overdueDays: 0, todoCount: 1 },
+  { id: "platform-todo-004", title: "待签署补充协议提醒", shopId: "S10004", shopName: "黑金时代小店", urgentCount: 0, category: "合同/协议", status: "已完成", createdBy: "系统", createdAt: "2026-05-07 15:53:41", completedAt: "2026-05-07 15:54:17", overdueDays: 0, todoCount: 1 },
+  { id: "platform-todo-005", title: "即将超时的开票申请提醒", shopId: "S10005", shopName: "长沙五一广场店", urgentCount: 2, category: "发票管理", status: "待处理", createdBy: "系统", createdAt: "2026-05-06 13:05:26", completedAt: "", overdueDays: 2, todoCount: 2 },
+  { id: "platform-todo-006", title: "店铺资质待补充", shopId: "S10006", shopName: "福满仓商贸", urgentCount: 0, category: "资质审核", status: "待处理", createdBy: "系统", createdAt: "2026-05-04 10:17:51", completedAt: "", overdueDays: 5, todoCount: 1 },
+  { id: "platform-todo-007", title: "已超时的开票申请提醒", shopId: "S10007", shopName: "星海电子", urgentCount: 1, category: "发票管理", status: "已完成", createdBy: "系统", createdAt: "2026-05-03 16:42:08", completedAt: "2026-05-03 18:15:40", overdueDays: 0, todoCount: 1 }
+];
+const platformTodoDetailContentById = {
+  "platform-todo-001": "您有待签署的补充协议，请及时签署！",
+  "platform-todo-002": "店铺补充协议仍待签署，请尽快完成线上确认。",
+  "platform-todo-003": "您有待签署的合同提醒，请及时处理签署流程。",
+  "platform-todo-004": "补充协议已完成签署，当前待办仅供历史查看。",
+  "platform-todo-005": "您有10笔即将超时的开票申请，请及时处理！",
+  "platform-todo-006": "店铺资质材料待补充，请尽快上传完整资料。",
+  "platform-todo-007": "您有10笔已超时的开票申请，请及时处理！"
+};
+const getSupplierTodoSyncTitlesByPlatformTodo = (item) => {
+  const title = String(item?.title || "");
+  if (title.includes("即将超时与已超时")) return ["即将超时与已超时的开票申请提醒"];
+  if (title.includes("即将超时")) return ["即将超时的开票申请提醒"];
+  if (title.includes("已超时")) return ["已超时的开票申请提醒"];
+  return [];
+};
+
+const getPlatformTodoSyncIdsBySupplierTodo = (item) => {
+  const title = String(item?.title || "");
+  if (title.includes("即将超时与已超时")) return ["platform-todo-006"];
+  if (title.includes("即将超时")) return ["platform-todo-005"];
+  if (title.includes("已超时")) return ["platform-todo-007"];
+  return [];
+};
 const partialBuyerDiscountPattern = /^(\d{0,2}(\.\d{0,2})?)?$/;
 const finalBuyerDiscountPattern = /^(5(\.\d{1,2})?|[6-9](\.\d{1,2})?|10(\.0{1,2})?|10)$/;
 const createSpecialPriceSeedActivities = () => ([
@@ -10012,6 +10105,423 @@ function BuyerListPage({ filters, onFiltersChange, rows, page, setPage, pageSize
   );
 }
 
+function SupplierTodoPage({ filters, onFiltersChange, rows, page, setPage, pageSize, setPageSize, onActionClick, onDetailAction, activeDetailItem, onCloseDetail }) {
+  const [jumpPageInput, setJumpPageInput] = useState("");
+  const filteredRows = useMemo(() => rows.filter((item) => {
+    if (filters.title && !item.title.includes(filters.title.trim())) return false;
+    if (filters.category !== "全部" && item.category !== filters.category) return false;
+    if (filters.status !== "全部" && item.status !== filters.status) return false;
+    return true;
+  }), [filters, rows]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const pagedRows = filteredRows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const handleJump = () => {
+    const nextPage = Number(jumpPageInput);
+    if (!Number.isFinite(nextPage) || nextPage < 1) return;
+    setPage(Math.min(pageCount, Math.max(1, Math.floor(nextPage))));
+  };
+
+  return (
+    <div className="todo-page">
+      <section className="content-card todo-filter-card">
+        <div className="todo-filter-row">
+          <label className="todo-filter-field">
+            <span>标题</span>
+            <input value={filters.title} onChange={(event) => onFiltersChange({ ...filters, title: event.target.value })} />
+          </label>
+          <label className="todo-filter-field">
+            <span>待办分类</span>
+            <select value={filters.category} onChange={(event) => onFiltersChange({ ...filters, category: event.target.value })}>
+              {todoCategoryOptions.map((item) => <option key={item} value={item}>{item === "全部" ? "请选择" : item}</option>)}
+            </select>
+          </label>
+          <label className="todo-filter-field">
+            <span>状态</span>
+            <select value={filters.status} onChange={(event) => onFiltersChange({ ...filters, status: event.target.value })}>
+              {todoStatusOptions.map((item) => <option key={item} value={item}>{item === "全部" ? "请选择" : item}</option>)}
+            </select>
+          </label>
+          <div className="todo-filter-actions">
+            <button className="btn btn-reset" type="button" onClick={() => { onFiltersChange(initialTodoFilters); setPage(1); setJumpPageInput(""); }}>重置</button>
+            <button className="btn btn-search" type="button" onClick={() => setPage(1)}>查询</button>
+          </div>
+        </div>
+      </section>
+
+      <section className="content-card todo-table-card">
+        <div className="buyer-table-shell todo-table-shell">
+          <table className="buyer-table todo-table">
+            <thead>
+              <tr>
+                <th>标题</th>
+                <th>待办分类</th>
+                <th>状态</th>
+                <th>创建人</th>
+                <th>创建时间</th>
+                <th>完成时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pagedRows.map((item) => (
+                <tr key={item.id}>
+                  <td>
+                    <div className="todo-title-cell">
+                      <span>{item.title}</span>
+                      {item.urgentCount > 0 ? <em>{item.urgentCount}</em> : null}
+                      {(item.showUrgentBadge || item.urgentCount >= 3) ? <strong>急</strong> : null}
+                    </div>
+                  </td>
+                  <td>{item.category}</td>
+                  <td>{item.status}</td>
+                  <td>{item.createdBy}</td>
+                  <td>{item.createdAt}</td>
+                  <td>{item.completedAt || "-"}</td>
+                  <td>
+                    <button className="todo-action-link" type="button" onClick={() => onActionClick(item)}>查看</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="pagination-bar todo-pagination">
+          <span>{`共 ${filteredRows.length} 条`}</span>
+          <select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1); setJumpPageInput(""); }}>
+            <option value={10}>10 条/页</option>
+            <option value={20}>20 条/页</option>
+            <option value={50}>50 条/页</option>
+          </select>
+          <button className="page-btn" type="button" disabled={currentPage === 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>‹</button>
+          {Array.from({ length: Math.min(pageCount, 5) }, (_, index) => {
+            const pageNumber = index + 1;
+            return (
+              <button
+                key={pageNumber}
+                className={`page-btn ${currentPage === pageNumber ? "is-current" : ""}`}
+                type="button"
+                onClick={() => setPage(pageNumber)}
+              >
+                {pageNumber}
+              </button>
+            );
+          })}
+          {pageCount > 5 ? <span className="todo-pagination-ellipsis">...</span> : null}
+          {pageCount > 5 ? <button className="page-btn" type="button" onClick={() => setPage(pageCount)}>{pageCount}</button> : null}
+          <button className="page-btn" type="button" disabled={currentPage >= pageCount} onClick={() => setPage((value) => Math.min(pageCount, value + 1))}>›</button>
+          <span>到第</span>
+          <input className="page-input" value={jumpPageInput} onChange={(event) => setJumpPageInput(event.target.value.replace(/[^\d]/g, ""))} placeholder="请输入" />
+          <span>页</span>
+          <button className="btn btn-jump" type="button" onClick={handleJump}>跳转</button>
+        </div>
+      </section>
+
+      {activeDetailItem ? (
+        <div className="platform-todo-detail-overlay" role="presentation">
+          <button className="platform-todo-detail-mask" type="button" aria-label="关闭待办详情" onClick={onCloseDetail} />
+          <aside className="platform-todo-detail-drawer" aria-label="待办详情">
+            <div className="platform-todo-detail-header">
+              <h3>待办详情</h3>
+              <button type="button" className="platform-todo-detail-close" onClick={onCloseDetail}>×</button>
+            </div>
+            <div className="platform-todo-detail-body">
+              <div className="platform-todo-detail-row">
+                <span>标题：</span>
+                <strong>{activeDetailItem.title}</strong>
+              </div>
+              <div className="platform-todo-detail-row">
+                <span>分类：</span>
+                <strong>{activeDetailItem.category}</strong>
+              </div>
+              <div className="platform-todo-detail-row">
+                <span>内容：</span>
+                <strong>
+                  {(todoDetailContentById[activeDetailItem.id]?.text) || `您有一条待办「${activeDetailItem.title}」，请及时处理。`}
+                  {todoDetailContentById[activeDetailItem.id]?.actionLabel ? (
+                    <button className="todo-detail-inline-link" type="button" onClick={() => onDetailAction(activeDetailItem)}>
+                      {todoDetailContentById[activeDetailItem.id].actionLabel}
+                    </button>
+                  ) : null}
+                </strong>
+              </div>
+              <div className="platform-todo-detail-row">
+                <span>创建时间：</span>
+                <strong>{activeDetailItem.createdAt}</strong>
+              </div>
+              <div className="platform-todo-detail-row">
+                <span>完成时间：</span>
+                <strong>{activeDetailItem.completedAt || ""}</strong>
+              </div>
+            </div>
+          </aside>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function PlatformShopTodoManagementPage({
+  filters,
+  draftFilters,
+  onDraftFiltersChange,
+  onSearch,
+  onReset,
+  rows,
+  page,
+  setPage,
+  pageSize,
+  setPageSize,
+  onCreate,
+  onView,
+  onUrge,
+  onRequestUrge,
+  confirmUrgeId,
+  onCancelUrge,
+  onConfirmUrge,
+  onRequestDelete,
+  confirmDeleteId,
+  onCancelDelete,
+  onConfirmDelete,
+  activeDetailItem,
+  onCloseDetail
+}) {
+  const [jumpPageInput, setJumpPageInput] = useState("");
+  const [filtersCollapsed, setFiltersCollapsed] = useState(false);
+  const filteredRows = useMemo(() => rows.filter((item) => {
+    if (filters.storeId.trim() && !String(item.shopId || "").includes(filters.storeId.trim())) return false;
+    if (filters.storeName.trim() && !String(item.shopName || "").includes(filters.storeName.trim())) return false;
+    if (filters.title.trim() && !String(item.title || "").includes(filters.title.trim())) return false;
+    if (filters.category !== "全部" && item.category !== filters.category) return false;
+    if (filters.status !== "全部" && item.status !== filters.status) return false;
+    if (filters.overdueDays.trim()) {
+      const overdueDays = Number(filters.overdueDays);
+      if (!Number.isFinite(overdueDays) || Number(item.overdueDays || 0) < overdueDays) return false;
+    }
+    if (filters.todoCount.trim()) {
+      const todoCount = Number(filters.todoCount);
+      if (!Number.isFinite(todoCount) || Number(item.todoCount || 0) < todoCount) return false;
+    }
+    return true;
+  }), [filters, rows]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const pagedRows = filteredRows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const handleJump = () => {
+    const nextPage = Number(jumpPageInput);
+    if (!Number.isFinite(nextPage) || nextPage < 1) return;
+    setPage(Math.min(pageCount, Math.max(1, Math.floor(nextPage))));
+  };
+
+  const updateDraftFilter = (field, value) => {
+    onDraftFiltersChange((current) => ({ ...current, [field]: value }));
+  };
+
+  return (
+    <div className="platform-todo-page">
+      <section className="content-card platform-todo-filter-card">
+        <div className="platform-todo-filter-head">
+          <button className="platform-todo-collapse" type="button" onClick={() => setFiltersCollapsed((value) => !value)}>
+            {filtersCollapsed ? "展开" : "收起"} <span>{filtersCollapsed ? "∨" : "∧"}</span>
+          </button>
+        </div>
+        {!filtersCollapsed ? (
+          <div className="platform-todo-filter-grid">
+            <label className="platform-todo-filter-field">
+              <span>店铺ID</span>
+              <input value={draftFilters.storeId} onChange={(event) => updateDraftFilter("storeId", event.target.value)} />
+            </label>
+            <label className="platform-todo-filter-field">
+              <span>店铺名称</span>
+              <input value={draftFilters.storeName} onChange={(event) => updateDraftFilter("storeName", event.target.value)} />
+            </label>
+            <label className="platform-todo-filter-field">
+              <span>待办分类</span>
+              <select value={draftFilters.category} onChange={(event) => updateDraftFilter("category", event.target.value)}>
+                {platformTodoCategoryOptions.map((item) => <option key={item} value={item}>{item === "全部" ? "请选择" : item}</option>)}
+              </select>
+            </label>
+            <label className="platform-todo-filter-field">
+              <span>状态</span>
+              <select value={draftFilters.status} onChange={(event) => updateDraftFilter("status", event.target.value)}>
+                {platformTodoStatusOptions.map((item) => <option key={item} value={item}>{item === "全部" ? "请选择" : item}</option>)}
+              </select>
+            </label>
+            <label className="platform-todo-filter-field">
+              <span>标题</span>
+              <input value={draftFilters.title} onChange={(event) => updateDraftFilter("title", event.target.value)} />
+            </label>
+            <label className="platform-todo-filter-field">
+              <span>距创建时间超</span>
+              <div className="platform-todo-input-with-suffix">
+                <input value={draftFilters.overdueDays} onChange={(event) => updateDraftFilter("overdueDays", event.target.value.replace(/[^\d]/g, ""))} />
+                <em>天</em>
+              </div>
+            </label>
+            <label className="platform-todo-filter-field">
+              <span>催办次数超</span>
+              <div className="platform-todo-input-with-suffix">
+                <input value={draftFilters.todoCount} onChange={(event) => updateDraftFilter("todoCount", event.target.value.replace(/[^\d]/g, ""))} />
+                <em>次</em>
+              </div>
+            </label>
+            <div className="platform-todo-filter-actions">
+              <button className="btn btn-reset" type="button" onClick={onReset}>重置</button>
+              <button className="btn btn-search" type="button" onClick={onSearch}>查询</button>
+            </div>
+          </div>
+        ) : null}
+      </section>
+
+      <section className="content-card platform-todo-table-card">
+        <div className="platform-todo-toolbar">
+          <button className="btn btn-create" type="button" onClick={onCreate}>新增待办</button>
+        </div>
+        <div className="buyer-table-shell platform-todo-table-shell">
+          <table className="buyer-table platform-todo-table">
+            <thead>
+              <tr>
+                <th>标题</th>
+                <th>店铺名称</th>
+                <th>待办分类</th>
+                <th>状态</th>
+                <th>创建人</th>
+                <th>创建时间</th>
+                <th>完成时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pagedRows.map((item) => (
+                <tr key={item.id}>
+                  <td>
+                    <div className="todo-title-cell">
+                      <span>{item.title}</span>
+                      {item.urgentCount > 0 ? <em>{item.urgentCount}</em> : null}
+                      {item.urgentCount >= 3 ? <strong>急</strong> : null}
+                    </div>
+                  </td>
+                  <td>{item.shopName}</td>
+                  <td>{item.category}</td>
+                  <td>{item.status}</td>
+                  <td>{item.createdBy}</td>
+                  <td>{item.createdAt}</td>
+                  <td>{item.completedAt || "-"}</td>
+                  <td>
+                    <div className="platform-todo-action-links">
+                      <button className="todo-action-link" type="button" onClick={() => onView(item)}>查看</button>
+                      {item.status === "待处理" ? (
+                        <div className="platform-todo-action-item">
+                          <button className="todo-action-link" type="button" onClick={() => onRequestUrge(item)}>催办</button>
+                          {confirmUrgeId === item.id ? (
+                            <div className="platform-todo-delete-popover platform-todo-confirm-popover">
+                              <strong>您确定要催办吗?</strong>
+                              <div className="platform-todo-delete-actions">
+                                <button type="button" onClick={onCancelUrge}>取消</button>
+                                <button type="button" onClick={() => onConfirmUrge(item)}>确定</button>
+                              </div>
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : null}
+                      <div className="platform-todo-action-item">
+                        <button className="todo-action-link" type="button" onClick={() => onRequestDelete(item)}>删除</button>
+                        {confirmDeleteId === item.id ? (
+                          <div className="platform-todo-delete-popover">
+                            <strong>您确定要删办吗?</strong>
+                            <div className="platform-todo-delete-actions">
+                              <button type="button" onClick={onCancelDelete}>取消</button>
+                              <button type="button" onClick={() => onConfirmDelete(item)}>确定</button>
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {pagedRows.length === 0 ? (
+                <tr>
+                  <td className="platform-todo-empty" colSpan={8}>暂无符合条件的待办</td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="pagination-bar todo-pagination">
+          <span>{`共 ${filteredRows.length} 条`}</span>
+          <select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1); setJumpPageInput(""); }}>
+            <option value={10}>10 条/页</option>
+            <option value={20}>20 条/页</option>
+            <option value={50}>50 条/页</option>
+          </select>
+          <button className="page-btn" type="button" disabled={currentPage === 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>‹</button>
+          {Array.from({ length: Math.min(pageCount, 5) }, (_, index) => {
+            const pageNumber = index + 1;
+            return (
+              <button
+                key={pageNumber}
+                className={`page-btn ${currentPage === pageNumber ? "is-current" : ""}`}
+                type="button"
+                onClick={() => setPage(pageNumber)}
+              >
+                {pageNumber}
+              </button>
+            );
+          })}
+          {pageCount > 5 ? <span className="todo-pagination-ellipsis">...</span> : null}
+          {pageCount > 5 ? <button className="page-btn" type="button" onClick={() => setPage(pageCount)}>{pageCount}</button> : null}
+          <button className="page-btn" type="button" disabled={currentPage >= pageCount} onClick={() => setPage((value) => Math.min(pageCount, value + 1))}>›</button>
+          <span>到第</span>
+          <input className="page-input" value={jumpPageInput} onChange={(event) => setJumpPageInput(event.target.value.replace(/[^\d]/g, ""))} placeholder="请输入" />
+          <span>页</span>
+          <button className="btn btn-jump" type="button" onClick={handleJump}>跳转</button>
+        </div>
+      </section>
+
+      {activeDetailItem ? (
+        <div className="platform-todo-detail-overlay" role="presentation">
+          <button className="platform-todo-detail-mask" type="button" aria-label="关闭待办详情" onClick={onCloseDetail} />
+          <aside className="platform-todo-detail-drawer" aria-label="待办详情">
+            <div className="platform-todo-detail-header">
+              <h3>待办详情</h3>
+              <button type="button" className="platform-todo-detail-close" onClick={onCloseDetail}>×</button>
+            </div>
+            <div className="platform-todo-detail-body">
+              <div className="platform-todo-detail-row">
+                <span>标题：</span>
+                <strong>{activeDetailItem.title}</strong>
+              </div>
+              <div className="platform-todo-detail-row">
+                <span>分类：</span>
+                <strong>{activeDetailItem.category}</strong>
+              </div>
+              <div className="platform-todo-detail-row">
+                <span>内容：</span>
+                <strong>{platformTodoDetailContentById[activeDetailItem.id] || `您有一条来自${activeDetailItem.shopName}的待办，请及时处理。`}</strong>
+              </div>
+              <div className="platform-todo-detail-row">
+                <span>创建时间：</span>
+                <strong>{activeDetailItem.createdAt}</strong>
+              </div>
+              <div className="platform-todo-detail-row">
+                <span>完成时间：</span>
+                <strong>{activeDetailItem.completedAt || ""}</strong>
+              </div>
+            </div>
+          </aside>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 const shopInvoiceBulkUploadMockBatch = {
   batchNo: "B202604190001",
   uploadTime: "2026-04-19 15:30:26",
@@ -10652,6 +11162,7 @@ function ShopInvoicePage({
     if (storeKeyword && !item.store.toLowerCase().includes(storeKeyword)) return false;
     if (markerFilter === "即将超时" && !isShopInvoiceApplicationApproachingOverdue(item)) return false;
     if (markerFilter === "超时" && !isShopInvoiceApplicationOverdue(item)) return false;
+    if (markerFilter === "即将超时与超时" && !(isShopInvoiceApplicationApproachingOverdue(item) || isShopInvoiceApplicationOverdue(item))) return false;
     if (markerFilter === "已修改" && !isShopInvoiceApplicationModified(item)) return false;
     if (markerFilter === "撤销重提" && !isShopInvoiceApplicationResubmitted(item)) return false;
 
@@ -16115,7 +16626,8 @@ export default function App() {
     activeGoodsPage: "商品管理",
     activeBuyerPage: "买家列表",
     activeShopPage: "发票管理",
-    currentMarketingPage: "专享价"
+    currentMarketingPage: "专享价",
+    activeUtilityPage: ""
   }), []);
   const [activePortalPage, setActivePortalPage] = useState(() => (
     ["admin", "buyer-pc-mall", "platform-center", "miniapp-mall"].includes(storedAdminView.activePortalPage) ? storedAdminView.activePortalPage : "admin"
@@ -16157,6 +16669,22 @@ export default function App() {
   const [currentMarketingPage, setCurrentMarketingPage] = useState(() => (
     marketingPageNames.includes(storedAdminView.currentMarketingPage) ? storedAdminView.currentMarketingPage : "专享价"
   ));
+  const [activeUtilityPage, setActiveUtilityPage] = useState(() => (
+    storedAdminView.activeUtilityPage === "todo" ? "todo" : ""
+  ));
+  const [todoRows, setTodoRows] = useState(todoSeedRows);
+  const [todoFilters, setTodoFilters] = useState(initialTodoFilters);
+  const [todoPage, setTodoPage] = useState(1);
+  const [todoPageSize, setTodoPageSize] = useState(10);
+  const [todoDetailId, setTodoDetailId] = useState("");
+  const [platformTodoRows, setPlatformTodoRows] = useState(platformTodoSeedRows);
+  const [platformTodoFilters, setPlatformTodoFilters] = useState(initialPlatformTodoFilters);
+  const [platformTodoDraftFilters, setPlatformTodoDraftFilters] = useState(initialPlatformTodoFilters);
+  const [platformTodoPage, setPlatformTodoPage] = useState(1);
+  const [platformTodoPageSize, setPlatformTodoPageSize] = useState(10);
+  const [platformTodoConfirmUrgeId, setPlatformTodoConfirmUrgeId] = useState("");
+  const [platformTodoConfirmDeleteId, setPlatformTodoConfirmDeleteId] = useState("");
+  const [platformTodoDetailId, setPlatformTodoDetailId] = useState("");
   const [shopInvoiceEntryPreset, setShopInvoiceEntryPreset] = useState({
     statusTab: "全部",
     markerFilter: "全部",
@@ -16176,7 +16704,8 @@ export default function App() {
   const isBuyerSection = activeSection === "buyer";
   const isShopSection = activeSection === "shop";
   const isMarketingSection = activeSection === "marketing";
-  const currentPageTitle = isHomeSection ? "首页-控制台" : isGoodsSection ? activeGoodsPage : isBuyerSection ? activeBuyerPage : isShopSection ? activeShopTab : currentMarketingPage;
+  const isTodoPage = activeUtilityPage === "todo";
+  const currentPageTitle = isTodoPage ? "待办事项" : isHomeSection ? "首页-控制台" : isGoodsSection ? activeGoodsPage : isBuyerSection ? activeBuyerPage : isShopSection ? activeShopTab : currentMarketingPage;
   const platformTopActions = useMemo(() => ([
     { key: "supplier-admin", label: "供应商后台", icon: "supplier-admin" },
     { key: "pc-mall", label: "买家PC商城", icon: "pc-mall" },
@@ -16209,6 +16738,12 @@ export default function App() {
   const activeSpecSelectedIds = selectedSpecIdsByProduct[activeSpecProductId] || [];
   const activeSpecProductFieldEditModes = productFieldEditModesByProduct?.[activeSpecProductId] || initialProductFieldEditModes;
   const activeSpecProductFlashPriceInputMode = !!activeSpecProduct && (!hasSpecLevelFlashPrice(activeSpecProduct) || activeSpecProductFieldEditModes.flashPrice);
+  const activeTodoDetail = useMemo(() => (
+    todoRows.find((item) => item.id === todoDetailId) || null
+  ), [todoDetailId, todoRows]);
+  const activePlatformTodoDetail = useMemo(() => (
+    platformTodoRows.find((item) => item.id === platformTodoDetailId) || null
+  ), [platformTodoDetailId, platformTodoRows]);
 
   const updateCurrentMarketingState = (updater) => {
     setMarketingStates((current) => ({
@@ -16228,9 +16763,10 @@ export default function App() {
       activeGoodsPage,
       activeBuyerPage,
       activeShopPage,
-      currentMarketingPage
+      currentMarketingPage,
+      activeUtilityPage
     });
-  }, [activePortalPage, activeSection, activeGoodsPage, activeBuyerPage, activeShopPage, currentMarketingPage]);
+  }, [activePortalPage, activeSection, activeGoodsPage, activeBuyerPage, activeShopPage, currentMarketingPage, activeUtilityPage]);
 
   const closeAllCreateOverlays = () => {
     setIsPickerOpen(false);
@@ -16785,6 +17321,7 @@ export default function App() {
   const handleSwitchMarketingPage = (pageName) => {
     setActivePortalPage("admin");
     setActiveSection("marketing");
+    setActiveUtilityPage("");
     setCurrentMarketingPage(pageName);
     setIsCreating(false);
     setIsEditMode(false);
@@ -16804,6 +17341,7 @@ export default function App() {
   const handleSwitchHomePage = () => {
     setActivePortalPage("admin");
     setActiveSection("home");
+    setActiveUtilityPage("");
     setShopInvoiceEntryPreset({
       statusTab: "全部",
       markerFilter: "全部",
@@ -16821,6 +17359,7 @@ export default function App() {
   const handleSwitchBuyerPage = (pageName) => {
     setActivePortalPage("admin");
     setActiveSection("buyer");
+    setActiveUtilityPage("");
     setShopInvoiceEntryPreset({
       statusTab: "全部",
       markerFilter: "全部",
@@ -16840,6 +17379,7 @@ export default function App() {
   const handleSwitchGoodsPage = (pageName) => {
     setActivePortalPage("admin");
     setActiveSection("goods");
+    setActiveUtilityPage("");
     setActiveGoodsPage(pageName);
     setEditingBuyer(null);
     setIsAddBuyerOpen(false);
@@ -16860,6 +17400,7 @@ export default function App() {
   const handleSwitchShopPage = (pageName) => {
     setActivePortalPage("admin");
     setActiveSection("shop");
+    setActiveUtilityPage("");
     setActiveShopPage(pageName);
     setActiveShopTab("发票管理");
     setShopInvoiceEntryPreset({
@@ -16876,9 +17417,37 @@ export default function App() {
     closeAllCreateOverlays();
   };
 
+  const handleSwitchPlatformCenterPage = (pageKey) => {
+    if (pageKey === "shop-todo-management") {
+      setPlatformTodoDetailId("");
+      setPlatformTodoConfirmUrgeId("");
+      setPlatformTodoConfirmDeleteId("");
+    }
+
+    setPlatformCenterPage(pageKey);
+  };
+
+  const handleSearchPlatformTodo = () => {
+    setPlatformTodoFilters(platformTodoDraftFilters);
+    setPlatformTodoPage(1);
+    setPlatformTodoDetailId("");
+    setPlatformTodoConfirmUrgeId("");
+    setPlatformTodoConfirmDeleteId("");
+  };
+
+  const handleResetPlatformTodo = () => {
+    setPlatformTodoDraftFilters(initialPlatformTodoFilters);
+    setPlatformTodoFilters(initialPlatformTodoFilters);
+    setPlatformTodoPage(1);
+    setPlatformTodoDetailId("");
+    setPlatformTodoConfirmUrgeId("");
+    setPlatformTodoConfirmDeleteId("");
+  };
+
   const handleOpenDashboardInvoiceTodo = ({ targetStatusTab = "待开票", targetMarkerFilter = "全部" }) => {
     setActivePortalPage("admin");
     setActiveSection("shop");
+    setActiveUtilityPage("");
     setActiveShopPage("发票管理");
     setActiveShopTab("发票管理");
     setShopInvoiceEntryPreset((current) => ({
@@ -17114,6 +17683,7 @@ export default function App() {
   const handleTopActionClick = (actionKey) => {
     if (actionKey === "platform-center") {
       setActivePortalPage("platform-center");
+      setActiveUtilityPage("");
       setPlatformCenterPage("home");
       setToastMessage("");
       return;
@@ -17121,12 +17691,14 @@ export default function App() {
 
     if (actionKey === "pc-mall") {
       setActivePortalPage("buyer-pc-mall");
+      setActiveUtilityPage("");
       setToastMessage("");
       return;
     }
 
     if (actionKey === "supplier-admin") {
       setActivePortalPage("admin");
+      setActiveUtilityPage("");
       handleSwitchHomePage();
       setToastMessage("");
       return;
@@ -17134,6 +17706,7 @@ export default function App() {
 
     if (actionKey === "operations-admin") {
       setActivePortalPage("platform-center");
+      setActiveUtilityPage("");
       setPlatformCenterPage("home");
       setToastMessage("");
       return;
@@ -17141,6 +17714,7 @@ export default function App() {
 
     if (actionKey === "supplier-admin") {
       setActivePortalPage("admin");
+      setActiveUtilityPage("");
       handleSwitchHomePage();
       setToastMessage("");
       return;
@@ -17148,14 +17722,119 @@ export default function App() {
 
     if (actionKey === "miniapp-mall") {
       setActivePortalPage("miniapp-mall");
+      setActiveUtilityPage("");
       setToastMessage("");
       return;
     }
 
-    if (actionKey === "service" || actionKey === "todo" || actionKey === "export" || actionKey === "logout") {
-      const actionLabelMap = { service: "在线客服", todo: "我的待办", export: "导出记录", logout: "退出登录" };
+    if (actionKey === "todo") {
+      setActivePortalPage("admin");
+      setActiveSection("home");
+      setActiveUtilityPage("todo");
+      setTodoPage(1);
+      setToastMessage("");
+      return;
+    }
+
+    if (actionKey === "service" || actionKey === "export" || actionKey === "logout") {
+      const actionLabelMap = { service: "在线客服", export: "导出记录", logout: "退出登录" };
       setToastMessage(`${actionLabelMap[actionKey]}功能已保留入口，后续可继续接真实逻辑。`);
     }
+  };
+
+  const handleTodoActionClick = (item) => {
+    setTodoDetailId(item.id);
+  };
+
+  const handleTodoDetailAction = (item) => {
+    const completedAt = new Date().toLocaleString("sv-SE", { hour12: false }).replace(" ", " ");
+    setTodoRows((current) => current.map((row) => (
+      row.id === item.id
+        ? { ...row, status: "已完成", completedAt }
+        : row
+    )));
+    const platformSyncIds = new Set(getPlatformTodoSyncIdsBySupplierTodo(item));
+    if (platformSyncIds.size > 0) {
+      setPlatformTodoRows((current) => current.map((row) => (
+        platformSyncIds.has(row.id)
+          ? { ...row, status: "已完成", completedAt }
+          : row
+      )));
+    }
+
+    if (item.id === "todo-005") {
+      setTodoDetailId("");
+      handleOpenDashboardInvoiceTodo({ targetStatusTab: "待开票", targetMarkerFilter: "即将超时" });
+      return;
+    }
+
+    if (item.id === "todo-006") {
+      setTodoDetailId("");
+      handleOpenDashboardInvoiceTodo({ targetStatusTab: "待开票", targetMarkerFilter: "即将超时与超时" });
+      return;
+    }
+
+    if (item.id === "todo-007") {
+      setTodoDetailId("");
+      handleOpenDashboardInvoiceTodo({ targetStatusTab: "待开票", targetMarkerFilter: "超时" });
+      return;
+    }
+
+    setToastMessage(`已处理待办「${item.title}」的快捷入口。`);
+  };
+
+  const handlePlatformTodoCreate = () => {
+    setToastMessage("已保留新增待办入口，后续可继续接平台中心新建流程。");
+  };
+
+  const handlePlatformTodoView = (item) => {
+    setPlatformTodoConfirmUrgeId("");
+    setPlatformTodoConfirmDeleteId("");
+    setPlatformTodoDetailId(item.id);
+  };
+
+  const handlePlatformTodoUrge = (item) => {
+    setPlatformTodoRows((current) => current.map((row) => (
+      row.id === item.id
+        ? {
+          ...row,
+          urgentCount: Number(row.urgentCount || 0) + 1,
+          todoCount: Number(row.todoCount || 0) + 1
+        }
+        : row
+    )));
+    const supplierSyncTitles = new Set(getSupplierTodoSyncTitlesByPlatformTodo(item));
+    if (supplierSyncTitles.size > 0) {
+      setTodoRows((current) => current.map((row) => {
+        if (!supplierSyncTitles.has(row.title)) return row;
+        const nextUrgentCount = Number(row.urgentCount || 0) + 1;
+        return {
+          ...row,
+          urgentCount: nextUrgentCount,
+          showUrgentBadge: !!row.showUrgentBadge || nextUrgentCount >= 3
+        };
+      }));
+    }
+    setPlatformTodoConfirmUrgeId("");
+    setPlatformTodoConfirmDeleteId("");
+    setToastMessage(`已向店铺「${item.shopName}」发送催办提醒。`);
+  };
+
+  const handlePlatformTodoDelete = (item) => {
+    setPlatformTodoRows((current) => current.filter((row) => row.id !== item.id));
+    const supplierSyncTitles = new Set(getSupplierTodoSyncTitlesByPlatformTodo(item));
+    if (supplierSyncTitles.size > 0) {
+      setTodoRows((current) => current.filter((row) => !supplierSyncTitles.has(row.title)));
+      if (activeTodoDetail && supplierSyncTitles.has(activeTodoDetail.title)) {
+        setTodoDetailId("");
+      }
+    }
+    if (platformTodoDetailId === item.id) {
+      setPlatformTodoDetailId("");
+    }
+    setPlatformTodoConfirmUrgeId("");
+    setPlatformTodoConfirmDeleteId("");
+    setToastMessage(`已删除平台待办「${item.title}」。`);
   };
 
   if (activePortalPage === "buyer-pc-mall") {
@@ -17169,6 +17848,8 @@ export default function App() {
   if (activePortalPage === "platform-center") {
     const platformCurrentPageLabel = platformCenterPage === "trade-settings"
       ? "交易设置"
+      : platformCenterPage === "shop-todo-management"
+        ? "待办管理"
       : platformCenterPage === "shop-invoice-management"
         ? platformShopTab
         : "控制台";
@@ -17219,7 +17900,14 @@ export default function App() {
       onClick: () => setPlatformShopTab("批量上传发票"),
       onClose: () => setPlatformShopTab("发票管理")
     }] : [])
-    ] : null;
+    ] : platformCenterPage === "shop-todo-management" ? [{
+      key: "platform-shop-todo-management",
+      label: "待办管理",
+      isCurrent: true,
+      closable: false,
+      onClick: () => handleSwitchPlatformCenterPage("shop-todo-management"),
+      onClose: undefined
+    }] : null;
 
     return (
       <div className="admin-shell platform-shell">
@@ -17244,7 +17932,7 @@ export default function App() {
                       return;
                     }
                     if (item.children?.length) {
-                      setPlatformCenterPage(item.children[0].key);
+                      handleSwitchPlatformCenterPage(item.children[0].key);
                     }
                   }}
                 >
@@ -17259,7 +17947,7 @@ export default function App() {
                         key={child.key}
                         type="button"
                         className={`sidebar-sublink platform-sidebar-sublink ${platformCenterPage === child.key ? "is-active" : ""}`}
-                        onClick={() => setPlatformCenterPage(child.key)}
+                        onClick={() => handleSwitchPlatformCenterPage(child.key)}
                       >
                         {child.label}
                       </button>
@@ -17292,6 +17980,35 @@ export default function App() {
                 onCloseInvoiceHistoryTab={() => setPlatformShopTab("发票管理")}
                 onOpenBulkUploadTab={() => setPlatformShopTab("批量上传发票")}
                 onCloseBulkUploadTab={() => setPlatformShopTab("发票管理")}
+              />
+            ) : platformCenterPage === "shop-todo-management" ? (
+              <PlatformShopTodoManagementPage
+                filters={platformTodoFilters}
+                draftFilters={platformTodoDraftFilters}
+                onDraftFiltersChange={setPlatformTodoDraftFilters}
+                onSearch={handleSearchPlatformTodo}
+                onReset={handleResetPlatformTodo}
+                rows={platformTodoRows}
+                page={platformTodoPage}
+                setPage={setPlatformTodoPage}
+                pageSize={platformTodoPageSize}
+                setPageSize={setPlatformTodoPageSize}
+                onCreate={handlePlatformTodoCreate}
+                onView={handlePlatformTodoView}
+                onUrge={handlePlatformTodoUrge}
+                onRequestUrge={(item) => {
+                  setPlatformTodoConfirmDeleteId("");
+                  setPlatformTodoConfirmUrgeId(item.id);
+                }}
+                confirmUrgeId={platformTodoConfirmUrgeId}
+                onCancelUrge={() => setPlatformTodoConfirmUrgeId("")}
+                onConfirmUrge={handlePlatformTodoUrge}
+                onRequestDelete={(item) => setPlatformTodoConfirmDeleteId(item.id)}
+                confirmDeleteId={platformTodoConfirmDeleteId}
+                onCancelDelete={() => setPlatformTodoConfirmDeleteId("")}
+                onConfirmDelete={handlePlatformTodoDelete}
+                activeDetailItem={activePlatformTodoDetail}
+                onCloseDetail={() => setPlatformTodoDetailId("")}
               />
             ) : <PlatformCenterPage />}
           </main>
@@ -17429,7 +18146,21 @@ export default function App() {
       <section className="workspace">
         <Header currentMarketingPage={currentPageTitle} specialCreateTab={isMarketingSection && isCreating && (isPrimarySpecialPricePage(currentMarketingPage) || isSecondarySpecialPricePage(currentMarketingPage)) ? "新增专享价" : ""} onTopActionClick={handleTopActionClick} customTabs={shopHeaderTabs} />
         <main className="workspace-main">
-          {isHomeSection ? (
+          {isTodoPage ? (
+            <SupplierTodoPage
+              filters={todoFilters}
+              onFiltersChange={setTodoFilters}
+              rows={todoRows}
+              page={todoPage}
+              setPage={setTodoPage}
+              pageSize={todoPageSize}
+              setPageSize={setTodoPageSize}
+              onActionClick={handleTodoActionClick}
+              onDetailAction={handleTodoDetailAction}
+              activeDetailItem={activeTodoDetail}
+              onCloseDetail={() => setTodoDetailId("")}
+            />
+          ) : isHomeSection ? (
             <SupplierDashboardPage onOpenInvoiceTodo={handleOpenDashboardInvoiceTodo} />
           ) : isGoodsSection ? (
             <SupplierGoodsManagementPage
