@@ -14407,8 +14407,11 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   const isMiniappInvoicePendingTab = miniappInvoiceAssistantTab === "pending";
   const isMiniappInvoiceAppliedTab = miniappInvoiceAssistantTab === "applied";
   const isMiniappInvoiceInvoicedTab = miniappInvoiceAssistantTab === "invoiced";
-  const isMiniappInvoicePageAllSelected = displayedMiniappPendingOrders.length > 0
-    && displayedMiniappPendingOrders.every((item) => selectedMiniappInvoiceOrderIds.includes(item.id));
+  const selectableDisplayedMiniappPendingOrders = useMemo(() => (
+    displayedMiniappPendingOrders.filter((item) => !isMiniappInvoiceOrderDisabled(item))
+  ), [displayedMiniappPendingOrders, isMiniappInvoiceOrderDisabled]);
+  const isMiniappInvoicePageAllSelected = selectableDisplayedMiniappPendingOrders.length > 0
+    && selectableDisplayedMiniappPendingOrders.every((item) => selectedMiniappInvoiceOrderIds.includes(item.id));
   const hasSelectedMiniappAppliedRecords = selectedMiniappAppliedRecordIds.length > 0;
   const isMiniappAppliedPageAllSelected = displayedMiniappAppliedInvoiceOrderCards.length > 0
     && displayedMiniappAppliedInvoiceOrderCards.every((item) => selectedMiniappAppliedRecordIds.includes(item.id));
@@ -14550,10 +14553,11 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   };
 
   const handleToggleMiniappInvoicePage = () => {
+    const selectableDisplayedOrderIds = selectableDisplayedMiniappPendingOrders.map((item) => item.id);
     setSelectedMiniappInvoiceOrderIds((current) => (
       isMiniappInvoicePageAllSelected
-        ? current.filter((item) => !displayedMiniappPendingOrders.some((order) => order.id === item))
-        : displayedMiniappPendingOrders.map((item) => item.id)
+        ? current.filter((item) => !selectableDisplayedOrderIds.includes(item))
+        : Array.from(new Set([...current, ...selectableDisplayedOrderIds]))
     ));
   };
   const handleToggleMiniappAppliedRecord = (recordId) => {
