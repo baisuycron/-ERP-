@@ -5555,11 +5555,32 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
   padding-top: 8px;
 }
 
+.miniapp-invoice-footer-actions {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
 .miniapp-invoice-edit-tip {
   margin: 0 8px 10px;
   color: #8b9099;
   font-size: 13px;
   line-height: 1.4;
+}
+
+.miniapp-invoice-cancel-btn {
+  height: 42px;
+  border: 1px solid #d1d5db;
+  border-radius: 21px;
+  background: #fff;
+  color: #4b5563;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.miniapp-invoice-footer-actions .miniapp-invoice-submit {
+  width: 100%;
 }
 
 .miniapp-confirm-mask {

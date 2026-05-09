@@ -16004,7 +16004,34 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                 {!isMiniappInvoiceEditSubmitted ? (
                   <div className="miniapp-invoice-footer">
                     <div className="miniapp-invoice-edit-tip">温馨提示：仅能支持修改一次开票信息</div>
-                    <button className="miniapp-invoice-submit" type="button" onClick={() => setIsMiniappInvoiceEditConfirmOpen(true)}>修改发票信息</button>
+                    <div className="miniapp-invoice-footer-actions">
+                      <button className="miniapp-invoice-cancel-btn" type="button" onClick={() => setIsMiniappAppliedCancelConfirmOpen(true)}>撤销申请</button>
+                      <button className="miniapp-invoice-submit" type="button" onClick={() => setIsMiniappInvoiceEditConfirmOpen(true)}>修改发票信息</button>
+                    </div>
+                  </div>
+                ) : null}
+
+                {isMiniappAppliedCancelConfirmOpen ? (
+                  <div className="miniapp-confirm-mask">
+                    <div className="miniapp-confirm-dialog">
+                      <div className="miniapp-confirm-body">
+                        <h3>提示</h3>
+                        <p>确定要撤销该开票申请吗？</p>
+                      </div>
+                      <div className="miniapp-confirm-actions">
+                        <button className="miniapp-confirm-cancel" type="button" onClick={() => setIsMiniappAppliedCancelConfirmOpen(false)}>取消</button>
+                        <button
+                          className="miniapp-confirm-submit"
+                          type="button"
+                          onClick={() => {
+                            setIsMiniappAppliedCancelConfirmOpen(false);
+                            setMiniappView("orders");
+                          }}
+                        >
+                          确定
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 ) : null}
 
