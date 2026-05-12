@@ -4101,8 +4101,9 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 }
 
 .miniapp-assistant-order-card.is-record-view.is-batch-display.is-invoiced-view {
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0;
+  position: relative;
+  display: block;
+  padding: 12px 14px 12px 40px;
 }
 
 .miniapp-assistant-order-main {
@@ -4172,6 +4173,13 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 
 .miniapp-assistant-order-card.is-record-view.is-batch-display .miniapp-assistant-record-check {
   margin-top: 118px;
+}
+
+.miniapp-assistant-order-card.is-record-view.is-batch-display.is-invoiced-view .miniapp-assistant-record-check {
+  position: absolute;
+  left: 14px;
+  top: 132px;
+  margin-top: 0;
 }
 
 .miniapp-assistant-applied-batch-card {

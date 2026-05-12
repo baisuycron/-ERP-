@@ -1464,9 +1464,9 @@ const todoDetailContentById = {
   "todo-002": { text: "存在即将超时与已超时的开票申请，请尽快处理。", actionLabel: "" },
   "todo-003": { text: "专享价活动商品规格已失效，请及时处理。", actionLabel: "" },
   "todo-004": { text: "专享价活动商品规格失效提醒已处理完成。", actionLabel: "" },
-  "todo-005": { text: "您有10笔即将超时的开票申请，请及时签署！", actionLabel: "去处理" },
+  "todo-005": { text: "您有10笔即将超时的开票申请，请及时处理！【处理进度：当前还剩5笔未处理】", actionLabel: "去处理" },
   "todo-006": { text: "您有10笔即将超时与已超时的开票申请，请及时签署！", actionLabel: "去处理" },
-  "todo-007": { text: "您有10笔已超时的开票申请，请及时签署！", actionLabel: "去处理" },
+  "todo-007": { text: "您有10笔已超时的开票申请，请及时处理！【处理进度：当前还剩5笔未处理】", actionLabel: "去处理" },
   "todo-017": { text: "该开票申请即将超时，请尽快核对并处理。", actionLabel: "" },
   "todo-020": { text: "存在即将超时与已超时的开票申请，请尽快处理。", actionLabel: "" },
   "todo-024": { text: "该开票申请已超时，请尽快处理。", actionLabel: "" }
@@ -1497,9 +1497,9 @@ const platformTodoDetailContentById = {
   "platform-todo-002": "店铺补充协议仍待签署，请尽快完成线上确认。",
   "platform-todo-003": "您有待签署的合同提醒，请及时处理签署流程。",
   "platform-todo-004": "补充协议已完成签署，当前待办仅供历史查看。",
-  "platform-todo-005": "您有10笔即将超时的开票申请，请及时处理！",
+  "platform-todo-005": "您有10笔即将超时的开票申请，请及时处理！【处理进度：当前还剩5笔未处理】",
   "platform-todo-006": "店铺资质材料待补充，请尽快上传完整资料。",
-  "platform-todo-007": "您有10笔已超时的开票申请，请及时处理！"
+  "platform-todo-007": "您有10笔已超时的开票申请，请及时处理！【处理进度：当前还剩5笔未处理】"
 };
 const getSupplierTodoSyncTitlesByPlatformTodo = (item) => {
   const title = String(item?.title || "");
@@ -14371,19 +14371,19 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       return true;
     });
   }, [miniappInvoicedFilters, miniappInvoicedInvoiceOrderCards]);
-  const hasSelectedMiniappInvoicedRecords = selectedMiniappInvoicedRecordIds.length > 0;
-  const isMiniappInvoicedPageAllSelected = displayedMiniappInvoicedInvoiceOrderCards.length > 0
-    && displayedMiniappInvoicedInvoiceOrderCards.every((item) => selectedMiniappInvoicedRecordIds.includes(item.id));
   const selectedMiniappInvoicedRecordSummary = useMemo(() => {
     const selectedSet = new Set(selectedMiniappInvoicedRecordIds);
-    return miniappInvoicedInvoiceOrderCards.reduce((summary, item) => {
+    return displayedMiniappInvoicedInvoiceOrderCards.reduce((summary, item) => {
       if (!selectedSet.has(item.id)) return summary;
       return {
         count: summary.count + 1,
         totalAmount: summary.totalAmount + Number(item.applyAmount || 0)
       };
     }, { count: 0, totalAmount: 0 });
-  }, [miniappInvoicedInvoiceOrderCards, selectedMiniappInvoicedRecordIds]);
+  }, [displayedMiniappInvoicedInvoiceOrderCards, selectedMiniappInvoicedRecordIds]);
+  const hasSelectedMiniappInvoicedRecords = selectedMiniappInvoicedRecordSummary.count > 0;
+  const isMiniappInvoicedPageAllSelected = displayedMiniappInvoicedInvoiceOrderCards.length > 0
+    && displayedMiniappInvoicedInvoiceOrderCards.every((item) => selectedMiniappInvoicedRecordIds.includes(item.id));
   const activeMiniappInvoicePreviewRecord = useMemo(() => (
     miniappInvoicedRecordItems.find((item) => item.id === miniappInvoicePreviewRecordId) || null
   ), [miniappInvoicePreviewRecordId, miniappInvoicedRecordItems]);
@@ -14717,14 +14717,14 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
     && displayedMiniappAppliedInvoiceOrderCards.every((item) => selectedMiniappAppliedRecordIds.includes(item.id));
   const selectedMiniappInvoiceSummary = useMemo(() => {
     const selectedSet = new Set(selectedMiniappInvoiceOrderIds);
-    return miniappInvoiceAssistantOrders.reduce((summary, item) => {
+    return selectableDisplayedMiniappPendingOrders.reduce((summary, item) => {
       if (!selectedSet.has(item.id)) return summary;
       return {
         totalAmount: summary.totalAmount + Number(item.footerAmount || 0),
         orderCount: summary.orderCount + Number(item.footerOrderCount || 0)
       };
     }, { totalAmount: 0, orderCount: 0 });
-  }, [miniappInvoiceAssistantOrders, selectedMiniappInvoiceOrderIds]);
+  }, [selectableDisplayedMiniappPendingOrders, selectedMiniappInvoiceOrderIds]);
   const miniappServiceOrderMetaById = useMemo(() => ({
     "invoice-helper-1": { orderStatus: "已完成", serviceAgentName: "蓝月亮旗舰店客服" },
     "invoice-helper-2": { orderStatus: "已完成", serviceAgentName: "松鼠便利店客服" },
@@ -15050,13 +15050,13 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
     setIsMiniappGeneratingDownloadLink(true);
 
     window.setTimeout(() => {
-      const selectedRows = miniappInvoicedInvoiceOrderCards.filter((item) => selectedMiniappInvoicedRecordIds.includes(item.id));
+      const selectedRows = displayedMiniappInvoicedInvoiceOrderCards.filter((item) => selectedMiniappInvoicedRecordIds.includes(item.id));
       const orderNos = selectedRows.map((item) => item.orderNo).join(",");
       setMiniappGeneratedDownloadLink(`https://download.shandianbangbang.com/invoice/pdf-batch?orderNos=${encodeURIComponent(orderNos)}&count=${selectedRows.length}`);
       setIsMiniappGeneratingDownloadLink(false);
       setIsMiniappDownloadLinkDialogOpen(true);
     }, 1200);
-  }, [hasSelectedMiniappInvoicedRecords, isMiniappGeneratingDownloadLink, miniappInvoicedInvoiceOrderCards, selectedMiniappInvoicedRecordIds]);
+  }, [displayedMiniappInvoicedInvoiceOrderCards, hasSelectedMiniappInvoicedRecords, isMiniappGeneratingDownloadLink, selectedMiniappInvoicedRecordIds]);
   const handleCopyMiniappGeneratedDownloadLink = useCallback(async () => {
     if (!miniappGeneratedDownloadLink) return;
     try {
@@ -15941,7 +15941,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                       ) : displayedMiniappInvoicedInvoiceOrderCards.map((item) => {
                         const isExpanded = expandedMiniappInvoicedRecordIds.includes(item.id);
                         return (
-                          <section className="miniapp-assistant-order-card is-record-view is-batch-display is-invoiced-view" key={item.id}>
+                          <section className={`miniapp-assistant-order-card is-record-view is-batch-display is-invoiced-view ${isExpanded ? "is-expanded" : ""}`} key={item.id}>
                             <button
                               className={`miniapp-assistant-record-check ${selectedMiniappInvoicedRecordIds.includes(item.id) ? "is-selected" : ""}`}
                               type="button"
@@ -16296,7 +16296,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                     </button>
                     <div className="miniapp-assistant-footer-actions">
                       {selectedMiniappInvoicedRecordSummary.count > 0 ? (
-                        <div className="miniapp-assistant-footer-summary">{`已选${selectedMiniappInvoicedRecordSummary.count}笔｜合计：¥${selectedMiniappInvoicedRecordSummary.totalAmount.toFixed(2)}`}</div>
+                        <div className="miniapp-assistant-footer-summary">{`已选${selectedMiniappInvoicedRecordSummary.count}笔`}</div>
                       ) : null}
                       <button
                         className={`miniapp-assistant-submit-btn ${hasSelectedMiniappInvoicedRecords ? "is-enabled" : ""}${isMiniappGeneratingDownloadLink ? " is-loading" : ""}`}
