@@ -2334,8 +2334,8 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .goods-table th:nth-child(5) { width: 150px; }
 .goods-table th:nth-child(6) { width: 150px; }
 .goods-table th:nth-child(7) { width: 150px; }
-.goods-table th:nth-child(8) { width: 150px; }
-.goods-table th:nth-child(9) { width: 150px; }
+.goods-table th:nth-child(8) { width: 210px; }
+.goods-table th:nth-child(9) { width: 110px; }
 .special-price-goods-table th:nth-child(1) { width: 56px; }
 .special-price-goods-table th:nth-child(2) { width: 360px; }
 .special-price-goods-table th:nth-child(3) { width: 120px; }
@@ -2348,6 +2348,9 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .product-meta { flex: 1; min-width: 0; }
 .product-name { margin-bottom: 8px; color: #1b2431; font-size: 14px; font-weight: 700; line-height: 1.5; word-break: break-word; }
 .product-id { color: #9aa4b2; font-size: 13px; }
+.spec-summary { display: flex; align-items: center; gap: 8px; color: #1d2a39; white-space: nowrap; min-width: 0; }
+.spec-summary span { overflow: hidden; text-overflow: ellipsis; }
+.row-actions { display: flex; align-items: center; gap: 12px; white-space: nowrap; min-width: 0; }
 .delete-link { border: none; background: transparent; color: #ff7a00; white-space: nowrap; }
 .limit-input { width: 92px; height: 28px; padding: 0 8px; border: 1px solid #d9dee6; }
 .limit-input.is-error { border-color: #ff4d4f; }
@@ -2355,9 +2358,7 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .limit-input.is-locked { border-color: transparent; background: transparent; padding-left: 0; color: #222; }
 .limit-locked-message { display: inline-block; min-width: 0; flex: 1; color: #566171; line-height: 1.45; white-space: nowrap; }
 .limit-input.is-disabled, .spec-batch-left input.is-disabled { background: #f5f6f8; color: #a6adba; cursor: not-allowed; }
-.spec-action { display: flex; align-items: center; gap: 8px; color: #1d2a39; }
-.spec-open-btn { border: none; background: transparent; color: #1d2a39; padding: 0; font-weight: 700; }
-.spec-open-btn span { color: #ff9f2d; font-size: inherit; line-height: inherit; margin-left: 6px; }
+.spec-open-btn { border: none; background: transparent; color: #ff9f2d; padding: 0; font-weight: 700; white-space: nowrap; }
 .goods-table.detail-table th:nth-child(1) { width: 440px; }
 .goods-table.detail-table th:nth-child(2) { width: 100px; }
 .goods-table.detail-table th:nth-child(3) { width: 100px; }

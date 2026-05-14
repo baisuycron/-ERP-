@@ -4178,6 +4178,19 @@ const syncProductActivityStock = (product, nextTotalValue) => {
     activityStock: nextTotalValue
   };
 };
+const normalizeProductForUnifiedActivityStock = (product) => {
+  const nextActivityStock = hasValue(product.activityStock) ? product.activityStock : getProductStockDisplay(product);
+
+  return {
+    ...product,
+    activityStock: nextActivityStock,
+    specs: product.specs.map((spec) => (
+      spec.status === "active"
+        ? { ...spec, activityStock: "" }
+        : spec
+    ))
+  };
+};
 
 function EditableHeader({ label, suffixIcon, suffixTooltip }) {
   return (
@@ -10005,7 +10018,7 @@ function SpecPickerModal({ pageName, product, productFlashPriceInputMode, select
   if (!product) return null;
 
   const isSpecialPricePage = isAnySpecialPricePage(pageName);
-  const useProductLevelFlashPrice = isSpecialPricePage && productFlashPriceInputMode;
+  const useProductLevelFlashPrice = productFlashPriceInputMode;
   const useUnifiedFlashPrice = hasUnifiedFlashPrice(product);
   const useUnifiedTotalLimit = hasUnifiedTotalLimit(product);
   const useUnifiedActivityStock = hasUnifiedActivityStock(product);
@@ -10027,6 +10040,7 @@ function SpecPickerModal({ pageName, product, productFlashPriceInputMode, select
   const allowSpecFlashPriceEdit = useProductLevelFlashPrice
     ? specFieldEditModes.flashPrice
     : (!useUnifiedFlashPrice || specFieldEditModes.flashPrice);
+  const productLevelFlashPriceLabel = hasValue(product.flashPrice) ? product.flashPrice : "按商品维度生效";
   const allowSpecTotalLimitEdit = !useUnifiedTotalLimit || specFieldEditModes.totalLimit;
   const allowSpecActivityStockEdit = !isSpecialPricePage && (!useUnifiedActivityStock || specFieldEditModes.activityStock);
 
@@ -10212,7 +10226,7 @@ function SpecPickerModal({ pageName, product, productFlashPriceInputMode, select
                     </td>
                     <td>{row.marketPrice}</td>
                     {!isSpecialPricePage ? <td>{row.stock}</td> : null}
-                    <td>{allowSpecFlashPriceEdit ? <input className={`spec-inline-input ${invalidSpecFields[row.id]?.flashPrice ? "is-error" : ""}`} value={row.flashPrice} onChange={(e) => handleSpecFieldChange(row.id, "flashPrice", e.target.value)} /> : <span className="spec-unified-label">按商品维度生效</span>}</td>
+                    <td>{allowSpecFlashPriceEdit ? <input className={`spec-inline-input ${invalidSpecFields[row.id]?.flashPrice ? "is-error" : ""}`} value={row.flashPrice} onChange={(e) => handleSpecFieldChange(row.id, "flashPrice", e.target.value)} /> : <span className="spec-unified-label">{productLevelFlashPriceLabel}</span>}</td>
                     <td>
                       {allowSpecTotalLimitEdit ? <input className={`spec-inline-input ${invalidSpecFields[row.id]?.limitCount ? "is-error" : ""}`} value={row.limitCount} onChange={(e) => handleSpecFieldChange(row.id, "limitCount", e.target.value.replace(/[^\d]/g, ""))} /> : <span className="spec-unified-label">按商品维度生效</span>}
                     </td>
@@ -13415,17 +13429,14 @@ function ShopInvoicePage({
 
 function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, selectedProducts, selectedGoodsIds, productFieldEditModesByProduct, productFieldErrorsByProduct, onToggleProductFieldEditMode, onToggleGoodsSelection, onRemoveProduct, onBatchRemoveProducts, onBack, onOpenPicker, onOpenSpecPicker, onUpdateProductFlashPrice, onUpdateProductLimit, onUpdateProductActivityStock, onSave, modalOpen }) {
   const isSpecialPricePage = isAnySpecialPricePage(pageName);
-  const showUnpricedFilter = pageName === "限时购1" || pageName === "限时购";
   const filteredProducts = useMemo(() => selectedProducts.filter((product) => {
     const productKeyword = form.productKeyword.trim();
     const productId = form.productId.trim();
-    const hasUnpricedSpec = !hasUnifiedFlashPrice(product) && product.specs.some((spec) => spec.status === "active" && !String(spec.flashPrice || "").trim());
 
     if (productKeyword && !product.name.includes(productKeyword)) return false;
     if (productId && !product.id.includes(productId)) return false;
-    if (showUnpricedFilter && form.onlyUnpricedProducts && !hasUnpricedSpec) return false;
     return true;
-  }), [form.onlyUnpricedProducts, form.productId, form.productKeyword, selectedProducts, showUnpricedFilter]);
+  }), [form.productId, form.productKeyword, selectedProducts]);
 
   const hasSelectedProducts = selectedProducts.length > 0;
   const allFilteredSelected = filteredProducts.length > 0 && filteredProducts.every((item) => selectedGoodsIds.includes(item.id));
@@ -13439,7 +13450,6 @@ function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, 
           <div className="goods-filter-bar">
             <label className="mini-field"><span>商品名称:</span><input value={form.productKeyword} onChange={(e) => onFormChange("productKeyword", e.target.value)} /></label>
             <label className="mini-field"><span>商品ID:</span><input value={form.productId} onChange={(e) => onFormChange("productId", e.target.value)} /></label>
-            {showUnpricedFilter ? <label className="check-item goods-filter-check"><input type="checkbox" checked={form.onlyUnpricedProducts} onChange={(e) => onFormChange("onlyUnpricedProducts", e.target.checked)} /><span>筛选未配限时价商品</span></label> : null}
             <button className="btn btn-reset" type="button" onClick={onResetFilters}>重置</button>
             <button className="btn btn-search" type="button">搜索</button>
           </div>
@@ -13457,14 +13467,14 @@ function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, 
             return (
               <tr key={item.id}>
                 {showSelectionControls ? <td><input type="checkbox" checked={selectedGoodsIds.includes(item.id)} onChange={() => onToggleGoodsSelection(item.id)} /></td> : null}
-                <td><div className="product-cell"><div className="product-image">{item.image}</div><div className="product-meta"><div className="product-name">{item.name}</div><div className="product-id">商品ID： {item.id}</div></div>{showSelectionControls ? <button className="delete-link" type="button" onClick={() => onRemoveProduct(item.id)}>删除商品</button> : null}</div></td>
+                <td><div className="product-cell"><div className="product-image">{item.image}</div><div className="product-meta"><div className="product-name">{item.name}</div><div className="product-id">商品ID： {item.id}</div></div></div></td>
                 <td>{item.marketPrice}</td>
                 {!isSpecialPricePage ? <td>{getProductStockDisplay(item)}</td> : null}
                 <td><EditableCellInput label={isSpecialPricePage ? "专享价" : "限时价"} value={flashPriceDisplay} onChange={(e) => onUpdateProductFlashPrice(item.id, e.target.value)} placeholder="请输入" locked={flashPriceLocked} showEditWhenLocked={flashPriceLocked} isEditMode={productFieldEditModes.flashPrice} onToggleEdit={() => onToggleProductFieldEditMode(item.id, "flashPrice")} hasError={productFieldErrors.flashPrice} /></td>
                 <td><EditableCellInput label={isSpecialPricePage ? "专享价生效件数" : "总限购数量"} value={totalLimitDisplay} onChange={(e) => onUpdateProductLimit(item.id, e.target.value.replace(/[^\d]/g, ""))} placeholder="请输入" locked={totalLimitLocked} lockedDisplay="按规格维度生效" isEditMode={productFieldEditModes.totalLimit} onToggleEdit={() => onToggleProductFieldEditMode(item.id, "totalLimit")} inputMode="numeric" hasError={productFieldErrors.totalLimit} /></td>
                 {!isSpecialPricePage ? <td><EditableCellInput label="总活动库存" value={activityStockDisplay} onChange={(e) => onUpdateProductActivityStock(item.id, e.target.value.replace(/[^\d]/g, ""))} placeholder="请输入" locked={activityStockLocked} lockedDisplay="按规格维度生效" isEditMode={productFieldEditModes.activityStock} onToggleEdit={() => onToggleProductFieldEditMode(item.id, "activityStock")} inputMode="numeric" hasError={productFieldErrors.activityStock} /></td> : null}
-                <td>共 {item.specs.length} 个 规格</td>
-                <td><div className="spec-action"><button type="button" className="spec-open-btn" onClick={() => onOpenSpecPicker(item.id)}>已选 {item.specs.filter((spec) => spec.status === "active").length} 个 规格 <span>编辑</span></button></div></td>
+                <td><div className="spec-summary"><span>共 {item.specs.length} 个规格，已选 {item.specs.filter((spec) => spec.status === "active").length} 个</span><button type="button" className="spec-open-btn" onClick={() => onOpenSpecPicker(item.id)}>编辑</button></div></td>
+                <td><div className="row-actions">{showSelectionControls ? <button className="delete-link" type="button" onClick={() => onRemoveProduct(item.id)}>删除商品</button> : null}</div></td>
               </tr>
             );
           })}</tbody></table></div>
@@ -17602,7 +17612,7 @@ export default function App() {
       if (existingProduct) return JSON.parse(JSON.stringify(existingProduct));
 
       const catalogProduct = catalogMap.get(productId);
-      return catalogProduct ? { ...JSON.parse(JSON.stringify(catalogProduct)), flashPrice: "" } : null;
+      return catalogProduct ? normalizeProductForUnifiedActivityStock({ ...JSON.parse(JSON.stringify(catalogProduct)), flashPrice: "" }) : null;
     }).filter(Boolean);
   };
 
@@ -17745,7 +17755,7 @@ export default function App() {
     const catalogProducts = createInitialProducts(isAnySpecialPricePage(currentMarketingPage) ? "1" : "0");
     const selectedCatalogProducts = catalogProducts
       .filter((item) => selectedPickerProductIds.includes(item.id))
-      .map((item) => ({ ...JSON.parse(JSON.stringify(item)), flashPrice: "" }));
+      .map((item) => normalizeProductForUnifiedActivityStock({ ...JSON.parse(JSON.stringify(item)), flashPrice: "" }));
 
     updateCurrentMarketingState((current) => {
       const existingIds = new Set(current.selectedProducts.map((item) => item.id));
