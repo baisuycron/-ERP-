@@ -2217,7 +2217,6 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .filter-field input::placeholder, .create-input-wrap input::placeholder, .mini-field input::placeholder, .page-input::placeholder, .picker-field input::placeholder { color: #c2c6cf; }
 .field-status { width: auto; }
 .field-date { width: auto; }
-.field-product-name { grid-column: 3; }
 .filter-actions { display: flex; justify-content: flex-end; gap: 10px; }
 .btn { height: 32px; padding: 0 18px; border: 1px solid transparent; }
 .btn-dark { background: #242424; color: #fff; }
@@ -7810,7 +7809,6 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
   .platform-todo-filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .platform-todo-filter-actions { grid-column: auto; }
 }
-
 
 
 
