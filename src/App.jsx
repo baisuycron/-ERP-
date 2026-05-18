@@ -9776,7 +9776,6 @@ function DetailPage({ detailActivity, page, setPage, pageSize, setPageSize, onSh
         <div className="detail-line"><span>活动分类:</span><strong>{detailActivity.category}</strong></div>
         <div className="detail-line"><span>开始时间:</span><strong>{detailActivity.startTime}</strong></div>
         <div className="detail-line"><span>结束时间:</span><strong>{detailActivity.endTime}</strong></div>
-        <div className="detail-line"><span>限购规则:</span><strong><i className="detail-rule-dot" />{detailActivity.rule}</strong></div>
       </div>
 
       <div className="detail-goods-label">商品详情:</div>
@@ -15380,6 +15379,27 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       setMiniappInvoicePreviewNotice("复制失败，请稍后重试");
     }
   }, [miniappGeneratedDownloadLink]);
+  const handleCopyMiniappInvoiceBatch = useCallback(async (invoiceBatch) => {
+    if (!invoiceBatch || invoiceBatch === "-") return;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(invoiceBatch);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = invoiceBatch;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "absolute";
+        textarea.style.left = "-9999px";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+      setMiniappInvoicePreviewNotice("开票批次已复制");
+    } catch (error) {
+      setMiniappInvoicePreviewNotice("复制失败，请稍后重试");
+    }
+  }, []);
   const handleOpenMiniappAppliedCancelConfirm = () => {
     if (!hasSelectedMiniappAppliedRecords) {
       setMiniappBatchErrorToast("请先勾选已申请开票订单，再进行撤销。");
@@ -16170,7 +16190,10 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                                 <div className="miniapp-batch-extra-grid">
                                   <div className="miniapp-batch-field is-store">
                                     <span>开票批次</span>
-                                    <strong>{item.invoiceBatch}</strong>
+                                    <div className="miniapp-batch-copy-value">
+                                      <strong>{item.invoiceBatch}</strong>
+                                      <button className="miniapp-batch-copy-btn" type="button" onClick={() => handleCopyMiniappInvoiceBatch(item.invoiceBatch)}>复制</button>
+                                    </div>
                                   </div>
                                   {shouldShowOrderAmount ? (
                                     <div className="miniapp-batch-field is-amount-inline">
@@ -16289,7 +16312,10 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                                 <div className="miniapp-batch-extra-grid">
                                   <div className="miniapp-batch-field is-store">
                                     <span>开票批次</span>
-                                    <strong>{item.invoiceBatch}</strong>
+                                    <div className="miniapp-batch-copy-value">
+                                      <strong>{item.invoiceBatch}</strong>
+                                      <button className="miniapp-batch-copy-btn" type="button" onClick={() => handleCopyMiniappInvoiceBatch(item.invoiceBatch)}>复制</button>
+                                    </div>
                                   </div>
                                   <div className="miniapp-batch-field is-amount-inline">
                                     <span>订单总额</span>
@@ -16423,7 +16449,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                           <>
                             <label className="miniapp-filter-field">
                               <span>关键字搜索</span>
-                              <input value={miniappAppliedDraftFilters.keyword} onChange={(event) => setMiniappAppliedDraftFilters((current) => ({ ...current, keyword: event.target.value }))} placeholder="请输入订单号/店铺名称/发票抬头" />
+                              <input value={miniappAppliedDraftFilters.keyword} onChange={(event) => setMiniappAppliedDraftFilters((current) => ({ ...current, keyword: event.target.value }))} placeholder="请输入订单号/开票批次/店铺名称/发票抬头" />
                             </label>
                             <div className="miniapp-filter-field">
                               <span>申请时间</span>
@@ -16481,7 +16507,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                           <>
                             <label className="miniapp-filter-field">
                               <span>关键字搜索</span>
-                              <input value={miniappInvoicedDraftFilters.keyword} onChange={(event) => setMiniappInvoicedDraftFilters((current) => ({ ...current, keyword: event.target.value }))} placeholder="请输入订单号/发票号码/店铺名称" />
+                              <input value={miniappInvoicedDraftFilters.keyword} onChange={(event) => setMiniappInvoicedDraftFilters((current) => ({ ...current, keyword: event.target.value }))} placeholder="请输入订单号/发票号码/开票批次/店铺名称" />
                             </label>
                             <div className="miniapp-filter-field">
                               <span>开票时间</span>
@@ -16600,14 +16626,22 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                         <div className="miniapp-assistant-footer-summary">{`已选${selectedMiniappInvoicedRecordSummary.count}笔`}</div>
                       ) : null}
                       <button
-                        className={`miniapp-assistant-submit-btn ${hasSelectedMiniappInvoicedRecords ? "is-enabled" : ""}${isMiniappGeneratingDownloadLink ? " is-loading" : ""}`}
+                        className={`miniapp-assistant-submit-btn ${hasSelectedMiniappInvoicedRecords ? "is-enabled" : ""}`}
                         type="button"
                         disabled={!hasSelectedMiniappInvoicedRecords || isMiniappGeneratingDownloadLink}
                         onClick={handleGenerateMiniappDownloadLink}
                       >
-                        <strong>{isMiniappGeneratingDownloadLink ? "生成中..." : "生成下载链接"}</strong>
-                        {isMiniappGeneratingDownloadLink ? <span className="miniapp-assistant-btn-spinner" aria-hidden="true" /> : null}
+                        <strong>生成下载链接</strong>
                       </button>
+                    </div>
+                  </div>
+                ) : null}
+                {isMiniappInvoiceInvoicedTab && isMiniappGeneratingDownloadLink ? (
+                  <div className="miniapp-assistant-loading-mask">
+                    <div className="miniapp-assistant-loading-dialog" role="status" aria-live="polite">
+                      <h3>提示</h3>
+                      <p>当前正在生成发票文件下载链接，请稍等~</p>
+                      <span className="miniapp-assistant-loading-spinner" aria-hidden="true" />
                     </div>
                   </div>
                 ) : null}
