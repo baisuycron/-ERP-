@@ -11350,7 +11350,7 @@ function ShopInvoiceBulkUploadPage({ onBack, onToast }) {
           <thead>
             <tr>
               <th>任务类型</th>
-              <th>任务时间</th>
+              <th>操作时间</th>
               <th>操作人</th>
               <th>任务状态</th>
               <th>操作</th>
