@@ -1482,6 +1482,33 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
   font-size: 18px;
   font-weight: 500;
 }
+.pc-mall-export-record-tabs {
+  display: flex;
+  gap: 28px;
+  padding: 0 24px 14px;
+  border-bottom: 1px solid #edf1f5;
+}
+.pc-mall-export-record-tab {
+  position: relative;
+  border: none;
+  padding: 0 2px 10px;
+  background: transparent;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+}
+.pc-mall-export-record-tab.is-active {
+  color: #202228;
+}
+.pc-mall-export-record-tab.is-active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: #1677ff;
+}
 .pc-mall-export-record-close {
   border: none;
   background: transparent;
@@ -1523,6 +1550,9 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
   background: transparent;
   color: #1677ff;
   font-size: 14px;
+}
+.pc-mall-export-record-muted {
+  color: #9ca3af;
 }
 .pc-mall-export-record-pagination {
   display: flex;

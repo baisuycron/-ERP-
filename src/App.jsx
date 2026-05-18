@@ -1564,6 +1564,16 @@ const buyerPcMallExportRecordRows = [
   { id: "export-007", type: "商品列表导出", exportedAt: "2026-05-11 02:42:45", operator: "NFSQ369", status: "执行成功" },
   { id: "export-008", type: "商品列表导出", exportedAt: "2026-05-11 02:42:45", operator: "NFSQ369", status: "执行成功" }
 ];
+const buyerPcMallImportTaskRows = [
+  { id: "import-001", type: "批量导入发票", exportedAt: "2026-05-18 17:50:06", operator: "NFSQ369", status: "全部失败", actionLabel: "下载失败数据" },
+  { id: "import-002", type: "商品列表导入", exportedAt: "2026-05-16 03:43:10", operator: "NFSQ369", status: "全部成功", actionLabel: "" },
+  { id: "import-003", type: "商品列表导入", exportedAt: "2026-05-16 03:43:10", operator: "NFSQ369", status: "部分失败", actionLabel: "下载失败数据" },
+  { id: "import-004", type: "商品列表导入", exportedAt: "2026-05-16 03:43:10", operator: "NFSQ369", status: "全部成功", actionLabel: "" },
+  { id: "import-005", type: "商品列表导入", exportedAt: "2026-05-16 03:43:09", operator: "NFSQ369", status: "全部成功", actionLabel: "" },
+  { id: "import-006", type: "买家列表导入", exportedAt: "2026-05-16 02:51:48", operator: "NFSQ369", status: "全部成功", actionLabel: "" },
+  { id: "import-007", type: "买家列表导入", exportedAt: "2026-05-16 02:51:48", operator: "NFSQ369", status: "全部成功", actionLabel: "" },
+  { id: "import-008", type: "买家列表导入", exportedAt: "2026-05-16 02:51:47", operator: "NFSQ369", status: "全部成功", actionLabel: "" }
+];
 const buyerPcMallCartSeedGroups = [
   {
     id: "store-1",
@@ -5105,39 +5115,72 @@ function BuyerPcMallProductDetailModal({ row, onClose }) {
 }
 
 function PcMallExportRecordModal({ rows, onClose }) {
+  const [activeTab, setActiveTab] = useState("export");
+  const isExportTab = activeTab === "export";
+  const currentRows = isExportTab ? rows : buyerPcMallImportTaskRows;
+  const totalCount = isExportTab ? 1176 : 210;
+
   return (
     <div className="modal-overlay pc-mall-export-record-overlay" onClick={onClose} role="presentation">
       <div className="pc-mall-export-record-modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="pc-mall-export-record-heading">
         <div className="pc-mall-export-record-head">
-          <h3 id="pc-mall-export-record-heading">导出记录</h3>
+          <h3 id="pc-mall-export-record-heading">任务中心</h3>
           <button className="pc-mall-export-record-close" type="button" onClick={onClose} aria-label="关闭">×</button>
+        </div>
+        <div className="pc-mall-export-record-tabs" role="tablist" aria-label="任务中心类型">
+          <button
+            className={`pc-mall-export-record-tab ${isExportTab ? "is-active" : ""}`}
+            type="button"
+            role="tab"
+            aria-selected={isExportTab}
+            onClick={() => setActiveTab("export")}
+          >
+            导出/下载任务
+          </button>
+          <button
+            className={`pc-mall-export-record-tab ${!isExportTab ? "is-active" : ""}`}
+            type="button"
+            role="tab"
+            aria-selected={!isExportTab}
+            onClick={() => setActiveTab("import")}
+          >
+            导入任务
+          </button>
         </div>
         <div className="pc-mall-export-record-body">
           <table className="pc-mall-export-record-table">
             <thead>
               <tr>
-                <th>导出类型</th>
-                <th>导出时间</th>
+                <th>{isExportTab ? "导出类型" : "导入类型"}</th>
+                <th>{isExportTab ? "导出时间" : "导入时间"}</th>
                 <th>操作人</th>
                 <th>状态</th>
                 <th>操作</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((item) => (
+              {currentRows.map((item) => (
                 <tr key={item.id}>
                   <td>{item.type}</td>
                   <td>{item.exportedAt}</td>
                   <td>{item.operator}</td>
                   <td>{item.status}</td>
-                  <td><button className="pc-mall-export-record-link" type="button">点击下载</button></td>
+                  <td>
+                    {isExportTab ? (
+                      <button className="pc-mall-export-record-link" type="button">点击下载</button>
+                    ) : item.actionLabel ? (
+                      <button className="pc-mall-export-record-link" type="button">{item.actionLabel}</button>
+                    ) : (
+                      <span className="pc-mall-export-record-muted" />
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
         <div className="pc-mall-export-record-pagination">
-          <span>共1176条</span>
+          <span>{`共${totalCount}条`}</span>
           <button className="pc-mall-page-size" type="button">10 条/页</button>
           <div className="pc-mall-page-list">
             <button className="pc-mall-page-btn is-arrow" type="button" disabled>‹</button>
@@ -7839,7 +7882,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                   ))}
                 </div>
                 <div className="pc-mall-tabbar-actions">
-                  <button className="pc-mall-invoice-type-btn pc-mall-invoice-type-btn-secondary" type="button" onClick={() => setIsExportRecordModalOpen(true)}>导出记录</button>
+                  <button className="pc-mall-invoice-type-btn pc-mall-invoice-type-btn-secondary" type="button" onClick={() => setIsExportRecordModalOpen(true)}>任务中心</button>
                   <button className="pc-mall-invoice-type-btn" type="button" onClick={handleOpenInvoiceTitleManagement}>发票抬头管理</button>
                 </div>
               </div>
@@ -8418,7 +8461,7 @@ function Header({ currentMarketingPage, specialCreateTab, onTopActionClick, cust
     { key: "miniapp-mall", label: "买家小程序商城", icon: "miniapp-mall" },
     { key: "service", label: "在线客服", icon: "service" },
     { key: "todo", label: "我的待办", icon: "todo", badge: pendingCount },
-    { key: "export", label: "导出记录", icon: "export" },
+    { key: "export", label: "任务中心", icon: "export" },
     { key: "logout", label: "退出登录", icon: "logout" }
   ];
   const isHomeTab = currentMarketingPage === homeTabLabel;
@@ -17738,6 +17781,7 @@ export default function App() {
   const [batchSpecSelectedIdsByProduct, setBatchSpecSelectedIdsByProduct] = useState({});
   const [marketingStates, setMarketingStates] = useState(createInitialMarketingStates);
   const [toastMessage, setToastMessage] = useState("");
+  const [isGlobalExportRecordModalOpen, setIsGlobalExportRecordModalOpen] = useState(false);
   const isGoodsSection = activeSection === "goods";
   const isHomeSection = activeSection === "home";
   const isBuyerSection = activeSection === "buyer";
@@ -17749,7 +17793,7 @@ export default function App() {
     { key: "supplier-admin", label: "供应商后台", icon: "supplier-admin" },
     { key: "pc-mall", label: "买家PC商城", icon: "pc-mall" },
     { key: "miniapp-mall", label: "买家小程序商城", icon: "miniapp-mall" },
-    { key: "export", label: "导出记录", icon: "export" },
+    { key: "export", label: "任务中心", icon: "export" },
     { key: "logout", label: "退出登录", icon: "logout" }
   ]), []);
   const buyerGroupOptions = useMemo(() => buyerGroups, []);
@@ -18795,8 +18839,14 @@ export default function App() {
       return;
     }
 
-    if (actionKey === "service" || actionKey === "export" || actionKey === "logout") {
-      const actionLabelMap = { service: "在线客服", export: "导出记录", logout: "退出登录" };
+    if (actionKey === "export") {
+      setIsGlobalExportRecordModalOpen(true);
+      setToastMessage("");
+      return;
+    }
+
+    if (actionKey === "service" || actionKey === "logout") {
+      const actionLabelMap = { service: "在线客服", logout: "退出登录" };
       setToastMessage(`${actionLabelMap[actionKey]}功能已保留入口，后续可继续接真实逻辑。`);
     }
   };
@@ -19295,6 +19345,7 @@ export default function App() {
       {isBuyerSection ? <AddBuyerModal open={isAddBuyerOpen} groupOptions={buyerGroupOptions} form={newBuyerForm} discountInvalid={newBuyerDiscountInvalid || isBuyerDiscountInvalid(newBuyerForm.discount)} onFormChange={(updater) => { setNewBuyerDiscountInvalid(false); setNewBuyerForm(updater); }} onClose={() => { setIsAddBuyerOpen(false); setNewBuyerDiscountInvalid(false); }} onSave={handleSaveNewBuyer} /> : null}
       {isBuyerSection ? <EditBuyerModal buyer={editingBuyer} groupOptions={buyerGroupOptions} form={buyerEditForm} discountInvalid={buyerEditDiscountInvalid || isBuyerDiscountInvalid(buyerEditForm.discount)} onFormChange={(updater) => { setBuyerEditDiscountInvalid(false); setBuyerEditForm(updater); }} onClose={() => { setEditingBuyer(null); setBuyerEditDiscountInvalid(false); }} onSave={handleSaveBuyerEdit} /> : null}
       {isBuyerSection ? <BuyerImportResultModal result={buyerImportResult} onClose={handleCloseBuyerImportResult} onConfirm={handleConfirmBuyerImportResult} /> : null}
+      {isGlobalExportRecordModalOpen ? <PcMallExportRecordModal rows={buyerPcMallExportRecordRows} onClose={() => setIsGlobalExportRecordModalOpen(false)} /> : null}
       {toastMessage ? <div className="page-toast">{toastMessage}</div> : null}
     </div>
   );
