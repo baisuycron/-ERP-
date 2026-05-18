@@ -10873,6 +10873,77 @@ const shopInvoiceBulkUploadMockBatch = {
   ]
 };
 
+const shopInvoiceBulkUploadTaskSeed = [
+  {
+    id: "task-20260515-01",
+    taskType: "批量导入发票",
+    totalCount: 3,
+    taskTime: "2026-05-15 17:27:08",
+    operator: "李丹",
+    status: "执行中",
+    batchResult: {
+      ...shopInvoiceBulkUploadMockBatch,
+      batchNo: "B202605150001",
+      uploadTime: "2026-05-15 17:27:08",
+      operator: "李丹",
+      zipFileName: "invoice_batch_20260515.zip"
+    }
+  },
+  {
+    id: "task-20260514-02",
+    taskType: "批量导入发票",
+    totalCount: 1,
+    taskTime: "2026-05-14 11:42:36",
+    operator: "王瑶",
+    status: "全部成功",
+    batchResult: {
+      ...shopInvoiceBulkUploadMockBatch,
+      batchNo: "B202605140001",
+      uploadTime: "2026-05-14 11:42:36",
+      operator: "王瑶",
+      zipFileName: "single_invoice_20260514.zip",
+      successInvoiceCount: 3,
+      failInvoiceCount: 0,
+      invoices: shopInvoiceBulkUploadMockBatch.invoices.map((item) => ({
+        ...item,
+        status: "导入成功",
+        failReason: "-"
+      })),
+      failDetails: []
+    }
+  },
+  {
+    id: "task-20250515-03",
+    taskType: "批量导入发票",
+    totalCount: 1,
+    taskTime: "2025-05-15 17:27:08",
+    operator: "李丹",
+    status: "全部失败",
+    batchResult: {
+      ...shopInvoiceBulkUploadMockBatch,
+      batchNo: "B202505150001",
+      uploadTime: "2025-05-15 17:27:08",
+      operator: "李丹",
+      zipFileName: "invoice_failed_20250515.zip"
+    }
+  },
+  {
+    id: "task-20231017-04",
+    taskType: "批量导入发票",
+    totalCount: 31,
+    taskTime: "2023-10-17 15:03:19",
+    operator: "张某某",
+    status: "部分失败",
+    batchResult: {
+      ...shopInvoiceBulkUploadMockBatch,
+      batchNo: "B202310170001",
+      uploadTime: "2023-10-17 15:03:19",
+      operator: "张某某",
+      zipFileName: "invoice_archive_20231017.zip"
+    }
+  }
+];
+
 function ShopInvoiceBulkUploadPage({ onBack, onToast }) {
   const [selectedZipName, setSelectedZipName] = useState("");
   const [isUploading, setIsUploading] = useState(false);
@@ -10882,6 +10953,21 @@ function ShopInvoiceBulkUploadPage({ onBack, onToast }) {
   const [activeInvoiceNo, setActiveInvoiceNo] = useState("");
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [replacingInvoice, setReplacingInvoice] = useState(null);
+  const [taskFilters, setTaskFilters] = useState({
+    status: "",
+    operator: "",
+    startDate: "",
+    endDate: ""
+  });
+  const [taskDraftFilters, setTaskDraftFilters] = useState({
+    status: "",
+    operator: "",
+    startDate: "",
+    endDate: ""
+  });
+  const [taskPage, setTaskPage] = useState(1);
+  const [taskPageSize, setTaskPageSize] = useState(20);
+  const [taskJumpPageInput, setTaskJumpPageInput] = useState("");
   const fileInputRef = useRef(null);
 
   const activeInvoice = useMemo(() => {
@@ -10890,6 +10976,20 @@ function ShopInvoiceBulkUploadPage({ onBack, onToast }) {
   }, [activeInvoiceNo, batchResult]);
   const buyerOrderInvoice = batchResult?.invoices.find((item) => item.status === "导入成功") || null;
   const buyerOrder = buyerOrderInvoice?.orders[0] || null;
+  const filteredTaskRows = useMemo(() => (
+    shopInvoiceBulkUploadTaskSeed.filter((item) => {
+      if (taskFilters.status && item.status !== taskFilters.status) return false;
+      if (taskFilters.operator && !item.operator.includes(taskFilters.operator.trim())) return false;
+      if (taskFilters.startDate && item.taskTime.slice(0, 10) < taskFilters.startDate) return false;
+      if (taskFilters.endDate && item.taskTime.slice(0, 10) > taskFilters.endDate) return false;
+      return true;
+    })
+  ), [taskFilters]);
+  const taskPageCount = Math.max(1, Math.ceil(filteredTaskRows.length / taskPageSize));
+  const currentTaskPage = Math.min(taskPage, taskPageCount);
+  const pagedTaskRows = useMemo(() => (
+    filteredTaskRows.slice((currentTaskPage - 1) * taskPageSize, currentTaskPage * taskPageSize)
+  ), [currentTaskPage, filteredTaskRows, taskPageSize]);
 
   const handleSelectZip = (event) => {
     const file = event.target.files?.[0];
@@ -10966,6 +11066,61 @@ function ShopInvoiceBulkUploadPage({ onBack, onToast }) {
     setActivePanel("detail");
   };
 
+  const handleSearchTasks = () => {
+    setTaskFilters(taskDraftFilters);
+    setTaskPage(1);
+    setTaskJumpPageInput("");
+  };
+
+  const handleResetTasks = () => {
+    const resetValue = {
+      status: "",
+      operator: "",
+      startDate: "",
+      endDate: ""
+    };
+    setTaskDraftFilters(resetValue);
+    setTaskFilters(resetValue);
+    setTaskPage(1);
+    setTaskPageSize(20);
+    setTaskJumpPageInput("");
+  };
+
+  const handleOpenTaskProgress = (task) => {
+    setBatchResult(task.batchResult);
+    setActiveInvoiceNo(task.batchResult.invoices[0]?.invoiceNo || "");
+    setActivePanel("result");
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+    });
+  };
+
+  const handleTaskJump = () => {
+    const nextPage = Number(taskJumpPageInput);
+    if (!nextPage) return;
+    setTaskPage(Math.min(taskPageCount, Math.max(1, nextPage)));
+    setTaskJumpPageInput("");
+  };
+
+  const handleDownloadTaskFailDetails = (task) => {
+    const failDetails = Array.isArray(task?.batchResult?.failDetails) ? task.batchResult.failDetails : [];
+    if (!failDetails.length) return;
+    const rows = failDetails.map((item) => ({
+      导入批次号: item.batchNo,
+      发票号码: item.invoiceNo,
+      PDF文件名: item.pdfFileName,
+      订单号: item.orderNo,
+      失败层级: item.failLevel,
+      失败原因编码: item.failCode,
+      失败原因描述: item.failReason
+    }));
+    const sheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, sheet, "失败明细");
+    XLSX.writeFile(workbook, `${task.batchResult.batchNo}-失败明细.xlsx`);
+    onToast?.("失败明细已导出");
+  };
+
   const handleSubmitEdit = () => {
     if (!editingInvoice) return;
     const originalInvoiceNo = editingInvoice.originalInvoiceNo || editingInvoice.invoiceNo;
@@ -11032,6 +11187,7 @@ function ShopInvoiceBulkUploadPage({ onBack, onToast }) {
                     <td>{item.orders.length} 笔</td>
                     <td><span className={`bulk-invoice-status ${item.status === "导入失败" ? "is-danger" : "is-success"}`}>{item.status}</span></td>
                     <td>{item.failReason}</td>
+                    <td><button className="bulk-invoice-table-link" type="button" onClick={() => handleOpenDetail(item.invoiceNo)}>查看</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -11152,6 +11308,93 @@ function ShopInvoiceBulkUploadPage({ onBack, onToast }) {
     </section>
   );
 
+  const renderTaskProgressList = () => (
+    <section className="content-card bulk-invoice-card">
+      <div className="bulk-invoice-section-head is-compact">
+        <div>
+          <h3>导入任务进度</h3>
+        </div>
+      </div>
+      <div className="bulk-invoice-task-filters">
+        <label className="bulk-invoice-task-field">
+          <span>任务状态</span>
+          <div className="bulk-invoice-task-select">
+            <select value={taskDraftFilters.status} onChange={(event) => setTaskDraftFilters((current) => ({ ...current, status: event.target.value }))}>
+              <option value="">请选择</option>
+              <option value="执行中">执行中</option>
+              <option value="全部成功">全部成功</option>
+              <option value="全部失败">全部失败</option>
+              <option value="部分失败">部分失败</option>
+            </select>
+          </div>
+        </label>
+        <label className="bulk-invoice-task-field is-operator">
+          <span>操作人员</span>
+          <input autoComplete="off" value={taskDraftFilters.operator} onChange={(event) => setTaskDraftFilters((current) => ({ ...current, operator: event.target.value }))} placeholder="请输入操作人员" />
+        </label>
+        <label className="bulk-invoice-task-field is-range">
+          <span>操作时间</span>
+          <div className="bulk-invoice-task-range">
+            <input autoComplete="off" type="date" value={taskDraftFilters.startDate} onChange={(event) => setTaskDraftFilters((current) => ({ ...current, startDate: event.target.value }))} />
+            <em>~</em>
+            <input autoComplete="off" type="date" value={taskDraftFilters.endDate} onChange={(event) => setTaskDraftFilters((current) => ({ ...current, endDate: event.target.value }))} />
+          </div>
+        </label>
+        <div className="bulk-invoice-task-actions">
+          <button className="btn btn-primary" type="button" onClick={handleSearchTasks}>查询</button>
+          <button className="btn btn-reset" type="button" onClick={handleResetTasks}>重置</button>
+        </div>
+      </div>
+      <div className="shop-invoice-table-shell bulk-invoice-table-shell">
+        <table className="shop-invoice-table is-no-select bulk-invoice-task-table">
+          <thead>
+            <tr>
+              <th>任务类型</th>
+              <th>任务时间</th>
+              <th>操作人</th>
+              <th>任务状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pagedTaskRows.length ? pagedTaskRows.map((item) => (
+              <tr key={item.id}>
+                <td>{item.taskType}</td>
+                <td>{item.taskTime}</td>
+                <td>{item.operator}</td>
+                <td>{item.status}</td>
+                <td>
+                  {item.status === "全部失败" || item.status === "部分失败" ? (
+                    <button className="bulk-invoice-table-link" type="button" onClick={() => handleDownloadTaskFailDetails(item)}>下载失败数据</button>
+                  ) : null}
+                </td>
+              </tr>
+            )) : (
+              <tr>
+                <td className="bulk-invoice-table-empty" colSpan={5}>暂无符合条件的导入任务</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <div className="bulk-invoice-task-pagination">
+        <span>{`共 ${filteredTaskRows.length} 条`}</span>
+        <select value={taskPageSize} onChange={(event) => { setTaskPageSize(Number(event.target.value)); setTaskPage(1); setTaskJumpPageInput(""); }}>
+          <option value={20}>20 条/页</option>
+          <option value={50}>50 条/页</option>
+          <option value={100}>100 条/页</option>
+        </select>
+        <button type="button" className="bulk-invoice-task-page-arrow" disabled={currentTaskPage === 1} onClick={() => setTaskPage((value) => Math.max(1, value - 1))}>‹</button>
+        <button type="button" className="bulk-invoice-task-page-number is-active">{currentTaskPage}</button>
+        <button type="button" className="bulk-invoice-task-page-arrow" disabled={currentTaskPage >= taskPageCount} onClick={() => setTaskPage((value) => Math.min(taskPageCount, value + 1))}>›</button>
+        <span>到第</span>
+        <input value={taskJumpPageInput} onChange={(event) => setTaskJumpPageInput(event.target.value.replace(/[^\d]/g, ""))} placeholder="请输入" />
+        <span>页</span>
+        <button type="button" className="bulk-invoice-task-jump-btn" onClick={handleTaskJump}>跳转</button>
+      </div>
+    </section>
+  );
+
   return (
     <div className="bulk-invoice-page bulk-invoice-simple-page">
       <section className="content-card bulk-invoice-simple-card">
@@ -11183,10 +11426,6 @@ function ShopInvoiceBulkUploadPage({ onBack, onToast }) {
 
         <div className="bulk-invoice-simple-form">
           <div className="bulk-invoice-simple-row">
-            <span className="bulk-invoice-simple-label"><i>*</i>上传内容：</span>
-            <label className="bulk-invoice-simple-radio"><input type="radio" checked readOnly /> 发票ZIP包</label>
-          </div>
-          <div className="bulk-invoice-simple-row">
             <span className="bulk-invoice-simple-label"><i>*</i>数据包：</span>
             <input className="shop-invoice-file-input" ref={fileInputRef} type="file" accept=".zip" onChange={handleSelectZip} />
             <button className="bulk-invoice-simple-file" type="button" onClick={() => fileInputRef.current?.click()}>
@@ -11214,7 +11453,9 @@ function ShopInvoiceBulkUploadPage({ onBack, onToast }) {
         </div>
       </section>
 
-      {batchResult ? renderResultList() : null}
+      {renderTaskProgressList()}
+
+      {batchResult ? (activePanel === "detail" ? renderInvoiceDetail() : renderResultList()) : null}
 
       {editingInvoice ? (
         <div className="shop-invoice-modal-mask" onClick={() => setEditingInvoice(null)}>
