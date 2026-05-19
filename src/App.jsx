@@ -1716,8 +1716,8 @@ const buyerPcMallHomeProductDetail = {
     { label: "尺寸", value: "160/80(XS)" }
   ],
   tiers: [
-    { version: "版本2", specId: "456122", upc: "6921168558049", price: "¥2.00", stock: "1000件" },
-    { version: "版本3", specId: "456123", upc: "6921168558048", price: "¥4.00", stock: "2000件" }
+    { version: "版本2", specId: "456122", upc: "6921168558049", price: "¥2.00", stock: "1000件", limit: 20, purchasedCount: 15 },
+    { version: "版本3", specId: "456123", upc: "6921168558048", price: "¥4.00", stock: "2000件", limit: 5 }
   ]
 };
 const buyerPcMallHomeProductDetailById = {
@@ -1745,7 +1745,7 @@ const buyerPcMallHomeProductDetailById = {
       { label: "颜色", options: ["深蓝色", "深灰色1+1+1", "深紫色修改2次"], selectedIndex: 0 }
     ],
     tiers: [
-      { version: "版本1", specId: "459223", upc: "", price: "¥10.00", stock: "980件" },
+      { version: "版本1", specId: "459223", upc: "", price: "¥10.00", stock: "980件", limit: 15, purchasedCount: 5 },
       { version: "版本2", specId: "459224", upc: "", price: "¥10.00", stock: "980件" }
     ]
   }
@@ -1779,8 +1779,8 @@ const buyerPcMallCartSeedGroups = [
     promotionTag: "满减",
     promotionText: "已购满100.00元，已减20.00元",
     items: [
-      { id: "cart-1", name: "小尼首次审核260128", sku: "69476373", spec: "深灰色，160/80(XS)", price: 8, quantity: 1, image: "花", selected: true, tag: "混批" },
-      { id: "cart-2", name: "小尼首次审核260128", sku: "69476373", spec: "灰色，160/80(XS)", price: 8, quantity: 5, image: "花", selected: true, tag: "混批" },
+      { id: "cart-1", name: "小尼首次审核260128", sku: "69476373", spec: "深灰色，160/80(XS)", price: 8, quantity: 1, image: "花", selected: true, tag: "混批", limit: 20, purchasedCount: 5 },
+      { id: "cart-2", name: "小尼首次审核260128", sku: "69476373", spec: "灰色，160/80(XS)", price: 8, quantity: 5, image: "花", selected: true, tag: "混批", limit: 25, purchasedCount: 0 },
       { id: "cart-3", name: "20260324单规格商品", sku: "55070505", spec: "默认规格", price: 55, quantity: 4, image: "人", selected: true, tag: "混批", hint: "再选6件或232.00元满足起批条件" }
     ]
   },
@@ -1791,7 +1791,10 @@ const buyerPcMallCartSeedGroups = [
     promotionTag: "满减",
     promotionText: "订单满300.00减70.00元",
     items: [
-      { id: "cart-4", name: "UPC必填时，允许无条码开启，填无条码商品", sku: "202601291816", spec: "默认规格", price: 10, quantity: 14, image: "码", selected: false, hint: "去凑单" }
+      { id: "cart-4", name: "UPC必填时，允许无条码开启，填无条商品的规格", sku: "202601291816", spec: "无条商品规格", price: 10, quantity: 14, image: "码", selected: false, totalLimitGroup: "cart-total-limit-upc-202601291816", totalLimit: 20 },
+      { id: "cart-5", name: "UPC必填时，允许无条码开启，填无条商品的规格", sku: "202601291816", spec: "500ML", price: 10, quantity: 14, image: "码", selected: false, totalLimitGroup: "cart-total-limit-upc-202601291816", totalLimit: 20 },
+      { id: "cart-6", name: "百事可乐", sku: "202605190500", spec: "500ml", price: 6, quantity: 1, image: "百", selected: false, totalLimitGroup: "cart-total-limit-pepsi-20260519", totalLimit: 20, totalPurchasedCount: 5 },
+      { id: "cart-7", name: "百事可乐", sku: "202605191000", spec: "1000ml", price: 10, quantity: 1, image: "百", selected: false, totalLimitGroup: "cart-total-limit-pepsi-20260519", totalLimit: 20, totalPurchasedCount: 5 }
     ]
   }
 ];
@@ -6863,7 +6866,7 @@ function BuyerPcMallHomePage({ allCartItemCount, onOpenCartPage, onOpenCustomerC
   );
 }
 
-function BuyerPcMallHomeProductDetailPage({ allCartItemCount, onOpenCartPage, onOpenCustomerCenter, onOpenHome, productId }) {
+function BuyerPcMallHomeProductDetailPage({ allCartItemCount, onImmediateBuy, onOpenCartPage, onOpenCustomerCenter, onOpenHome, productId }) {
   const detail = buyerPcMallHomeProductDetailById[productId] || buyerPcMallHomeProductDetail;
   const initialSelectedSpecOptions = useMemo(() => (
     Object.fromEntries(detail.specs.map((item) => [item.label, item.selectedIndex || 0]))
@@ -6871,11 +6874,22 @@ function BuyerPcMallHomeProductDetailPage({ allCartItemCount, onOpenCartPage, on
   const [quantitiesBySpecId, setQuantitiesBySpecId] = useState(() => (
     Object.fromEntries(detail.tiers.map((item) => [item.specId, 0]))
   ));
+  const [limitErrorsBySpecId, setLimitErrorsBySpecId] = useState({});
+  const [orderConditionToast, setOrderConditionToast] = useState("");
   const [selectedSpecOptions, setSelectedSpecOptions] = useState(() => initialSelectedSpecOptions);
   useEffect(() => {
     setQuantitiesBySpecId(Object.fromEntries(detail.tiers.map((item) => [item.specId, 0])));
+    setLimitErrorsBySpecId({});
+    setOrderConditionToast("");
     setSelectedSpecOptions(initialSelectedSpecOptions);
   }, [detail, initialSelectedSpecOptions]);
+  useEffect(() => {
+    if (!orderConditionToast) return undefined;
+    const timer = window.setTimeout(() => {
+      setOrderConditionToast("");
+    }, 2200);
+    return () => window.clearTimeout(timer);
+  }, [orderConditionToast]);
   const selectedSummary = detail.tiers.reduce((summary, item) => {
     const quantity = Number(quantitiesBySpecId[item.specId] || 0);
     if (quantity <= 0) return summary;
@@ -6886,14 +6900,31 @@ function BuyerPcMallHomeProductDetailPage({ allCartItemCount, onOpenCartPage, on
       totalAmount: summary.totalAmount + price * quantity
     };
   }, { selectedKinds: 0, selectedQuantity: 0, totalAmount: 0 });
+  const getTierLimitMessage = (tier) => {
+    const limit = Number(tier?.limit || 0);
+    const purchasedCount = Number(tier?.purchasedCount || 0);
+    if (limit <= 0) return "";
+    if (purchasedCount > 0) {
+      return `该规格活动限购${limit}件，您已购买${purchasedCount}件，剩余可购买${Math.max(limit - purchasedCount, 0)}件`;
+    }
+    return `该规格活动限购${limit}件`;
+  };
   const handleChangeTierQuantity = (specId, delta) => {
-    setQuantitiesBySpecId((current) => {
-      const currentQuantity = Number(current[specId] || 0);
-      return {
-        ...current,
-        [specId]: Math.max(currentQuantity + delta, 0)
-      };
-    });
+    const currentQuantity = Number(quantitiesBySpecId[specId] || 0);
+    const currentTier = detail.tiers.find((item) => item.specId === specId);
+    const limit = Number(currentTier?.limit || 0);
+    const purchasedCount = Number(currentTier?.purchasedCount || 0);
+    const remainingLimit = limit > 0 ? Math.max(limit - purchasedCount, 0) : 0;
+    const nextQuantity = Math.max(currentQuantity + delta, 0);
+    if (delta > 0 && limit > 0 && nextQuantity > remainingLimit) {
+      setLimitErrorsBySpecId((errors) => ({ ...errors, [specId]: true }));
+      return;
+    }
+    setLimitErrorsBySpecId((errors) => ({ ...errors, [specId]: false }));
+    setQuantitiesBySpecId((current) => ({
+      ...current,
+      [specId]: nextQuantity
+    }));
   };
   const handleSelectSpecOption = (label, optionIndex) => {
     setSelectedSpecOptions((current) => ({
@@ -6901,9 +6932,52 @@ function BuyerPcMallHomeProductDetailPage({ allCartItemCount, onOpenCartPage, on
       [label]: optionIndex
     }));
   };
+  const hasTierLimitError = detail.tiers.some((item) => (
+    Number(item.limit || 0) > 0 && (
+      Number(quantitiesBySpecId[item.specId] || 0) >= Number(item.limit) ||
+      limitErrorsBySpecId[item.specId]
+    )
+  ));
+  const handleImmediateBuy = () => {
+    if (hasTierLimitError) return;
+    if (selectedSummary.selectedQuantity <= 0) return;
+    const selectedItems = detail.tiers
+      .map((item) => {
+        const quantity = Number(quantitiesBySpecId[item.specId] || 0);
+        if (quantity <= 0) return null;
+        const price = Number(String(item.price || "").replace(/[^\d.]/g, "")) || 0;
+        const colorSpec = detail.specs.find((spec) => spec.label === "颜色");
+        const colorOptionIndex = colorSpec ? (selectedSpecOptions[colorSpec.label] ?? colorSpec.selectedIndex ?? 0) : 0;
+        const colorValue = colorSpec ? (colorSpec.options || [colorSpec.value])[colorOptionIndex] : "";
+        return {
+          id: item.specId,
+          name: detail.title,
+          shopName: detail.shopName,
+          image: detail.image || "flowers",
+          tag: detail.promo || "混批",
+          sku: item.specId,
+          spec: [colorValue ? `颜色:${colorValue}` : "", item.version ? `规格:${item.version}` : ""].filter(Boolean).join(" "),
+          limit: item.limit,
+          purchasedCount: item.purchasedCount,
+          purchaseStep: 10,
+          price,
+          quantity
+        };
+      })
+      .filter(Boolean);
+    if (selectedItems.length === 0) return;
+    onImmediateBuy?.({
+      shopName: detail.shopName,
+      items: selectedItems
+    });
+  };
+  const handleInvalidImmediateBuy = () => {
+    setOrderConditionToast("商品不满足下单条件，请检查");
+  };
   return (
     <div className="pc-mall-home-shell">
       <BuyerPcMallHomeHeader allCartItemCount={allCartItemCount} onOpenCartPage={onOpenCartPage} onOpenCustomerCenter={onOpenCustomerCenter} onOpenHome={onOpenHome} />
+      {orderConditionToast ? <div className="pc-mall-product-toast is-error">{orderConditionToast}</div> : null}
 
       <main className="pc-mall-product-detail-page">
         <div className="pc-mall-product-breadcrumb">
@@ -6997,13 +7071,24 @@ function BuyerPcMallHomeProductDetailPage({ allCartItemCount, onOpenCartPage, on
             <div className="pc-mall-product-tier-list">
               {detail.tiers.map((item) => (
                 <div className="pc-mall-product-tier" key={item.specId}>
-                  <div><strong>{item.version}</strong><span>{`规格ID:${item.specId}  UPC码/69码:${item.upc}`}</span></div>
+                  <div className="pc-mall-product-tier-meta"><strong>{item.version}</strong><span>{`规格ID:${item.specId}  UPC码/69码:${item.upc}`}</span></div>
                   <strong>{item.price}</strong>
                   <span>{`活动库存 ${item.stock}`}</span>
-                  <div className="pc-mall-product-stepper">
-                    <button type="button" disabled={Number(quantitiesBySpecId[item.specId] || 0) === 0} onClick={() => handleChangeTierQuantity(item.specId, -10)}>−</button>
-                    <span>{quantitiesBySpecId[item.specId] || 0}</span>
-                    <button type="button" onClick={() => handleChangeTierQuantity(item.specId, 10)}>＋</button>
+                  <div className="pc-mall-product-stepper-wrap">
+                    <div className="pc-mall-product-stepper">
+                      <button type="button" disabled={Number(quantitiesBySpecId[item.specId] || 0) === 0} onClick={() => handleChangeTierQuantity(item.specId, -10)}>−</button>
+                      <span>{quantitiesBySpecId[item.specId] || 0}</span>
+                      <button
+                        type="button"
+                        disabled={Number(item.limit || 0) > 0 && Number(quantitiesBySpecId[item.specId] || 0) >= Number(item.limit)}
+                        onClick={() => handleChangeTierQuantity(item.specId, 10)}
+                      >
+                        ＋
+                      </button>
+                    </div>
+                    {Number(item.limit || 0) > 0 && (Number(quantitiesBySpecId[item.specId] || 0) >= Number(item.limit) || limitErrorsBySpecId[item.specId]) ? (
+                      <div className="pc-mall-product-stepper-error">{getTierLimitMessage(item)}</div>
+                    ) : null}
                   </div>
                 </div>
               ))}
@@ -7014,7 +7099,7 @@ function BuyerPcMallHomeProductDetailPage({ allCartItemCount, onOpenCartPage, on
                 <span>优惠：<strong>¥0.00</strong></span>
                 <span>商品合计：<strong>{formatMoneyDisplay(selectedSummary.totalAmount)}</strong></span>
               </div>
-              <button className="is-buy" type="button">立即购买</button>
+              <button className="is-buy" type="button" onClick={hasTierLimitError ? handleInvalidImmediateBuy : handleImmediateBuy}>立即购买</button>
               <button className="is-cart" type="button" onClick={onOpenCartPage}>加入购物车</button>
               <button className="is-list" type="button">加入常购</button>
             </div>
@@ -7022,6 +7107,144 @@ function BuyerPcMallHomeProductDetailPage({ allCartItemCount, onOpenCartPage, on
         </section>
       </main>
 
+      <BuyerPcMallHomeFloatbar allCartItemCount={allCartItemCount} />
+    </div>
+  );
+}
+
+function BuyerPcMallCheckoutPage({ allCartItemCount, order, onBackToCart, onChangeQuantity, onOpenCartPage, onOpenCustomerCenter, onOpenHome }) {
+  const items = Array.isArray(order?.items) ? order.items : [];
+  const totalQuantity = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  const totalAmount = items.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0), 0);
+  const storeName = order?.shopName || items[0]?.shopName || "农妇三拳";
+  const getCheckoutLimitMessage = (item) => {
+    const limit = Number(item?.limit || 0);
+    const purchasedCount = Number(item?.purchasedCount || 0);
+    if (limit <= 0 || Number(item?.quantity || 0) < limit) return "";
+    return [
+      `该规格活动限购${limit}，您已购买${purchasedCount}，`,
+      `剩余可购买${Math.max(limit - purchasedCount, 0)}`
+    ];
+  };
+
+  return (
+    <div className="pc-cart-shell pc-checkout-shell">
+      <header className="pc-cart-utility-bar">
+        <div className="pc-cart-utility-inner">
+          <div className="pc-cart-utility-left">
+            <span>您好，欢迎来到美团闪电帮帮！</span>
+            <span className="pc-cart-utility-account">Shawnee003(ID:18166)</span>
+          </div>
+          <div className="pc-cart-utility-links">
+            <button className="pc-cart-utility-link" type="button">我的美团闪电帮帮</button>
+            <button className="pc-cart-utility-link is-active" type="button" onClick={onOpenCartPage}>{`购物车(${allCartItemCount})`}</button>
+            <button className="pc-cart-utility-link" type="button">微信小程序</button>
+            <button className="pc-cart-utility-link" type="button">卖家中心⌄</button>
+            <button className="pc-cart-utility-link" type="button" onClick={onOpenCustomerCenter}>客户中心⌄</button>
+          </div>
+        </div>
+      </header>
+
+      <header className="pc-cart-header">
+        <div className="pc-cart-header-inner">
+          <button className="pc-cart-brand pc-cart-brand-btn" type="button" onClick={onOpenHome}>
+            <span className="pc-cart-brand-mark">⬆</span>
+            <span className="pc-cart-brand-name">闪电帮帮</span>
+          </button>
+          <div className="pc-cart-steps">
+            <div className="pc-cart-step is-done"><span>✓</span><strong>我的购物车</strong></div>
+            <div className="pc-cart-step is-active"><span>2</span><strong>填写订单信息</strong></div>
+            <div className="pc-cart-step"><span>3</span><strong>提交订单</strong></div>
+          </div>
+        </div>
+      </header>
+
+      <main className="pc-checkout-main">
+        <section className="pc-checkout-panel">
+          <h2>请填写核对订单信息</h2>
+
+          <section className="pc-checkout-section">
+            <div className="pc-checkout-section-head">
+              <h3>收货人信息</h3>
+              <button type="button">✎ 修改</button>
+            </div>
+            <div className="pc-checkout-radio-row">
+              <span className="pc-checkout-radio-dot" />
+              <strong>快送</strong>
+              <span>15151515151&nbsp;&nbsp;内蒙古自治区 鄂尔多斯市 杭锦旗 伊和乌素苏木乡&nbsp;&nbsp;111&nbsp;&nbsp;IoT加盟测试自动化商家勿动_张琼2 (ID: 601603)</span>
+            </div>
+          </section>
+
+          <section className="pc-checkout-section">
+            <h3>支付及配送方式</h3>
+            <div className="pc-checkout-radio-row">
+              <span className="pc-checkout-radio-dot" />
+              <strong>在线支付</strong>
+            </div>
+            <p>快递运输，由供应商选择合作快递为您配送；如果对运费有疑问，请联系供应商。</p>
+          </section>
+
+          <section className="pc-checkout-section">
+            <h3>商品清单</h3>
+            <div className="pc-checkout-table-head">
+              <span>商品</span>
+              <span>服务</span>
+              <span>商城价</span>
+              <span>数量</span>
+            </div>
+            <div className="pc-checkout-store-name">▣ {storeName}</div>
+            <div className="pc-checkout-item-list">
+              {items.map((item) => (
+                <div className="pc-checkout-item" key={item.id}>
+                  <div className="pc-checkout-product">
+                    <div className={`pc-checkout-thumb is-${item.image || "flowers"}`}>
+                      {item.tag ? <span>{item.tag}</span> : null}
+                    </div>
+                    <div>
+                      <div className="pc-checkout-product-title">
+                        {item.tag ? <em>{item.tag}</em> : null}
+                        <strong>{item.name}</strong>
+                      </div>
+                      <p>{`货号：${item.sku || "-"}`}</p>
+                    </div>
+                  </div>
+                  <div className="pc-checkout-service">{item.spec}</div>
+                  <div className="pc-checkout-price">{`¥ ${Number(item.price || 0).toFixed(0)}`}</div>
+                  <div className="pc-checkout-quantity">
+                    <div className="pc-cart-quantity-box">
+                      <button type="button" disabled={Number(item.quantity || 0) <= Number(item.purchaseStep || 1)} onClick={() => onChangeQuantity?.(item.id, -Number(item.purchaseStep || 1))}>-</button>
+                      <span>{item.quantity}</span>
+                      <button type="button" onClick={() => onChangeQuantity?.(item.id, Number(item.purchaseStep || 1))}>+</button>
+                    </div>
+                    {getCheckoutLimitMessage(item) ? (
+                      <div className="pc-checkout-quantity-error">
+                        {getCheckoutLimitMessage(item).map((line) => <span key={line}>{line}</span>)}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="pc-checkout-message-row">
+              <span>买家留言</span>
+              <input placeholder="请输入" />
+            </div>
+            <div className="pc-checkout-delivery-row">
+              <span>配送方式</span>
+              <strong>● 快递配送</strong>
+            </div>
+            <div className="pc-checkout-summary-line">{`共 ${totalQuantity} 件商品，总商品金额： ${formatMoneyDisplay(totalAmount)}`}</div>
+          </section>
+
+          <footer className="pc-checkout-footer">
+            <button className="pc-checkout-back" type="button" onClick={onBackToCart}>返回购物车</button>
+            <div className="pc-checkout-total">
+              <span>{`应付总额：${formatMoneyDisplay(totalAmount)}`}</span>
+              <button type="button">提交订单</button>
+            </div>
+          </footer>
+        </section>
+      </main>
       <BuyerPcMallHomeFloatbar allCartItemCount={allCartItemCount} />
     </div>
   );
@@ -7043,7 +7266,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
     normalizeBuyerPcMallOrderTab(buyerPcMallStoredView.activeTab)
   ));
   const [invoicePageView, setInvoicePageView] = useState(() => (
-    ["home", "list", "batch", "title-management", "detail", "cart", "product-detail"].includes(buyerPcMallStoredView.invoicePageView) ? buyerPcMallStoredView.invoicePageView : "list"
+    ["home", "list", "batch", "title-management", "detail", "cart", "checkout", "product-detail"].includes(buyerPcMallStoredView.invoicePageView) ? buyerPcMallStoredView.invoicePageView : "list"
   ));
   const [invoiceRows, setInvoiceRows] = useState(normalizedBuyerPcMallInvoiceRows);
   const [appliedInvoiceRows, setAppliedInvoiceRows] = useState(buyerPcMallAppliedInvoiceRows);
@@ -7091,6 +7314,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
   const [singleInvoiceOrder, setSingleInvoiceOrder] = useState(null);
   const [activeProductDetailOrderNo, setActiveProductDetailOrderNo] = useState("");
   const [activeHomeProductId, setActiveHomeProductId] = useState("");
+  const [directBuyOrder, setDirectBuyOrder] = useState(null);
   const [activeBuyerInvoiceDetail, setActiveBuyerInvoiceDetail] = useState(null);
   const [isExportRecordModalOpen, setIsExportRecordModalOpen] = useState(false);
   const [modifyInvoiceOrders, setModifyInvoiceOrders] = useState([]);
@@ -7098,6 +7322,8 @@ function BuyerPcMallPage({ onPortalActionClick }) {
   const [invoiceActionModal, setInvoiceActionModal] = useState(null);
   const [cartStoreGroups, setCartStoreGroups] = useState(buyerPcMallCartSeedGroups);
   const [cartSearchKeyword, setCartSearchKeyword] = useState("");
+  const [cartQuantityDrafts, setCartQuantityDrafts] = useState({});
+  const [cartLimitNoticeByItemId, setCartLimitNoticeByItemId] = useState({});
   const buyerPcMallMissingInvoiceTitleNotice = "请在发票抬头管理>新增发票抬头后再开票";
   const getBuyerPcMallApplyDisabledReason = useCallback((item) => {
     if (!item) return "";
@@ -7122,7 +7348,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
   useEffect(() => {
     writeStoredJson(buyerPcMallViewStorageKey, {
       activeTab,
-      invoicePageView: invoicePageView === "detail" ? "list" : invoicePageView,
+      invoicePageView: invoicePageView === "detail" || invoicePageView === "checkout" ? "list" : invoicePageView,
       batchInvoiceOrderItems
     });
   }, [activeTab, batchInvoiceOrderItems, invoicePageView]);
@@ -7399,6 +7625,28 @@ function BuyerPcMallPage({ onPortalActionClick }) {
         window.scrollTo({ top: 0, left: 0, behavior: "auto" });
       });
     }
+  };
+  const handleOpenDirectBuyCheckout = (order) => {
+    setDirectBuyOrder(order);
+    setInvoicePageView("checkout");
+    if (typeof window !== "undefined") {
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      });
+    }
+  };
+  const handleChangeDirectBuyQuantity = (itemId, delta) => {
+    setDirectBuyOrder((current) => {
+      if (!current) return current;
+      return {
+        ...current,
+        items: (current.items || []).map((item) => (
+          item.id === itemId
+            ? { ...item, quantity: Math.max(1, Number(item.quantity || 1) + delta) }
+            : item
+        ))
+      };
+    });
   };
   const handleCloseBuyerInvoiceDetail = () => {
     setActiveBuyerInvoiceDetail(null);
@@ -7989,6 +8237,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
   const isProductDetailView = invoicePageView === "product-detail";
   const isBatchInvoiceView = invoicePageView === "batch";
   const isCartView = invoicePageView === "cart";
+  const isCheckoutView = invoicePageView === "checkout";
   const isInvoiceTitleManagementView = invoicePageView === "title-management";
   const isInvoiceDetailView = invoicePageView === "detail";
   const shouldEnableInvoiceDetailScroll = isInvoiceDetailView && (isAppliedTab || isInvoicedTab);
@@ -8000,6 +8249,128 @@ function BuyerPcMallPage({ onPortalActionClick }) {
     ...group,
     selected: group.items.length > 0 && group.items.every((item) => item.selected)
   }), []);
+  const getBuyerPcMallCartLimitMessage = useCallback((item) => {
+    const limit = Number(item?.limit || 0);
+    const purchasedCount = Number(item?.purchasedCount || 0);
+
+    if (limit <= 0) return "";
+    if (purchasedCount > 0) {
+      return `该规格活动限购${limit}件，您已购买${purchasedCount}件，|剩余可购买${Math.max(limit - purchasedCount, 0)}件`;
+    }
+    return `该规格活动限购${limit}件`;
+  }, []);
+  const getBuyerPcMallCartTotalLimitMessage = useCallback((item) => {
+    const totalLimit = Number(item?.totalLimit || 0);
+    const totalPurchasedCount = Number(item?.totalPurchasedCount || 0);
+    if (totalLimit <= 0) return "";
+    if (totalPurchasedCount > 0) {
+      return `本品活动限购${totalLimit}件，您已购买${totalPurchasedCount}件，剩余可购买${Math.max(totalLimit - totalPurchasedCount, 0)}件`;
+    }
+    return `本品活动限购${totalLimit}件`;
+  }, []);
+  const handleCommitCartQuantity = useCallback((storeId, itemId, rawQuantity) => {
+    const targetGroup = cartStoreGroups.find((group) => group.id === storeId);
+    const targetItem = targetGroup?.items.find((item) => item.id === itemId);
+    if (!targetItem) return;
+
+    const parsedQuantity = Number.parseInt(String(rawQuantity || "").replace(/[^\d]/g, ""), 10);
+    const nextQuantity = Number.isFinite(parsedQuantity) && parsedQuantity > 0 ? parsedQuantity : 1;
+    const currentQuantity = Math.max(1, Number(targetItem.quantity || 1));
+    const totalLimit = Number(targetItem.totalLimit || 0);
+    const totalPurchasedCount = Number(targetItem.totalPurchasedCount || 0);
+    const totalLimitGroup = targetItem.totalLimitGroup || "";
+
+    if (totalLimitGroup && totalLimit > 0) {
+      const siblingQuantity = (targetGroup?.items || []).reduce((sum, item) => {
+        if (item.id === itemId || item.totalLimitGroup !== totalLimitGroup) return sum;
+        return sum + Math.max(1, Number(item.quantity || 1));
+      }, 0);
+      const nextTotalQuantity = siblingQuantity + nextQuantity;
+      const remainingTotalLimit = Math.max(totalLimit - totalPurchasedCount, 0);
+      const shouldShowTotalLimitNotice = nextTotalQuantity >= remainingTotalLimit;
+
+      setCartStoreGroups((current) => current.map((group) => (
+        group.id === storeId
+          ? syncCartGroupSelectedState({
+            ...group,
+            items: group.items.map((item) => (
+              item.id === itemId ? { ...item, quantity: nextQuantity } : item
+            ))
+          })
+          : group
+      )));
+
+      setCartQuantityDrafts((current) => {
+        const nextDrafts = { ...current };
+        delete nextDrafts[itemId];
+        return nextDrafts;
+      });
+
+      setCartLimitNoticeByItemId((current) => {
+        const nextNotices = { ...current };
+        (targetGroup?.items || []).forEach((item) => {
+          if (item.totalLimitGroup === totalLimitGroup) {
+            delete nextNotices[item.id];
+          }
+        });
+        if (shouldShowTotalLimitNotice) {
+          nextNotices[itemId] = getBuyerPcMallCartTotalLimitMessage(targetItem);
+        }
+        return nextNotices;
+      });
+      return;
+    }
+
+    const limit = Number(targetItem.limit || 0);
+    const purchasedCount = Number(targetItem.purchasedCount || 0);
+    const remainingLimit = limit > 0 ? Math.max(limit - purchasedCount, 0) : 0;
+    const resolvedQuantity = limit > 0 ? Math.min(nextQuantity, Math.max(remainingLimit, 1)) : nextQuantity;
+    const shouldShowLimitNotice = limit > 0 && nextQuantity >= remainingLimit;
+    const didChangeQuantity = resolvedQuantity !== currentQuantity;
+
+    if (didChangeQuantity) {
+      setCartStoreGroups((current) => current.map((group) => (
+        group.id === storeId
+          ? syncCartGroupSelectedState({
+            ...group,
+            items: group.items.map((item) => (
+              item.id === itemId ? { ...item, quantity: resolvedQuantity } : item
+            ))
+          })
+          : group
+      )));
+    }
+
+    setCartQuantityDrafts((current) => {
+      const nextDrafts = { ...current };
+      delete nextDrafts[itemId];
+      return nextDrafts;
+    });
+
+    setCartLimitNoticeByItemId((current) => {
+      const nextNotices = { ...current };
+      if (shouldShowLimitNotice) {
+        nextNotices[itemId] = getBuyerPcMallCartLimitMessage(targetItem);
+      } else {
+        delete nextNotices[itemId];
+      }
+      return nextNotices;
+    });
+
+  }, [cartStoreGroups, getBuyerPcMallCartLimitMessage, getBuyerPcMallCartTotalLimitMessage, syncCartGroupSelectedState]);
+  const getVisibleCartLimitNotice = useCallback((group, item) => {
+    const totalLimitGroup = item.totalLimitGroup || "";
+    const totalLimit = Number(item.totalLimit || 0);
+    if (!totalLimitGroup || totalLimit <= 0) return cartLimitNoticeByItemId[item.id] || "";
+
+    const totalPurchasedCount = Number(item.totalPurchasedCount || 0);
+    const totalQuantity = group.items.reduce((sum, currentItem) => (
+      currentItem.totalLimitGroup === totalLimitGroup
+        ? sum + Math.max(1, Number(currentItem.quantity || 1))
+        : sum
+    ), 0);
+    return totalQuantity >= Math.max(totalLimit - totalPurchasedCount, 0) ? getBuyerPcMallCartTotalLimitMessage(item) : "";
+  }, [cartLimitNoticeByItemId, getBuyerPcMallCartTotalLimitMessage]);
   const handleToggleAllCartItems = (checked) => {
     setCartStoreGroups((current) => current.map((group) => ({
       ...group,
@@ -8031,20 +8402,32 @@ function BuyerPcMallPage({ onPortalActionClick }) {
     )));
   };
   const handleChangeCartQuantity = (storeId, itemId, delta) => {
-    setCartStoreGroups((current) => current.map((group) => (
-      group.id === storeId
-        ? syncCartGroupSelectedState({
-          ...group,
-          items: group.items.map((item) => (
-            item.id === itemId
-              ? { ...item, quantity: Math.max(1, Number(item.quantity || 1) + delta) }
-              : item
-          ))
-        })
-        : group
-    )));
+    const targetGroup = cartStoreGroups.find((group) => group.id === storeId);
+    const targetItem = targetGroup?.items.find((item) => item.id === itemId);
+    const currentQuantity = Math.max(1, Number(targetItem?.quantity || 1));
+    handleCommitCartQuantity(storeId, itemId, currentQuantity + delta);
+  };
+  const handleCartQuantityDraftChange = (itemId, value) => {
+    const nextValue = value.replace(/[^\d]/g, "");
+    setCartQuantityDrafts((current) => ({ ...current, [itemId]: nextValue }));
   };
   const handleRemoveCartItem = (storeId, itemId) => {
+    const targetGroup = cartStoreGroups.find((group) => group.id === storeId);
+    const targetItem = targetGroup?.items.find((item) => item.id === itemId);
+    const totalLimitGroup = targetItem?.totalLimitGroup || "";
+    setCartLimitNoticeByItemId((current) => {
+      const nextNotices = { ...current };
+      if (totalLimitGroup) {
+        (targetGroup?.items || []).forEach((item) => {
+          if (item.totalLimitGroup === totalLimitGroup) {
+            delete nextNotices[item.id];
+          }
+        });
+      } else {
+        delete nextNotices[itemId];
+      }
+      return nextNotices;
+    });
     setCartStoreGroups((current) => current
       .map((group) => (
         group.id === storeId
@@ -8151,7 +8534,11 @@ function BuyerPcMallPage({ onPortalActionClick }) {
   }
 
   if (isProductDetailView) {
-    return <BuyerPcMallHomeProductDetailPage allCartItemCount={allCartItemCount} onOpenCartPage={handleOpenCartPage} onOpenCustomerCenter={handleOpenCustomerCenter} onOpenHome={handleOpenPcMallHome} productId={activeHomeProductId} />;
+    return <BuyerPcMallHomeProductDetailPage allCartItemCount={allCartItemCount} onImmediateBuy={handleOpenDirectBuyCheckout} onOpenCartPage={handleOpenCartPage} onOpenCustomerCenter={handleOpenCustomerCenter} onOpenHome={handleOpenPcMallHome} productId={activeHomeProductId} />;
+  }
+
+  if (isCheckoutView) {
+    return <BuyerPcMallCheckoutPage allCartItemCount={allCartItemCount} order={directBuyOrder} onBackToCart={handleOpenCartPage} onChangeQuantity={handleChangeDirectBuyQuantity} onOpenCartPage={handleOpenCartPage} onOpenCustomerCenter={handleOpenCustomerCenter} onOpenHome={handleOpenPcMallHome} />;
   }
 
   if (isCartView) {
@@ -8225,7 +8612,9 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                     <span>{group.promotionText}</span>
                   </div>
 
-                  {group.items.map((item) => (
+                  {group.items.map((item) => {
+                    const visibleLimitNotice = getVisibleCartLimitNotice(group, item);
+                    return (
                     <div className="pc-cart-item-row" key={item.id}>
                       <label className="pc-cart-check-cell">
                         <input type="checkbox" checked={item.selected} onChange={(event) => handleToggleCartItem(group.id, item.id, event.target.checked)} />
@@ -8245,16 +8634,40 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                       <div className="pc-cart-quantity-cell">
                         <div className="pc-cart-quantity-box">
                           <button type="button" onClick={() => handleChangeCartQuantity(group.id, item.id, -1)}>-</button>
-                          <span>{item.quantity}</span>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={Object.prototype.hasOwnProperty.call(cartQuantityDrafts, item.id) ? cartQuantityDrafts[item.id] : String(item.quantity)}
+                            onChange={(event) => handleCartQuantityDraftChange(item.id, event.target.value)}
+                            onBlur={(event) => handleCommitCartQuantity(group.id, item.id, event.target.value)}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter") {
+                                event.currentTarget.blur();
+                              }
+                            }}
+                          />
                           <button type="button" onClick={() => handleChangeCartQuantity(group.id, item.id, 1)}>+</button>
                         </div>
+                        {visibleLimitNotice ? (
+                          <div className="pc-cart-item-limit-notice">
+                            {String(visibleLimitNotice).includes("|") ? (
+                              <>
+                                <span className="pc-cart-item-limit-line is-primary">{String(visibleLimitNotice).split("|")[0]}</span>
+                                <span className="pc-cart-item-limit-line"> {String(visibleLimitNotice).split("|")[1]}</span>
+                              </>
+                            ) : (
+                              <span className="pc-cart-item-limit-line">{visibleLimitNotice}</span>
+                            )}
+                          </div>
+                        ) : null}
                         {item.hint ? <div className="pc-cart-item-hint">{item.hint}</div> : null}
                       </div>
                       <div className="pc-cart-action-cell">
                         <button type="button" onClick={() => handleRemoveCartItem(group.id, item.id)}>删除</button>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </section>
               ))}
 

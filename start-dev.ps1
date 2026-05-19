@@ -36,16 +36,29 @@ if (Test-Path $stderrLog) {
   Clear-Content $stderrLog -ErrorAction SilentlyContinue
 }
 
-$launcher = Start-Process -FilePath "powershell.exe" `
-  -ArgumentList @(
-    "-ExecutionPolicy", "Bypass",
-    "-File", $runnerScript
-  ) `
-  -WorkingDirectory $root `
-  -WindowStyle Hidden `
-  -RedirectStandardOutput $stdoutLog `
-  -RedirectStandardError $stderrLog `
-  -PassThru
+$originalUpperPath = $null
+if (Test-Path Env:PATH) {
+  $originalUpperPath = $env:PATH
+  Remove-Item Env:PATH
+}
+
+try {
+  $launcher = Start-Process -FilePath "powershell.exe" `
+    -ArgumentList @(
+      "-NoProfile",
+      "-ExecutionPolicy", "Bypass",
+      "-File", $runnerScript
+    ) `
+    -WorkingDirectory $root `
+    -WindowStyle Hidden `
+    -RedirectStandardOutput $stdoutLog `
+    -RedirectStandardError $stderrLog `
+    -PassThru
+} finally {
+  if ($null -ne $originalUpperPath) {
+    $env:PATH = $originalUpperPath
+  }
+}
 
 Set-Content -Path $pidFile -Value $launcher.Id
 
