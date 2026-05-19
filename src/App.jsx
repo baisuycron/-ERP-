@@ -1553,6 +1553,203 @@ const buyerPcMallSidebarGroups = [
   { title: "售后服务", items: ["退款退货", "投诉维权", "平台客服"] },
   { title: "账户管理", items: ["收货地址管理", "发票管理", "个人信息", "账户安全管理", "身份认证"], activeItem: "发票管理" }
 ];
+const buyerPcMallHomeQuickLinks = ["文章列表", "购物车", "首页"];
+const buyerPcMallHomeCategories = [
+  "IT新增类目测试12",
+  "玻璃弯口杯",
+  "测试一次类目1",
+  "类目隐藏测试4.23勿动",
+  "类目排序 保证金2025-0.02",
+  "Iws测试111111 美妆护肤",
+  "保证金2025-0",
+  "保证金2025-0.01 数码家电",
+  "类目隐藏测试勿动勿加商品",
+  "粮油调味干货",
+  "个人洗护",
+  "宠物生活",
+  "休闲食品",
+  "家庭清洁",
+  "饮料营养冲调",
+  "酒类",
+  "乳品冰品",
+  "服饰鞋包",
+  "家装建材",
+  "厨具餐具"
+];
+const buyerPcMallHomeProducts = [
+  {
+    id: "home-goods-1",
+    nameSegments: ["新品", "测试绑定商品数量1..."],
+    chipIndices: [0],
+    detailLine: "· 1日达",
+    priceText: "¥40.00",
+    salesText: "月销100以内 年销10+",
+    badges: ["供应商", "超级供应商", "农妇三拳"],
+    image: "cover"
+  },
+  {
+    id: "home-goods-2",
+    nameSegments: ["优选店铺A", "新的货盘标签..."],
+    chipIndices: [0],
+    detailLine: "· 7日达 · 全店满100元或满9件包邮",
+    priceText: "限时价¥1.00",
+    salesText: "月销100以内 年销10+",
+    badges: ["服务商", "超级供应商", "测试之家"],
+    image: "basketball",
+    ribbonText: "限时购",
+    imageFooterLeft: "进行中",
+    imageFooterRight: "3天8时03分"
+  },
+  {
+    id: "home-goods-3",
+    nameSegments: ["优选店铺A", "新的货盘标签二..."],
+    chipIndices: [0],
+    detailLine: "· 7日达 · 全店满100元或满9件包邮",
+    priceText: "¥3.00起",
+    salesText: "月销100+ 年销10+",
+    badges: ["服务商", "超级供应商", "测试之家"],
+    image: "dress"
+  },
+  {
+    id: "home-goods-4",
+    nameSegments: ["新的货盘标签序号", "价格阶..."],
+    chipIndices: [0],
+    detailLine: "· 7日达 · 全店满100元或满9件包邮",
+    priceText: "¥4.00",
+    salesText: "月销100以内 年销10+",
+    badges: ["服务商", "超级供应商", "测试之家"],
+    image: "basketball"
+  },
+  {
+    id: "home-goods-5",
+    nameSegments: ["多规格", "3"],
+    subInfoText: "3",
+    detailLine: "",
+    priceText: "¥2.00",
+    salesText: "月销100以内 年销10+",
+    badges: [],
+    footerText: "sakurafourever",
+    image: "camera"
+  },
+  {
+    id: "home-goods-6",
+    nameSegments: ["商品删除测试"],
+    detailLine: "",
+    priceText: "¥10.00起",
+    salesText: "月销100以内 年销10+",
+    badges: ["供应商", "COCO店铺（勿删）"],
+    image: "corn"
+  },
+  {
+    id: "home-goods-7",
+    nameSegments: ["专享价商品"],
+    detailLine: "",
+    priceText: "¥100.00起",
+    salesText: "月销100以内 年销10+",
+    badges: ["供应商", "COCO店铺（勿删）"],
+    image: "kettle"
+  },
+  {
+    id: "home-goods-8",
+    nameSegments: ["充电线"],
+    detailLine: "",
+    priceText: "¥10.00起",
+    salesText: "月销100以内 年销10+",
+    badges: ["供应商", "COCO店铺（勿删）"],
+    image: "cable"
+  },
+  {
+    id: "home-goods-9",
+    nameSegments: ["新商品剩余库存剩余限购"],
+    detailLine: "",
+    priceText: "¥5.00起",
+    salesText: "月销100以内 年销10+",
+    badges: ["供应商", "COCO店铺（勿删）"],
+    image: "corn"
+  },
+  {
+    id: "home-goods-10",
+    nameSegments: ["单规格混批（按产品报价）"],
+    detailLine: "",
+    priceText: "¥10.00",
+    salesText: "月销100以内 年销10+",
+    badges: ["供应商", "COCO店铺（勿删）"],
+    image: "giftbox"
+  },
+  {
+    id: "home-goods-11",
+    nameSegments: ["多规格阶梯报价"],
+    detailLine: "",
+    priceText: "¥15.00",
+    salesText: "月销200+ 年销100+",
+    badges: ["供应商", "COCO店铺（勿删）"],
+    image: "bottle"
+  },
+  {
+    id: "home-goods-12",
+    nameSegments: ["0313羽毛球多规格商品..."],
+    detailLine: "",
+    priceText: "¥100.00起",
+    salesText: "月销100以内 年销10+",
+    badges: ["供应商", "COCO店铺（勿删）"],
+    image: "badminton"
+  }
+];
+
+const buyerPcMallHomeAlignedPriceIds = new Set(["home-goods-3", "home-goods-5", "home-goods-6"]);
+const buyerPcMallHomeProductDetail = {
+  title: "小尼首次审核260128",
+  subtitle: "我是卖点卖点",
+  image: "flowers",
+  shopName: "农妇三拳",
+  breadcrumbs: ["美妆护肤", "缝\"(", "新增面部护理", "小尼首次审核260128"],
+  priceRange: "¥2.00-4.00",
+  minOrder: "10件起批",
+  promo: "限时购",
+  countdown: "2天23时57分34秒",
+  storeScore: "5分",
+  logisticsScore: "4.9分",
+  serviceScore: "4.7分",
+  responseRate: "29.17%",
+  specs: [
+    { label: "颜色", value: "深灰色" },
+    { label: "尺寸", value: "160/80(XS)" }
+  ],
+  tiers: [
+    { version: "版本2", specId: "456122", upc: "6921168558049", price: "¥2.00", stock: "1000件" },
+    { version: "版本3", specId: "456123", upc: "6921168558048", price: "¥4.00", stock: "2000件" }
+  ]
+};
+const buyerPcMallHomeProductDetailById = {
+  "home-goods-1": {
+    title: "测试小尼修改规格值",
+    subtitle: "",
+    image: "skincare",
+    shopName: "农妇三拳",
+    breadcrumbs: ["TT新增类目测试12", "TT 二级", "三级类目", "测试小尼修改规格值"],
+    priceLevels: [
+      { price: "¥10.00", minOrder: "20件起批" },
+      { price: "¥8.00", minOrder: "40-59件" },
+      { price: "¥6.00", minOrder: "≥ 60件" }
+    ],
+    promo: "",
+    countdown: "",
+    storeScore: "5分",
+    logisticsScore: "4.9分",
+    serviceScore: "4.7分",
+    responseRate: "29.17%",
+    shippingFrom: "北京/北京",
+    shippingTo: "内蒙古自治区/鄂尔多斯市/杭锦旗",
+    freightText: "包邮，24小时内发货",
+    specs: [
+      { label: "颜色", options: ["深蓝色", "深灰色1+1+1", "深紫色修改2次"], selectedIndex: 0 }
+    ],
+    tiers: [
+      { version: "版本1", specId: "459223", upc: "", price: "¥10.00", stock: "980件" },
+      { version: "版本2", specId: "459224", upc: "", price: "¥10.00", stock: "980件" }
+    ]
+  }
+};
 
 const buyerPcMallExportRecordRows = [
   { id: "export-001", type: "商品列表导出", exportedAt: "2026-05-11 03:40:59", operator: "NFSQ369", status: "执行成功" },
@@ -6442,6 +6639,394 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
   );
 });
 
+function BuyerPcMallHomeHeader({ allCartItemCount, onOpenCartPage, onOpenCustomerCenter, onOpenHome }) {
+  return (
+    <>
+      <header className="pc-mall-home-utility-bar">
+        <div className="pc-mall-home-utility-inner">
+          <div className="pc-mall-home-utility-left">
+            <span>您好，欢迎来到美团闪电帮帮！</span>
+            <span className="pc-mall-home-utility-account">Shawnee003(ID:18166)</span>
+          </div>
+          <div className="pc-mall-home-utility-links">
+            <button className="pc-mall-home-utility-link" type="button">我的美团闪电帮帮</button>
+            <button className="pc-mall-home-utility-link is-active" type="button" onClick={onOpenCartPage}>{`购物车(${allCartItemCount})`}</button>
+            <button className="pc-mall-home-utility-link" type="button">微信小程序</button>
+            <button className="pc-mall-home-utility-link" type="button">卖家中心⌄</button>
+            <button className="pc-mall-home-utility-link" type="button" onClick={onOpenCustomerCenter}>客户中心⌄</button>
+          </div>
+        </div>
+      </header>
+
+      <header className="pc-mall-home-header">
+        <div className="pc-mall-home-header-inner">
+          <button className="pc-mall-home-logo pc-mall-home-logo-btn" type="button" onClick={onOpenHome}>
+            <span className="pc-mall-home-logo-mark">⬆</span>
+            <span className="pc-mall-home-logo-text">闪电帮帮</span>
+          </button>
+          <div className="pc-mall-home-search">
+            <div className="pc-mall-home-search-bar">
+              <button className="pc-mall-home-search-type" type="button">商品⌄</button>
+              <input value="" readOnly placeholder="请输入商品名称或UPC码" />
+              <button className="pc-mall-home-search-btn" type="button">搜索</button>
+            </div>
+            <div className="pc-mall-home-search-tags">
+              <span>手机</span>
+              <span>水电费</span>
+              <span>测试2</span>
+            </div>
+          </div>
+        </div>
+      </header>
+    </>
+  );
+}
+
+function BuyerPcMallHomeFloatbar({ allCartItemCount }) {
+  return (
+    <aside className="pc-mall-home-floatbar">
+      {["商家中心", `购物车(${allCartItemCount})`, "优惠券", "关注商品", "常购清单", "浏览历史", "批量下单", "联系客服", "返回顶部"].map((item) => (
+        <button key={item} type="button">{item}</button>
+      ))}
+    </aside>
+  );
+}
+
+function BuyerPcMallHomePage({ allCartItemCount, onOpenCartPage, onOpenCustomerCenter, onOpenHomeProductDetail, onOpenHome }) {
+  return (
+    <div className="pc-mall-home-shell">
+      <BuyerPcMallHomeHeader allCartItemCount={allCartItemCount} onOpenCartPage={onOpenCartPage} onOpenCustomerCenter={onOpenCustomerCenter} onOpenHome={onOpenHome} />
+
+      <main className="pc-mall-home-main">
+        <section className="pc-mall-home-hero-banner">
+          <div className="pc-mall-home-hero-copy">
+            <strong>秒价活动专区</strong>
+            <span>查看活动介绍 ›</span>
+          </div>
+          <div className="pc-mall-home-hero-cards">
+            <article><strong>01</strong><span>TOP1引流神器</span></article>
+            <article><strong>02</strong><span>平台额外补贴</span></article>
+            <article><strong>¥</strong><span>首推商品营销场域</span></article>
+          </div>
+        </section>
+
+        <section className="pc-mall-home-overview">
+          <aside className="pc-mall-home-category-panel">
+            <div className="pc-mall-home-category-list">
+              {buyerPcMallHomeCategories.map((item) => <span key={item}>{item}</span>)}
+            </div>
+          </aside>
+          <div className="pc-mall-home-feature-grid">
+            <section className="pc-mall-home-feature-card is-wide">
+              <div className="pc-mall-home-feature-head">
+                <h3>平台号召令</h3>
+                <span>100W+同行都在看</span>
+              </div>
+              <div className="pc-mall-home-promo-grid">
+                {[1, 2, 3].map((item) => (
+                  <article className="pc-mall-home-promo-card" key={item}>
+                    <span className="pc-mall-home-promo-badge">美团闪购 春节大促</span>
+                    <strong>春节出游 数码好物</strong>
+                    <p>搜充电宝享爆款直降</p>
+                    <button type="button">立即查看</button>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section className="pc-mall-home-feature-card">
+              <div className="pc-mall-home-feature-head">
+                <h3>甄选好物</h3>
+                <span>特色品类热销好物</span>
+              </div>
+              <div className="pc-mall-home-quick-grid">
+                {buyerPcMallHomeQuickLinks.map((item) => <article key={item}>{item}</article>)}
+              </div>
+            </section>
+            <section className="pc-mall-home-feature-card is-wide">
+              <div className="pc-mall-home-feature-head">
+                <h3>品牌补贴</h3>
+                <span>百亿补贴</span>
+              </div>
+              <div className="pc-mall-home-promo-grid">
+                {[4, 5, 6].map((item) => (
+                  <article className="pc-mall-home-promo-card" key={item}>
+                    <span className="pc-mall-home-promo-badge">美团闪购 春节大促</span>
+                    <strong>春节出游 数码好物</strong>
+                    <p>搜充电宝享爆款直降</p>
+                    <button type="button">立即查看</button>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section className="pc-mall-home-feature-card">
+              <div className="pc-mall-home-feature-head">
+                <h3>新商推荐</h3>
+                <span>特色品类热销好物</span>
+              </div>
+              <div className="pc-mall-home-quick-grid">
+                <article>luck2022旺旺...</article>
+                <article>bobi110</article>
+                <article>皇甫弟店铺名</article>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section className="pc-mall-home-shortcuts">
+          <article>2026042</article>
+          <article>限时抢购</article>
+          <article>专题列表</article>
+          <article>专题列表</article>
+        </section>
+
+        <section className="pc-mall-home-floor">
+          <div className="pc-mall-home-floor-head">
+            <div className="pc-mall-home-floor-title">
+              <h2>新锐好物</h2>
+              <span>特色品类热销好物</span>
+            </div>
+            <div className="pc-mall-home-floor-tabs">
+              {["数码家电", "4.28", "tab3", "导入tab", "衣服包包", "嘻嘻嘻嘻嘻嘻嘻嘻", "休闲零食", "鲜花蛋糕", "大牌家电", "TAB名称", "TAB名称2", "TAB名称3", "TAB名称4"].map((item) => (
+                <button key={item} type="button">{item}</button>
+              ))}
+            </div>
+          </div>
+          <div className="pc-mall-home-product-grid">
+            {buyerPcMallHomeProducts.map((item) => (
+              <button
+                className={[
+                  "pc-mall-home-product-card",
+                  buyerPcMallHomeAlignedPriceIds.has(item.id) ? "is-price-row-lifted" : ""
+                ].filter(Boolean).join(" ")}
+                key={item.id}
+                type="button"
+                onClick={() => onOpenHomeProductDetail(item.id)}
+              >
+                <div className={`pc-mall-home-product-image is-${item.image}`}>
+                  {item.ribbonText ? <span className="pc-mall-home-product-ribbon">{item.ribbonText}</span> : null}
+                  {item.imageFooterLeft || item.imageFooterRight ? (
+                    <div className="pc-mall-home-product-image-footer">
+                      <span>{item.imageFooterLeft}</span>
+                      <strong>{item.imageFooterRight}</strong>
+                    </div>
+                  ) : null}
+                </div>
+                <h3 className="pc-mall-home-product-name">
+                  {item.nameSegments.map((segment, index) => (
+                    <span
+                      key={`${item.id}-${segment}`}
+                      className={item.chipIndices?.includes(index) ? "is-accent is-chip" : ""}
+                    >
+                      {segment}
+                    </span>
+                  ))}
+                </h3>
+                {item.subInfoText || item.detailLine ? (
+                  <div className="pc-mall-home-product-subinfo">{item.subInfoText || item.detailLine}</div>
+                ) : (
+                  <div className="pc-mall-home-product-subinfo is-empty" />
+                )}
+                <div className="pc-mall-home-product-price-row">
+                  <strong className={item.priceText.startsWith("限时价") ? "is-sale" : ""}>{item.priceText}</strong>
+                  <span>{item.salesText}</span>
+                </div>
+                {item.badges.length > 0 ? (
+                  <div className="pc-mall-home-product-badges">
+                    {item.badges.map((badge, index) => (
+                      <span
+                        key={`${item.id}-${badge}`}
+                        className={[
+                          index === 0 ? "is-primary" : "",
+                          badge === "超级供应商" ? "is-dark-gold" : "",
+                          badge === "测试之家" ? "is-plain" : "",
+                          index === item.badges.length - 1 ? "is-store-name" : "",
+                          index === item.badges.length - 1 ? "has-tooltip" : ""
+                        ].filter(Boolean).join(" ")}
+                        data-full-label={index === item.badges.length - 1 ? badge : undefined}
+                        title={index === item.badges.length - 1 ? badge : undefined}
+                      >
+                        {badge}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="pc-mall-home-product-store-line">{item.footerText || item.detailLine}</div>
+                )}
+              </button>
+            ))}
+          </div>
+        </section>
+      </main>
+
+      <BuyerPcMallHomeFloatbar allCartItemCount={allCartItemCount} />
+    </div>
+  );
+}
+
+function BuyerPcMallHomeProductDetailPage({ allCartItemCount, onOpenCartPage, onOpenCustomerCenter, onOpenHome, productId }) {
+  const detail = buyerPcMallHomeProductDetailById[productId] || buyerPcMallHomeProductDetail;
+  const initialSelectedSpecOptions = useMemo(() => (
+    Object.fromEntries(detail.specs.map((item) => [item.label, item.selectedIndex || 0]))
+  ), [detail]);
+  const [quantitiesBySpecId, setQuantitiesBySpecId] = useState(() => (
+    Object.fromEntries(detail.tiers.map((item) => [item.specId, 0]))
+  ));
+  const [selectedSpecOptions, setSelectedSpecOptions] = useState(() => initialSelectedSpecOptions);
+  useEffect(() => {
+    setQuantitiesBySpecId(Object.fromEntries(detail.tiers.map((item) => [item.specId, 0])));
+    setSelectedSpecOptions(initialSelectedSpecOptions);
+  }, [detail, initialSelectedSpecOptions]);
+  const selectedSummary = detail.tiers.reduce((summary, item) => {
+    const quantity = Number(quantitiesBySpecId[item.specId] || 0);
+    if (quantity <= 0) return summary;
+    const price = Number(String(item.price || "").replace(/[^\d.]/g, "")) || 0;
+    return {
+      selectedKinds: summary.selectedKinds + 1,
+      selectedQuantity: summary.selectedQuantity + quantity,
+      totalAmount: summary.totalAmount + price * quantity
+    };
+  }, { selectedKinds: 0, selectedQuantity: 0, totalAmount: 0 });
+  const handleChangeTierQuantity = (specId, delta) => {
+    setQuantitiesBySpecId((current) => {
+      const currentQuantity = Number(current[specId] || 0);
+      return {
+        ...current,
+        [specId]: Math.max(currentQuantity + delta, 0)
+      };
+    });
+  };
+  const handleSelectSpecOption = (label, optionIndex) => {
+    setSelectedSpecOptions((current) => ({
+      ...current,
+      [label]: optionIndex
+    }));
+  };
+  return (
+    <div className="pc-mall-home-shell">
+      <BuyerPcMallHomeHeader allCartItemCount={allCartItemCount} onOpenCartPage={onOpenCartPage} onOpenCustomerCenter={onOpenCustomerCenter} onOpenHome={onOpenHome} />
+
+      <main className="pc-mall-product-detail-page">
+        <div className="pc-mall-product-breadcrumb">
+          {detail.breadcrumbs.map((item, index) => (
+            <span key={`${item}-${index}`}>{item}{index < detail.breadcrumbs.length - 1 ? <em>»</em> : null}</span>
+          ))}
+        </div>
+        <section className="pc-mall-product-store-card">
+          <div className="pc-mall-product-store-logo">美团闪购</div>
+          <div className="pc-mall-product-store-info">
+            <div className="pc-mall-product-store-title">
+              <span className="pc-mall-product-store-tag">供应商</span>
+              <span className="pc-mall-product-store-tag is-dark">超级供应商</span>
+              <strong>{detail.shopName}</strong>
+            </div>
+            <div className="pc-mall-product-store-tags">
+              <span>资质</span>
+              <span>消费者保障服务</span>
+            </div>
+            <div className="pc-mall-product-store-scores">
+              <span>商品：<strong>{detail.storeScore}</strong></span>
+              <span>物流：<strong>{detail.logisticsScore}</strong></span>
+              <span>服务：<strong>{detail.serviceScore}</strong></span>
+              <span>5分钟响应率：<strong>{detail.responseRate}</strong></span>
+            </div>
+          </div>
+          <div className="pc-mall-product-store-actions">
+            <button type="button">♡ 收藏店铺</button>
+            <button type="button">进入店铺</button>
+          </div>
+        </section>
+
+        <section className="pc-mall-product-detail-panel">
+          <div className="pc-mall-product-gallery">
+            <div className={`pc-mall-product-main-image is-${detail.image || "flowers"}`} />
+            <div className={`pc-mall-product-thumb is-${detail.image || "flowers"}`} />
+          </div>
+          <div className="pc-mall-product-info">
+            <h1>{detail.title}</h1>
+            <p className="pc-mall-product-subtitle">{detail.subtitle}</p>
+            {detail.promo ? (
+              <div className="pc-mall-product-promo-head">
+                <span>{detail.promo}</span>
+                <strong>距结束还剩&nbsp;&nbsp;{detail.countdown}</strong>
+              </div>
+            ) : null}
+            <div className={`pc-mall-product-price-panel ${detail.priceLevels ? "has-levels" : ""}`}>
+              <span>价格</span>
+              {detail.priceLevels ? (
+                <div className="pc-mall-product-price-levels">
+                  {detail.priceLevels.map((item) => (
+                    <div className="pc-mall-product-price-level" key={`${item.price}-${item.minOrder}`}>
+                      <strong>{item.price}</strong>
+                      <em>{item.minOrder}</em>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <>
+                  <strong>{detail.priceRange}</strong>
+                  <em>{detail.minOrder}</em>
+                </>
+              )}
+              <button type="button">♡ 关注</button>
+            </div>
+            <div className="pc-mall-product-info-row"><span>促销</span><strong className="is-selected">混批</strong><em>全店满10件且满100元可混批采购</em></div>
+            <div className="pc-mall-product-info-row"><span>发货</span><em>{detail.shippingFrom || "湖南/长沙"}&nbsp;&nbsp;配送至&nbsp;&nbsp;{detail.shippingTo || "内蒙古自治区/鄂尔多斯市/杭锦旗"}&nbsp;&nbsp;{detail.freightText || "运费0元，24小时内发货"}</em></div>
+            <div className="pc-mall-product-info-row"><span>服务</span><em>电子普通发票 · 电子增值税专用发票 · 确认收货后，不支持售后</em></div>
+            {detail.specs.map((item) => (
+              <div className="pc-mall-product-info-row" key={item.label}>
+                <span>{item.label}</span>
+                {(item.options || [item.value]).map((option, optionIndex) => {
+                  const isSelected = optionIndex === (selectedSpecOptions[item.label] ?? item.selectedIndex ?? 0);
+                  return (
+                    <button
+                      className={`pc-mall-product-spec-option ${isSelected ? "is-selected" : ""}`}
+                      key={option}
+                      type="button"
+                      onClick={() => handleSelectSpecOption(item.label, optionIndex)}
+                    >
+                      {item.label === "颜色" && isSelected && selectedSummary.selectedQuantity > 0 ? (
+                        <i className="pc-mall-product-spec-count">{selectedSummary.selectedQuantity}</i>
+                      ) : null}
+                      {option}
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
+            <div className="pc-mall-product-rule">按箱购买，每箱10件</div>
+            <div className="pc-mall-product-tier-list">
+              {detail.tiers.map((item) => (
+                <div className="pc-mall-product-tier" key={item.specId}>
+                  <div><strong>{item.version}</strong><span>{`规格ID:${item.specId}  UPC码/69码:${item.upc}`}</span></div>
+                  <strong>{item.price}</strong>
+                  <span>{`活动库存 ${item.stock}`}</span>
+                  <div className="pc-mall-product-stepper">
+                    <button type="button" disabled={Number(quantitiesBySpecId[item.specId] || 0) === 0} onClick={() => handleChangeTierQuantity(item.specId, -10)}>−</button>
+                    <span>{quantitiesBySpecId[item.specId] || 0}</span>
+                    <button type="button" onClick={() => handleChangeTierQuantity(item.specId, 10)}>＋</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="pc-mall-product-actions">
+              <div className="pc-mall-product-summary-bar">
+                <span>已选 <strong>{selectedSummary.selectedKinds}</strong> 款 <strong>{selectedSummary.selectedQuantity}</strong> 件</span>
+                <span>优惠：<strong>¥0.00</strong></span>
+                <span>商品合计：<strong>{formatMoneyDisplay(selectedSummary.totalAmount)}</strong></span>
+              </div>
+              <button className="is-buy" type="button">立即购买</button>
+              <button className="is-cart" type="button" onClick={onOpenCartPage}>加入购物车</button>
+              <button className="is-list" type="button">加入常购</button>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <BuyerPcMallHomeFloatbar allCartItemCount={allCartItemCount} />
+    </div>
+  );
+}
+
 function BuyerPcMallPage({ onPortalActionClick }) {
   const buyerPcMallStoredView = useMemo(() => readStoredJson(buyerPcMallViewStorageKey, {
     activeTab: buyerPcMallOrderTabKeys[0],
@@ -6458,7 +7043,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
     normalizeBuyerPcMallOrderTab(buyerPcMallStoredView.activeTab)
   ));
   const [invoicePageView, setInvoicePageView] = useState(() => (
-    ["list", "batch", "title-management", "detail", "cart"].includes(buyerPcMallStoredView.invoicePageView) ? buyerPcMallStoredView.invoicePageView : "list"
+    ["home", "list", "batch", "title-management", "detail", "cart", "product-detail"].includes(buyerPcMallStoredView.invoicePageView) ? buyerPcMallStoredView.invoicePageView : "list"
   ));
   const [invoiceRows, setInvoiceRows] = useState(normalizedBuyerPcMallInvoiceRows);
   const [appliedInvoiceRows, setAppliedInvoiceRows] = useState(buyerPcMallAppliedInvoiceRows);
@@ -6505,6 +7090,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
   const [batchInvoiceMode, setBatchInvoiceMode] = useState("merged");
   const [singleInvoiceOrder, setSingleInvoiceOrder] = useState(null);
   const [activeProductDetailOrderNo, setActiveProductDetailOrderNo] = useState("");
+  const [activeHomeProductId, setActiveHomeProductId] = useState("");
   const [activeBuyerInvoiceDetail, setActiveBuyerInvoiceDetail] = useState(null);
   const [isExportRecordModalOpen, setIsExportRecordModalOpen] = useState(false);
   const [modifyInvoiceOrders, setModifyInvoiceOrders] = useState([]);
@@ -6780,10 +7366,22 @@ function BuyerPcMallPage({ onPortalActionClick }) {
   const handleOpenCartPage = () => {
     setInvoicePageView("cart");
     setActiveBuyerInvoiceDetail(null);
+    setActiveHomeProductId("");
   };
   const handleOpenCustomerCenter = () => {
     setActiveBuyerInvoiceDetail(null);
+    setActiveHomeProductId("");
     setInvoicePageView("list");
+  };
+  const handleOpenPcMallHome = () => {
+    setActiveBuyerInvoiceDetail(null);
+    setActiveHomeProductId("");
+    setInvoicePageView("home");
+    if (typeof window !== "undefined") {
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      });
+    }
   };
   const handleInvoiceTitleManagementBack = () => {
     setInvoicePageView("list");
@@ -6791,6 +7389,16 @@ function BuyerPcMallPage({ onPortalActionClick }) {
   const handleOpenBuyerInvoiceDetail = (row, sourceType) => {
     setActiveBuyerInvoiceDetail(createBuyerPcMallInvoiceDetail(row, sourceType));
     setInvoicePageView("detail");
+  };
+  const handleOpenHomeProductDetail = (productId) => {
+    setActiveHomeProductId(productId);
+    setActiveBuyerInvoiceDetail(null);
+    setInvoicePageView("product-detail");
+    if (typeof window !== "undefined") {
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      });
+    }
   };
   const handleCloseBuyerInvoiceDetail = () => {
     setActiveBuyerInvoiceDetail(null);
@@ -7377,6 +7985,8 @@ function BuyerPcMallPage({ onPortalActionClick }) {
     { key: "已开具发票", label: "已开具发票" }
   ]), []);
   const currentInvoiceTabTotal = isPendingTab ? invoiceRows.length : isAppliedTab ? appliedInvoiceRows.length : invoicedInvoiceRows.length;
+  const isHomeView = invoicePageView === "home";
+  const isProductDetailView = invoicePageView === "product-detail";
   const isBatchInvoiceView = invoicePageView === "batch";
   const isCartView = invoicePageView === "cart";
   const isInvoiceTitleManagementView = invoicePageView === "title-management";
@@ -7536,6 +8146,14 @@ function BuyerPcMallPage({ onPortalActionClick }) {
     />
   ) : null;
 
+  if (isHomeView) {
+    return <BuyerPcMallHomePage allCartItemCount={allCartItemCount} onOpenCartPage={handleOpenCartPage} onOpenCustomerCenter={handleOpenCustomerCenter} onOpenHome={handleOpenPcMallHome} onOpenHomeProductDetail={handleOpenHomeProductDetail} />;
+  }
+
+  if (isProductDetailView) {
+    return <BuyerPcMallHomeProductDetailPage allCartItemCount={allCartItemCount} onOpenCartPage={handleOpenCartPage} onOpenCustomerCenter={handleOpenCustomerCenter} onOpenHome={handleOpenPcMallHome} productId={activeHomeProductId} />;
+  }
+
   if (isCartView) {
     return (
       <div className="pc-cart-shell">
@@ -7557,10 +8175,10 @@ function BuyerPcMallPage({ onPortalActionClick }) {
 
         <header className="pc-cart-header">
           <div className="pc-cart-header-inner">
-            <div className="pc-cart-brand">
+            <button className="pc-cart-brand pc-cart-brand-btn" type="button" onClick={handleOpenPcMallHome}>
               <span className="pc-cart-brand-mark">⬆</span>
               <span className="pc-cart-brand-name">闪电帮帮</span>
-            </div>
+            </button>
             <div className="pc-cart-steps">
               <div className="pc-cart-step is-active"><span>1</span><strong>我的购物车</strong></div>
               <div className="pc-cart-step"><span>2</span><strong>填写订单信息</strong></div>
@@ -7668,17 +8286,17 @@ function BuyerPcMallPage({ onPortalActionClick }) {
         {batchInvoiceNotice ? <div className="page-toast">{batchInvoiceNotice}</div> : null}
         <header className="pc-mall-topbar">
           <div className="pc-mall-topbar-inner">
-            <div className="pc-mall-brand">
+            <button className="pc-mall-brand pc-mall-brand-btn" type="button" onClick={handleOpenPcMallHome}>
               <span className="pc-mall-brand-mark">⬆</span>
               <span className="pc-mall-brand-name">闪电帮帮</span>
               <span className="pc-mall-brand-account">NFSQ369（ID:13641）</span>
-              <button className="pc-mall-toplink" type="button">退出</button>
-            </div>
+            </button>
             <div className="pc-mall-toplinks">
+              <button className="pc-mall-toplink" type="button">退出</button>
               <button className="pc-mall-toplink pc-mall-portal-entry" type="button" onClick={() => onPortalActionClick?.("operations-admin")}>运营后台</button>
               <button className="pc-mall-toplink pc-mall-portal-entry" type="button" onClick={() => onPortalActionClick?.("supplier-admin")}>供应商后台</button>
               <button className="pc-mall-toplink pc-mall-portal-entry" type="button" onClick={() => onPortalActionClick?.("miniapp-mall")}>买家小程序商城</button>
-              <button className="pc-mall-toplink" type="button">我的美团闪电帮帮</button>
+              <button className="pc-mall-toplink" type="button" onClick={handleOpenPcMallHome}>我的美团闪电帮帮</button>
               <button className="pc-mall-toplink pc-mall-cart" type="button" onClick={handleOpenCartPage}>{`购物车(${allCartItemCount})`}</button>
               <button className="pc-mall-toplink" type="button">微信小程序</button>
               <button className="pc-mall-toplink" type="button">卖家中心⌄</button>
@@ -7817,17 +8435,17 @@ function BuyerPcMallPage({ onPortalActionClick }) {
     <div className={`pc-mall-shell ${shouldEnableInvoiceDetailScroll ? "pc-mall-shell-detail-scroll" : "pc-mall-shell-batch"}`}>
       <header className="pc-mall-topbar">
         <div className="pc-mall-topbar-inner">
-          <div className="pc-mall-brand">
+          <button className="pc-mall-brand pc-mall-brand-btn" type="button" onClick={handleOpenPcMallHome}>
             <span className="pc-mall-brand-mark">⬆</span>
             <span className="pc-mall-brand-name">闪电帮帮</span>
             <span className="pc-mall-brand-account">NFSQ369（ID:13641）</span>
-            <button className="pc-mall-toplink" type="button">退出</button>
-          </div>
+          </button>
           <div className="pc-mall-toplinks">
+            <button className="pc-mall-toplink" type="button">退出</button>
             <button className="pc-mall-toplink pc-mall-portal-entry" type="button" onClick={() => onPortalActionClick?.("operations-admin")}>运营后台</button>
             <button className="pc-mall-toplink pc-mall-portal-entry" type="button" onClick={() => onPortalActionClick?.("supplier-admin")}>供应商后台</button>
             <button className="pc-mall-toplink pc-mall-portal-entry" type="button" onClick={() => onPortalActionClick?.("miniapp-mall")}>买家小程序商城</button>
-            <button className="pc-mall-toplink" type="button">我的美团闪电帮帮</button>
+            <button className="pc-mall-toplink" type="button" onClick={handleOpenPcMallHome}>我的美团闪电帮帮</button>
             <button className="pc-mall-toplink pc-mall-cart" type="button" onClick={handleOpenCartPage}>{`购物车(${allCartItemCount})`}</button>
             <button className="pc-mall-toplink" type="button">微信小程序</button>
             <button className="pc-mall-toplink" type="button">卖家中心⌄</button>
