@@ -949,11 +949,12 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 }
 .pc-mall-product-rule { margin: 4px 16px 8px 84px; height: 30px; padding: 0 12px; background: #fff8dd; color: #111827; font-size: 13px; line-height: 30px; }
 .pc-mall-product-tier-list { margin-left: 84px; }
-.pc-mall-product-tier { display: grid; grid-template-columns: minmax(0, 1fr) 88px 130px 112px; align-items: start; min-height: 42px; padding: 0; border-bottom: 1px solid #eef1f5; color: #6b7280; font-size: 13px; }
+.pc-mall-product-tier { display: grid; grid-template-columns: minmax(0, 1fr) 116px 130px 112px; align-items: start; min-height: 42px; padding: 0; border-bottom: 1px solid #eef1f5; color: #6b7280; font-size: 13px; }
 .pc-mall-product-tier-meta { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding-top: 5px; }
 .pc-mall-product-tier-meta strong { color: #111827; font-weight: 400; }
-.pc-mall-product-tier > strong { color: #111827; font-size: 14px; }
-.pc-mall-product-tier > strong,
+.pc-mall-product-tier-price { display: flex; align-items: center; gap: 6px; min-width: 0; padding-top: 8px; }
+.pc-mall-product-tier-price strong { color: #111827; font-size: 14px; line-height: 20px; white-space: nowrap; }
+.pc-mall-product-tier-price span { display: inline-flex; align-items: center; justify-content: center; height: 18px; padding: 0 4px; border: 1px solid #ff5a1f; color: #ff5a1f; background: #fff7ed; font-size: 11px; line-height: 16px; white-space: nowrap; }
 .pc-mall-product-tier > span { padding-top: 8px; }
 .pc-mall-product-stepper-wrap { display: flex; flex-direction: column; align-items: stretch; gap: 3px; width: 112px; }
 .pc-mall-product-stepper { display: grid; grid-template-columns: 32px 48px 32px; height: 32px; }
@@ -2984,6 +2985,8 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
   transform-origin: top left;
   overflow: hidden;
 }
+
+.miniapp-phone-inner.is-flash-detail { padding-bottom: 0; }
 
 .miniapp-statusbar {
   display: flex;
@@ -8217,6 +8220,115 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .miniapp-wholesale-entry-card em { display: block; margin-top: 6px; color: #ff6a00; font-style: normal; font-size: 12px; line-height: 1.6; }
 .miniapp-wholesale-entry-btn { min-width: 92px; height: 38px; background: #111827; color: #fff; font-size: 14px; }
 .miniapp-wholesale-inline-link { min-width: 88px; height: 32px; background: #fff1e8; color: #ff6a00; font-size: 13px; }
+.miniapp-flash-detail-page { position: relative; height: 794px; min-height: 0; background: #f5f6fb; overflow: visible; color: #1f2937; }
+.miniapp-flash-detail-nav { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 4; display: flex; align-items: center; justify-content: space-between; pointer-events: none; }
+.miniapp-flash-detail-nav > button, .miniapp-flash-detail-nav-actions { pointer-events: auto; height: 48px; border: 1px solid rgba(229, 231, 235, 0.92); border-radius: 999px; background: rgba(255, 255, 255, 0.94); box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08); }
+.miniapp-flash-detail-nav > button { width: 64px; padding: 0; }
+.miniapp-flash-detail-nav > button:first-child span { display: block; width: 13px; height: 13px; margin: 0 auto; border-left: 3px solid #111827; border-bottom: 3px solid #111827; transform: rotate(45deg); }
+.miniapp-flash-detail-nav > button:nth-child(2) { position: absolute; left: 64px; width: 66px; border-left-color: transparent; }
+.miniapp-flash-detail-nav > button:nth-child(2) i, .miniapp-flash-detail-nav > button:nth-child(2) i::before, .miniapp-flash-detail-nav > button:nth-child(2) i::after { display: block; width: 22px; height: 2px; background: #111827; content: ""; }
+.miniapp-flash-detail-nav > button:nth-child(2) i { position: relative; margin: 0 auto; }
+.miniapp-flash-detail-nav > button:nth-child(2) i::before { position: absolute; top: -8px; left: 0; }
+.miniapp-flash-detail-nav > button:nth-child(2) i::after { position: absolute; top: 8px; left: 0; }
+.miniapp-flash-detail-nav-actions { display: flex; align-items: center; gap: 0; overflow: hidden; }
+.miniapp-flash-detail-nav-actions span, .miniapp-flash-detail-nav-actions button { display: flex; align-items: center; justify-content: center; width: 58px; height: 100%; border: none; background: transparent; color: #111827; font-size: 24px; }
+.miniapp-flash-detail-nav-actions button { border-left: 1px solid #eef1f5; font-size: 28px; }
+.miniapp-flash-vconsole { position: absolute; top: 78px; right: -8px; z-index: 5; height: 58px; min-width: 142px; border-radius: 11px 0 0 11px; padding: 0 20px 0 24px; background: #1fbf62; color: #fff; font-size: 24px; font-weight: 700; line-height: 58px; box-shadow: 0 4px 14px rgba(15, 23, 42, 0.16); }
+.miniapp-flash-vconsole span { position: absolute; top: 2px; right: 4px; color: rgba(255, 255, 255, 0.8); font-size: 9px; font-weight: 700; line-height: 1; transform: rotate(35deg); }
+.miniapp-flash-detail-content { height: 100%; overflow-y: auto; padding-bottom: 68px; background: #f5f6fb; }
+.miniapp-flash-detail-content { scrollbar-width: none; }
+.miniapp-flash-detail-content::-webkit-scrollbar { display: none; }
+.miniapp-flash-hero { position: relative; height: 332px; border-radius: 0 0 8px 8px; overflow: hidden; background: linear-gradient(180deg, #915033 0 66%, #ede7dd 66% 100%); }
+.miniapp-flash-hero::before { content: ""; position: absolute; left: 0; top: 0; z-index: 0; width: 58%; height: 100%; background: linear-gradient(90deg, rgba(0, 0, 0, 0.58), rgba(0, 0, 0, 0.18) 70%, transparent); }
+.miniapp-flash-hero::after { content: ""; position: absolute; left: 0; right: 0; bottom: 38px; z-index: 1; height: 66px; background: radial-gradient(ellipse at 66% 14%, rgba(0, 0, 0, 0.22), transparent 62%); }
+.miniapp-flash-fan-rib { position: absolute; right: 34px; bottom: 52px; z-index: 2; width: 390px; height: 22px; border-left: 3px solid rgba(74, 45, 24, 0.7); border-right: 1px solid rgba(74, 45, 24, 0.35); background: linear-gradient(90deg, #dbc39a, #fff4d8 58%, #bd8450); transform-origin: right center; box-shadow: 0 10px 18px rgba(0, 0, 0, 0.13); }
+.miniapp-flash-fan-rib::before { content: "草木国风"; display: block; margin-left: 88px; color: rgba(42, 25, 14, 0.5); font-size: 15px; font-weight: 700; line-height: 22px; transform: skewX(-16deg); }
+.miniapp-flash-fan-rib.is-one { transform: rotate(-68deg); }
+.miniapp-flash-fan-rib.is-two { transform: rotate(-54deg); }
+.miniapp-flash-fan-rib.is-three { transform: rotate(-40deg); }
+.miniapp-flash-fan-rib.is-four { transform: rotate(-26deg); }
+.miniapp-flash-fan-rib.is-five { transform: rotate(-12deg); }
+.miniapp-flash-fan-base { position: absolute; right: 28px; bottom: 14px; z-index: 3; width: 66px; height: 66px; border-radius: 50%; background: radial-gradient(circle, #f0c891 0 18%, #b17743 19% 47%, #4a2f20 48%); box-shadow: -22px 18px 22px rgba(0, 0, 0, 0.24); }
+.miniapp-flash-fan-base::before { content: ""; position: absolute; right: 32px; bottom: 38px; width: 318px; height: 220px; clip-path: polygon(100% 100%, 0 48%, 18% 18%, 46% 3%, 76% 0, 100% 12%); background: repeating-conic-gradient(from -80deg at 100% 100%, rgba(250, 238, 205, 0.92) 0deg 6deg, rgba(133, 82, 41, 0.82) 6deg 7.5deg, rgba(255, 248, 226, 0.95) 7.5deg 13deg, rgba(195, 137, 78, 0.88) 13deg 14.5deg); box-shadow: -14px 18px 20px rgba(0, 0, 0, 0.18); }
+.miniapp-flash-fan-base::after { content: ""; position: absolute; right: 28px; bottom: 38px; width: 224px; height: 136px; clip-path: polygon(100% 100%, 0 50%, 25% 24%, 60% 9%, 100% 16%); background: linear-gradient(135deg, rgba(55, 32, 18, 0.2), transparent 48%); }
+.miniapp-flash-hero em { position: absolute; right: 12px; bottom: 12px; z-index: 4; color: #fff; font-style: normal; font-size: 14px; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45); }
+.miniapp-flash-product-card, .miniapp-flash-info-card { position: relative; margin: -2px 14px 0; border-radius: 12px; background: #fff; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.07); overflow: hidden; }
+.miniapp-flash-promo-head { display: flex; align-items: center; justify-content: space-between; height: 42px; padding: 0 16px; background: linear-gradient(90deg, #ff6835, #ff3f21); color: #fff; }
+.miniapp-flash-promo-head strong { font-size: 20px; }
+.miniapp-flash-promo-head span { display: flex; align-items: center; gap: 7px; font-size: 14px; }
+.miniapp-flash-promo-head b { display: inline-flex; align-items: center; height: 28px; border-radius: 6px; padding: 0 7px; background: #fff; color: #ff4a22; font-size: 18px; }
+.miniapp-flash-product-body { position: relative; padding: 14px 18px 12px; }
+.miniapp-flash-price { color: #ff6a00; font-size: 30px; font-weight: 500; line-height: 1; }
+.miniapp-flash-min-order { margin-top: 6px; color: #8a8f99; font-size: 12px; }
+.miniapp-flash-product-body h1 { margin: 14px 0 9px; color: #111827; font-size: 19px; line-height: 1.25; }
+.miniapp-flash-muted-tag { display: inline-flex; align-items: center; height: 20px; padding: 0 7px; background: #f1f1f4; color: #8b8f98; font-size: 12px; }
+.miniapp-flash-service-float { position: absolute; right: 22px; top: 48px; width: 44px; height: 44px; border: none; border-radius: 50%; background: #fff; box-shadow: 0 4px 14px rgba(15, 23, 42, 0.16); }
+.miniapp-flash-service-float::before { content: ""; position: absolute; left: 11px; top: 14px; width: 23px; height: 15px; border: 3px solid #ffd21f; border-top-color: #111827; border-radius: 50%; }
+.miniapp-flash-service-float::after { content: ""; position: absolute; right: 10px; bottom: 12px; width: 8px; height: 4px; border-right: 3px solid #111827; border-bottom: 3px solid #111827; border-radius: 0 0 8px 0; }
+.miniapp-flash-action-row { display: grid; grid-template-columns: 54px 54px 70px minmax(0, 1fr); gap: 5px; margin-top: 20px; color: #a1a6b0; font-size: 12px; text-align: center; }
+.miniapp-flash-action-row span { position: relative; display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; white-space: nowrap; }
+.miniapp-flash-action-row span::before { content: ""; display: inline-block; width: 15px; height: 15px; border: 2px solid #a1a6b0; box-sizing: border-box; }
+.miniapp-flash-action-row .is-share::before { border-radius: 50%; border-right-color: transparent; }
+.miniapp-flash-action-row .is-favorite::before { clip-path: polygon(50% 0, 62% 35%, 100% 35%, 68% 57%, 80% 100%, 50% 72%, 20% 100%, 32% 57%, 0 35%, 38% 35%); background: currentColor; border: none; }
+.miniapp-flash-action-row .is-usual::before { border-radius: 3px; }
+.miniapp-flash-action-row .is-sales::before { width: 18px; border-radius: 4px; transform: skewX(-8deg); }
+.miniapp-flash-info-card { margin-top: 10px; padding: 8px 18px; }
+.miniapp-flash-info-row { display: grid; grid-template-columns: 52px minmax(0, 1fr) 18px; gap: 10px; align-items: start; padding: 9px 0; border-top: 1px solid #f1f2f5; }
+.miniapp-flash-info-row:first-child { border-top: none; }
+.miniapp-flash-info-row > span { color: #a1a6b0; font-size: 16px; }
+.miniapp-flash-info-row strong { color: #1f2937; font-size: 16px; font-weight: 700; }
+.miniapp-flash-info-row p { margin: 6px 0 0; color: #1f2937; font-size: 16px; line-height: 1.35; }
+.miniapp-flash-info-row em { display: block; margin-top: 8px; color: #a1a6b0; font-style: normal; font-size: 13px; line-height: 1.35; }
+.miniapp-flash-info-row i { color: #c1c5cc; font-style: normal; font-size: 24px; line-height: 1; }
+.miniapp-flash-promo-tags { display: flex; align-items: center; gap: 10px; }
+.miniapp-flash-promo-tags b { display: inline-flex; align-items: center; justify-content: center; height: 28px; min-width: 58px; border: 1px solid #ff5060; border-radius: 4px; color: #ff4054; background: #fff; font-size: 14px; font-weight: 400; }
+.miniapp-flash-footer { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; display: grid; grid-template-columns: 48px 48px 58px minmax(0, 1fr) minmax(0, 1fr); height: 54px; padding: 0 10px 0 4px; background: #fff; box-shadow: 0 -4px 18px rgba(15, 23, 42, 0.08); }
+.miniapp-flash-footer button { border: none; font-family: inherit; }
+.miniapp-flash-footer-icon { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: #fff; color: #333; font-size: 11px; }
+.miniapp-flash-footer-icon span { position: relative; display: block; width: 19px; height: 19px; border: 2px solid #111827; }
+.miniapp-flash-footer-icon span.is-store { border-radius: 5px 5px 2px 2px; border-top-width: 5px; }
+.miniapp-flash-footer-icon span.is-service { border-radius: 50%; border-bottom-color: transparent; }
+.miniapp-flash-footer-icon span.is-cart { border-top: none; border-radius: 0 0 4px 4px; }
+.miniapp-flash-footer-icon em { position: absolute; top: -11px; right: -13px; min-width: 22px; height: 16px; border-radius: 999px; padding: 0 5px; background: #ff3040; color: #fff; font-size: 10px; font-style: normal; line-height: 16px; text-align: center; }
+.miniapp-flash-cart-btn, .miniapp-flash-buy-btn { color: #111827; font-size: 15px; font-weight: 700; }
+.miniapp-flash-cart-btn { border-radius: 999px 0 0 999px; background: #ffd21f; }
+.miniapp-flash-buy-btn { border-radius: 0 999px 999px 0; background: #ff6a00; color: #fff; }
+.miniapp-flash-buy-overlay { position: absolute; inset: 0; z-index: 20; pointer-events: none; }
+.miniapp-flash-buy-mask { position: absolute; inset: 0; border: none; background: rgba(0, 0, 0, 0.66); pointer-events: auto; }
+.miniapp-flash-buy-mask::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 384px; background: radial-gradient(circle at 47% 44%, rgba(255, 245, 225, 0.96) 0 12%, transparent 13%), radial-gradient(circle at 55% 46%, rgba(255, 132, 20, 0.9) 0 18%, transparent 19%), radial-gradient(circle at 42% 54%, rgba(255, 157, 39, 0.92) 0 20%, transparent 21%), radial-gradient(circle at 62% 54%, rgba(246, 123, 16, 0.88) 0 17%, transparent 18%), linear-gradient(135deg, #52611f 0%, #e8b142 42%, #8fb048 100%); opacity: 0.58; }
+.miniapp-flash-buy-mask::after { content: "新鲜蜜桔"; position: absolute; left: 28px; top: 72px; color: rgba(0, 0, 0, 0.86); font-size: 46px; font-weight: 900; letter-spacing: 2px; text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.55); opacity: 0.55; }
+.miniapp-flash-buy-sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; display: flex; flex-direction: column; gap: 6px; height: auto; max-height: calc(100% - 128px); overflow: hidden; border-radius: 14px 14px 0 0; padding: 14px 14px 10px; background: #f6f7fb; pointer-events: auto; box-shadow: 0 -12px 28px rgba(15, 23, 42, 0.18); }
+.miniapp-flash-buy-summary { display: flex; align-items: center; gap: 12px; height: 58px; padding: 0 0 2px; flex: none; }
+.miniapp-flash-buy-thumb { width: 52px; height: 52px; border-radius: 12px; background: radial-gradient(circle at 35% 38%, #ffe5ef 0 20%, transparent 21%), radial-gradient(circle at 55% 34%, #f7a9c6 0 16%, transparent 17%), radial-gradient(circle at 68% 58%, #ffe0ed 0 22%, transparent 23%), linear-gradient(135deg, #d7efe0, #fff3c4); flex: none; }
+.miniapp-flash-buy-summary strong { display: block; color: #ff6a00; font-size: 18px; line-height: 1.2; }
+.miniapp-flash-buy-summary span { display: block; margin-top: 8px; color: #9aa3af; font-size: 12px; }
+.miniapp-flash-spec-card { border-radius: 14px; padding: 12px; background: #fff; flex: none; }
+.miniapp-flash-spec-group + .miniapp-flash-spec-group { margin-top: 10px; }
+.miniapp-flash-spec-group h3, .miniapp-flash-spec-row h3 { margin: 0 0 8px; color: #374151; font-size: 18px; font-weight: 500; }
+.miniapp-flash-spec-options { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.miniapp-flash-spec-options button { min-width: 76px; height: 36px; border: none; border-radius: 4px; padding: 0 10px; background: #f3f4f8; color: #4b5563; font-size: 13px; }
+.miniapp-flash-spec-options button.is-selected { background: #ff6a00; color: #fff; }
+.miniapp-flash-spec-options button.has-thumb { display: inline-flex; align-items: center; gap: 8px; padding-left: 5px; }
+.miniapp-flash-spec-options button.has-thumb i { width: 28px; height: 28px; border-radius: 3px; background: radial-gradient(circle at 35% 38%, #ffe5ef 0 20%, transparent 21%), radial-gradient(circle at 55% 34%, #f7a9c6 0 16%, transparent 17%), linear-gradient(135deg, #d7efe0, #fff3c4); }
+.miniapp-flash-spec-options button.has-thumb.is-dark i { background: linear-gradient(135deg, #7f1d1d, #111827); }
+.miniapp-flash-spec-row { margin-top: 10px; }
+.miniapp-flash-spec-row h3 { margin-bottom: 8px; }
+.miniapp-flash-spec-row h3 span { color: #9aa3af; font-size: 13px; }
+.miniapp-flash-spec-row strong { display: block; color: #374151; font-size: 15px; font-weight: 500; }
+.miniapp-flash-spec-row p, .miniapp-flash-spec-row em { display: block; margin: 3px 0 0; color: #9aa3af; font-size: 12px; font-style: normal; }
+.miniapp-flash-spec-row p { display: flex; align-items: center; gap: 6px; }
+.miniapp-flash-spec-row p b { display: inline-flex; align-items: center; justify-content: center; height: 16px; border: 1px solid #ff4b55; border-radius: 2px; padding: 0 3px; color: #ff4054; background: #fff; font-size: 10px; font-weight: 400; line-height: 14px; white-space: nowrap; }
+.miniapp-flash-spec-items { display: flex; flex-direction: column; gap: 8px; }
+.miniapp-flash-spec-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 46px; }
+.miniapp-flash-sheet-stepper { display: grid; grid-template-columns: 34px 42px 34px; height: 32px; border: 1px solid #edf0f5; border-radius: 8px; overflow: hidden; flex: none; }
+.miniapp-flash-sheet-stepper button, .miniapp-flash-sheet-stepper span { display: flex; align-items: center; justify-content: center; border: none; border-left: 1px solid #edf0f5; background: #fff; color: #111827; font-size: 18px; }
+.miniapp-flash-sheet-stepper button:first-child { border-left: none; }
+.miniapp-flash-sheet-stepper button:disabled { color: #c6ccd6; background: #fafafa; }
+.miniapp-flash-sheet-total { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; margin: 0 -14px; padding: 6px 16px; color: #6b7280; font-size: 12px; background: #fff; flex: none; }
+.miniapp-flash-sheet-total > div { display: flex; flex-direction: column; gap: 6px; }
+.miniapp-flash-sheet-total > div:last-child { text-align: right; }
+.miniapp-flash-sheet-total b { color: #ff6a00; font-size: 16px; font-weight: 600; }
+.miniapp-flash-sheet-buy-btn { height: 46px; border: none; border-radius: 999px; background: linear-gradient(90deg, #ffe54d, #ffd517); color: #111827; font-size: 17px; font-weight: 700; box-shadow: inset 0 0 0 1px rgba(255, 187, 0, 0.28); flex: none; }
 
 @media (max-width: 1320px) {
   .platform-todo-filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }

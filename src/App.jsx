@@ -1716,8 +1716,8 @@ const buyerPcMallHomeProductDetail = {
     { label: "尺寸", value: "160/80(XS)" }
   ],
   tiers: [
-    { version: "版本2", specId: "456122", upc: "6921168558049", price: "¥2.00", stock: "1000件", limit: 20, purchasedCount: 15 },
-    { version: "版本3", specId: "456123", upc: "6921168558048", price: "¥4.00", stock: "2000件", limit: 5 }
+    { version: "版本2", specId: "456122", upc: "6921168558049", price: "¥2.00", priceTag: "限时价", stock: "1000件", limit: 20, purchasedCount: 15 },
+    { version: "版本3", specId: "456123", upc: "6921168558048", price: "¥4.00", priceTag: "专享价", stock: "2000件", limit: 5 }
   ]
 };
 const buyerPcMallHomeProductDetailById = {
@@ -7072,7 +7072,10 @@ function BuyerPcMallHomeProductDetailPage({ allCartItemCount, onImmediateBuy, on
               {detail.tiers.map((item) => (
                 <div className="pc-mall-product-tier" key={item.specId}>
                   <div className="pc-mall-product-tier-meta"><strong>{item.version}</strong><span>{`规格ID:${item.specId}  UPC码/69码:${item.upc}`}</span></div>
-                  <strong>{item.price}</strong>
+                  <div className="pc-mall-product-tier-price">
+                    <strong>{item.price}</strong>
+                    {item.priceTag ? <span>{item.priceTag}</span> : null}
+                  </div>
                   <span>{`活动库存 ${item.stock}`}</span>
                   <div className="pc-mall-product-stepper-wrap">
                     <div className="pc-mall-product-stepper">
@@ -15526,6 +15529,30 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
     "2084008012": 2
   });
   const [selectedWholesaleProductId, setSelectedWholesaleProductId] = useState(goodsRows[0]?.id || "");
+  const [isMiniappFlashBuySheetOpen, setIsMiniappFlashBuySheetOpen] = useState(false);
+  const miniappFlashSpecs = [
+    { version: "版本3", price: 2, priceTag: "限时价", stock: 50, specId: "456094" },
+    { version: "版本2", price: 10, priceTag: "专享价", stock: 20, specId: "456095" }
+  ];
+  const [miniappFlashQuantities, setMiniappFlashQuantities] = useState({
+    "456094": 0,
+    "456095": 0
+  });
+  const handleMiniappFlashQuantityChange = (specId, delta) => {
+    const targetSpec = miniappFlashSpecs.find((item) => item.specId === specId);
+    if (!targetSpec) return;
+    setMiniappFlashQuantities((current) => {
+      const currentQuantity = Number(current[specId] || 0);
+      const nextQuantity = Math.min(Math.max(currentQuantity + delta, 0), targetSpec.stock);
+      return { ...current, [specId]: nextQuantity };
+    });
+  };
+  const miniappFlashSelectedQuantity = miniappFlashSpecs.reduce((sum, item) => (
+    sum + Number(miniappFlashQuantities[item.specId] || 0)
+  ), 0);
+  const miniappFlashSelectedAmount = miniappFlashSpecs.reduce((sum, item) => (
+    sum + Number(miniappFlashQuantities[item.specId] || 0) * item.price
+  ), 0);
   const isWholesaleDetailView = miniappView === "wholesale-detail";
   const isWholesaleCheckoutView = miniappView === "wholesale-checkout";
   const wholesaleCartItems = useMemo(() => wholesaleCatalog
@@ -15571,6 +15598,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   }), [shopWholesaleRule, wholesaleCartItems]);
   const activeWholesaleProduct = wholesaleCatalog.find((item) => item.id === selectedWholesaleProductId) || wholesaleCatalog[0];
   const activeWholesaleStoreGroup = wholesaleStoreGroups.find((group) => group.store === activeWholesaleProduct?.store);
+  const isFeaturedWholesaleFlashDetail = activeWholesaleProduct?.id === "2080025606";
   const allWholesaleStoresValid = wholesaleStoreGroups.every((group) => group.canSubmit);
   const wholesaleOrderHint = allWholesaleStoresValid
     ? "已按提交订单时的最新商品与店铺规则重新校验。"
@@ -16593,7 +16621,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       </aside>
       <div className="miniapp-phone-frame">
         <div className="miniapp-phone">
-          <div className="miniapp-phone-inner">
+          <div className={`miniapp-phone-inner${isWholesaleDetailView && isFeaturedWholesaleFlashDetail ? " is-flash-detail" : ""}`}>
             <div className="miniapp-statusbar">
               <span>{isInvoiceAssistantView ? "17:30:57" : isInvoiceAppliedModifyView ? "17:30:57" : isInvoiceServiceChatView ? "17:31:18" : isInvoiceTitleCreateView ? "09:39:54" : isInvoiceTitleManagementView ? "09:44:04" : isInvoiceEditView ? "16:31" : isInvoiceDetailView ? "16:29" : isOrderListView ? "00:07:15" : isMineTab ? "00:03:58" : "00:02:06"}</span>
               <div className="miniapp-status-icons">
@@ -18474,6 +18502,142 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                 </main>
               </>
             ) : isWholesaleDetailView ? (
+              isFeaturedWholesaleFlashDetail ? (
+                <div className="miniapp-flash-detail-page">
+                  <div className="miniapp-flash-detail-nav">
+                    <button type="button" onClick={() => setMiniappView("main")} aria-label="返回"><span /></button>
+                    <button type="button" aria-label="菜单"><i /></button>
+                    <div className="miniapp-flash-detail-nav-actions">
+                      <span>•••</span>
+                      <button type="button" aria-label="返回买家PC商城" onClick={() => onBackToPcMall?.()}>◎</button>
+                    </div>
+                  </div>
+                  <div className="miniapp-flash-vconsole">vConsole<span>WEBVIEW</span></div>
+
+                  <main className="miniapp-flash-detail-content">
+                    <section className="miniapp-flash-hero">
+                      <span className="miniapp-flash-fan-rib is-one" />
+                      <span className="miniapp-flash-fan-rib is-two" />
+                      <span className="miniapp-flash-fan-rib is-three" />
+                      <span className="miniapp-flash-fan-rib is-four" />
+                      <span className="miniapp-flash-fan-rib is-five" />
+                      <span className="miniapp-flash-fan-base" />
+                      <em>1/2</em>
+                    </section>
+
+                    <section className="miniapp-flash-product-card">
+                      <div className="miniapp-flash-promo-head">
+                        <strong>限时购</strong>
+                        <span>距结束 <b>16天 11:18:32</b></span>
+                      </div>
+                      <div className="miniapp-flash-product-body">
+                        <button className="miniapp-flash-service-float" type="button" aria-label="联系客服" />
+                        <div className="miniapp-flash-price">¥50.00</div>
+                        <div className="miniapp-flash-min-order">1罐 1起批</div>
+                        <h1>护肤品限时购冒烟测</h1>
+                        <div className="miniapp-flash-muted-tag">限时购冒烟</div>
+                        <div className="miniapp-flash-action-row">
+                          <span className="is-share">分享</span>
+                          <span className="is-favorite">收藏</span>
+                          <span className="is-usual">加入常购</span>
+                          <span className="is-sales">月销量100以内</span>
+                        </div>
+                      </div>
+                    </section>
+
+                    <section className="miniapp-flash-info-card">
+                      <div className="miniapp-flash-info-row">
+                        <span>发货</span>
+                        <div>
+                          <strong>现在付款，预计 1天送达</strong>
+                          <p>24小时内发货 | 运费：¥0起</p>
+                          <em>至 内蒙古自治区 鄂尔多斯市 杭锦旗</em>
+                        </div>
+                        <i>〉</i>
+                      </div>
+                      <div className="miniapp-flash-info-row">
+                        <span>促销</span>
+                        <div className="miniapp-flash-promo-tags">
+                          <b>限时购</b>
+                          <b>混批</b>
+                        </div>
+                        <i>〉</i>
+                      </div>
+                    </section>
+                  </main>
+
+                  <div className="miniapp-flash-footer">
+                    <button className="miniapp-flash-footer-icon" type="button"><span className="is-store" />店铺</button>
+                    <button className="miniapp-flash-footer-icon" type="button"><span className="is-service" />客服</button>
+                    <button className="miniapp-flash-footer-icon" type="button" onClick={() => setActiveTab("cart")}><span className="is-cart"><em>20</em></span>购物车</button>
+                    <button className="miniapp-flash-cart-btn" type="button" onClick={() => { setActiveTab("cart"); setMiniappView("main"); }}>加入购物车</button>
+                    <button className="miniapp-flash-buy-btn" type="button" onClick={() => setIsMiniappFlashBuySheetOpen(true)}>立即购买</button>
+                  </div>
+                  {isMiniappFlashBuySheetOpen ? (
+                    <div className="miniapp-flash-buy-overlay">
+                      <button className="miniapp-flash-buy-mask" type="button" aria-label="关闭规格选择" onClick={() => setIsMiniappFlashBuySheetOpen(false)} />
+                      <div className="miniapp-flash-buy-sheet">
+                        <div className="miniapp-flash-buy-summary">
+                          <div className="miniapp-flash-buy-thumb" />
+                          <div>
+                            <strong>¥2起</strong>
+                            <span>每个账户最多购买5件  |  8件起批</span>
+                          </div>
+                        </div>
+                        <section className="miniapp-flash-spec-card">
+                          <div className="miniapp-flash-spec-group">
+                            <h3>颜色</h3>
+                            <div className="miniapp-flash-spec-options">
+                              <button className="is-selected has-thumb" type="button"><i />蓝色</button>
+                              <button className="has-thumb is-dark" type="button"><i />黑色</button>
+                            </div>
+                          </div>
+                          <div className="miniapp-flash-spec-group">
+                            <h3>尺寸</h3>
+                            <div className="miniapp-flash-spec-options">
+                              <button className="is-selected" type="button">162/84(XS)</button>
+                              <button type="button">170/92(M)</button>
+                            </div>
+                          </div>
+                          <div className="miniapp-flash-spec-row">
+                            <div>
+                              <h3>规格 <span>按箱购买，每箱1件</span></h3>
+                              <div className="miniapp-flash-spec-items">
+                                {miniappFlashSpecs.map((item) => {
+                                  const quantity = Number(miniappFlashQuantities[item.specId] || 0);
+                                  return (
+                                    <div className="miniapp-flash-spec-item" key={item.specId}>
+                                      <div>
+                                        <strong>{item.version}</strong>
+                                        <p>
+                                          <b>{item.priceTag}</b>
+                                          <span>{`¥ ${item.price}`}</span>
+                                          <span>{`库存：${item.stock}`}</span>
+                                        </p>
+                                        <em>{`规格ID：${item.specId}`}</em>
+                                      </div>
+                                      <div className="miniapp-flash-sheet-stepper">
+                                        <button type="button" disabled={quantity <= 0} onClick={() => handleMiniappFlashQuantityChange(item.specId, -1)}>−</button>
+                                        <span>{quantity}</span>
+                                        <button type="button" disabled={quantity >= item.stock} onClick={() => handleMiniappFlashQuantityChange(item.specId, 1)}>＋</button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        </section>
+                        <div className="miniapp-flash-sheet-total">
+                          <div><span>已选 <b>{miniappFlashSelectedQuantity}</b>件</span><span>配送至：内蒙古自治区 鄂尔多斯市⌄</span></div>
+                          <div><span>商品合计：<b>{`¥ ${miniappFlashSelectedAmount}`}</b></span><span>运费(预估)：<b>¥ 0</b></span></div>
+                        </div>
+                        <button className="miniapp-flash-sheet-buy-btn" type="button">立即购买</button>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
               <div className="miniapp-wholesale-page">
                 <header className="miniapp-order-header miniapp-wholesale-header">
                   <button className="miniapp-order-back" type="button" onClick={() => setMiniappView("main")} aria-label="返回">
@@ -18528,6 +18692,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                   <button className="miniapp-wholesale-primary-btn" type="button" onClick={() => { setActiveTab("cart"); setMiniappView("main"); }}>加入购物车</button>
                 </div>
               </div>
+              )
             ) : isWholesaleCheckoutView ? (
               <div className="miniapp-wholesale-page">
                 <header className="miniapp-order-header miniapp-wholesale-header">
