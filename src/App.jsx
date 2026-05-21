@@ -1716,8 +1716,8 @@ const buyerPcMallHomeProductDetail = {
     { label: "尺寸", value: "160/80(XS)" }
   ],
   tiers: [
-    { version: "版本2", specId: "456122", upc: "6921168558049", price: "¥2.00", priceTag: "限时价", stock: "1000件", limit: 20, purchasedCount: 15 },
-    { version: "版本3", specId: "456123", upc: "6921168558048", price: "¥4.00", priceTag: "专享价", stock: "2000件", limit: 5 }
+    { version: "版本2", specId: "456122", upc: "6921168558049", price: "¥2.00", priceTag: "限时价", stock: "1000件" },
+    { version: "版本3", specId: "456123", upc: "6921168558048", price: "¥4.00", priceTag: "专享价", stock: "2000件", limit: 20, purchasedCount: 15 }
   ]
 };
 const buyerPcMallHomeProductDetailById = {
@@ -6938,6 +6938,19 @@ function BuyerPcMallHomeProductDetailPage({ allCartItemCount, onImmediateBuy, on
       limitErrorsBySpecId[item.specId]
     )
   ));
+  const getSelectedSpecValues = () => detail.specs
+    .map((spec) => {
+      const selectedIndex = selectedSpecOptions[spec.label] ?? spec.selectedIndex ?? 0;
+      return (spec.options || [spec.value])[selectedIndex];
+    })
+    .filter(Boolean);
+  const getOrderConditionToastMessage = () => {
+    const invalidTier = detail.tiers.find((item) => limitErrorsBySpecId[item.specId]) || detail.tiers.find((item) => (
+      Number(item.limit || 0) > 0 && Number(quantitiesBySpecId[item.specId] || 0) >= Number(item.limit)
+    ));
+    if (!invalidTier) return "商品不满足下单条件，请检查";
+    return `【${[...getSelectedSpecValues(), invalidTier.version].filter(Boolean).join(",")}】${getTierLimitMessage(invalidTier)}`;
+  };
   const handleImmediateBuy = () => {
     if (hasTierLimitError) return;
     if (selectedSummary.selectedQuantity <= 0) return;
@@ -6972,7 +6985,7 @@ function BuyerPcMallHomeProductDetailPage({ allCartItemCount, onImmediateBuy, on
     });
   };
   const handleInvalidImmediateBuy = () => {
-    setOrderConditionToast("商品不满足下单条件，请检查");
+    setOrderConditionToast(getOrderConditionToastMessage());
   };
   return (
     <div className="pc-mall-home-shell">
@@ -14763,7 +14776,7 @@ function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, 
 
   const hasSelectedProducts = selectedProducts.length > 0;
   const allFilteredSelected = filteredProducts.length > 0 && filteredProducts.every((item) => selectedGoodsIds.includes(item.id));
-  const showSelectionControls = !isEditMode;
+  const showSelectionControls = true;
 
   const selectedGoodsPanel = (
     <>
@@ -14798,7 +14811,7 @@ function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, 
                 <td><EditableCellInput label={isSpecialPricePage ? "专享价生效件数" : "总限购数量"} value={totalLimitDisplay} onChange={(e) => onUpdateProductLimit(item.id, e.target.value.replace(/[^\d]/g, ""))} placeholder="请输入" locked={totalLimitLocked} lockedDisplay="按规格维度生效" allowEditButton={!isEditMode} isEditMode={productFieldEditModes.totalLimit} onToggleEdit={() => onToggleProductFieldEditMode(item.id, "totalLimit")} inputMode="numeric" hasError={productFieldErrors.totalLimit} /></td>
                 {!isSpecialPricePage ? <td><EditableCellInput label="总活动库存" value={activityStockDisplay} onChange={(e) => onUpdateProductActivityStock(item.id, e.target.value.replace(/[^\d]/g, ""))} placeholder="请输入" locked={activityStockLocked} lockedDisplay="按规格维度生效" allowEditButton={!isEditMode} isEditMode={productFieldEditModes.activityStock} onToggleEdit={() => onToggleProductFieldEditMode(item.id, "activityStock")} inputMode="numeric" hasError={productFieldErrors.activityStock} /></td> : null}
                 <td><div className="spec-summary"><span>共 {item.specs.length} 个规格，已选 {item.specs.filter((spec) => spec.status === "active").length} 个</span><button type="button" className="spec-open-btn" onClick={() => isProductTerminated ? onShowSpecDetail(item) : onOpenSpecPicker(item.id)}>{isProductTerminated ? "查看" : "编辑"}</button></div></td>
-                <td><div className="row-actions activity-row-actions">{showSelectionControls ? <button className="delete-link" type="button" onClick={() => onRemoveProduct(item.id)}>删除商品</button> : null}{isEditMode ? <button className={`terminate-product-btn ${isProductTerminated ? "is-disabled" : ""}`} type="button" onClick={() => onTerminateProduct(item.id)} disabled={isProductTerminated}>{isProductTerminated ? "已手动终止" : "单品终止"}</button> : null}</div></td>
+                <td><div className="row-actions activity-row-actions"><button className="delete-link" type="button" onClick={() => onRemoveProduct(item.id)}>删除商品</button></div></td>
               </tr>
             );
           })}</tbody></table></div>
@@ -19456,6 +19469,11 @@ export default function App() {
   };
 
   const handleRemoveProduct = (productId) => {
+    if (selectedProducts.length <= 1) {
+      setToastMessage("请至少保留一个商品参与活动");
+      return;
+    }
+
     updateCurrentMarketingState((current) => ({
       ...current,
       selectedProducts: current.selectedProducts.filter((item) => item.id !== productId),
@@ -19490,6 +19508,11 @@ export default function App() {
     }
 
     const selectedIdSet = new Set(selectedGoodsIds);
+    if (selectedProducts.filter((item) => !selectedIdSet.has(item.id)).length === 0) {
+      setToastMessage("请至少保留一个商品参与活动");
+      return;
+    }
+
     updateCurrentMarketingState((current) => ({
       ...current,
       selectedProducts: current.selectedProducts.filter((item) => !selectedIdSet.has(item.id)),

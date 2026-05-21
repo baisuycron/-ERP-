@@ -970,8 +970,9 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .pc-mall-product-actions .is-buy { background: #202020; color: #fff; }
 .pc-mall-product-actions .is-cart { background: #ffc640; color: #111827; }
 .pc-mall-product-actions .is-list { background: transparent; color: #111827; padding: 0 10px; min-width: 80px; }
-.pc-mall-product-toast { position: fixed; top: 132px; left: 50%; z-index: 260; min-width: 260px; padding: 11px 22px; border-radius: 4px; color: #fff; font-size: 14px; line-height: 1.4; text-align: center; transform: translateX(-50%); box-shadow: 0 8px 22px rgba(15, 23, 42, 0.18); }
-.pc-mall-product-toast.is-error { background: #ff4d4f; }
+.pc-mall-product-toast { position: fixed; top: 60px; left: 50%; z-index: 260; display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 360px; min-height: 38px; padding: 8px 16px; border: 1px solid #ffb59f; border-radius: 2px; background: #fff3ee; color: #4b4f58; font-size: 13px; line-height: 1.4; text-align: center; transform: translateX(-50%); box-shadow: 0 3px 12px rgba(255, 92, 60, 0.22); white-space: nowrap; }
+.pc-mall-product-toast::before { content: "×"; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 18px; height: 18px; border-radius: 50%; background: #ff2f3f; color: #fff; font-size: 17px; font-weight: 700; line-height: 18px; }
+.pc-mall-product-toast.is-error { background: #fff3ee; }
 .pc-mall-home-floatbar { position: fixed; top: 192px; right: clamp(16px, 2vw, 28px); display: flex; flex-direction: column; gap: 2px; width: 76px; z-index: 20; }
 .pc-mall-home-floatbar button { min-height: 54px; border: none; border-radius: 12px; background: #fff; color: #374151; font-size: 12px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08); }
 .pc-mall-shell { min-height: 100vh; background: #f5f7fa; color: #1f2937; font-family: "Microsoft YaHei", "PingFang SC", sans-serif; }
