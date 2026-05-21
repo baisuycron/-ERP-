@@ -74,6 +74,7 @@ const initialMiniappInvoicedFilters = {
   pickupStores: [],
   buyerAccounts: ["全部"],
   invoiceType: "全部",
+  downloadStatus: "全部",
   separateInvoiceRequired: "全部"
 };
 
@@ -15405,6 +15406,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       paymentMethod: "先款后货",
       pickupStore: "北京朝阳门店(102325)",
       status: "已开票",
+      downloadStatus: "未下载",
       amount: 105,
       title: "湖南海商科技有限公司",
       separateInvoiceRequired: "是",
@@ -15437,6 +15439,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       paymentMethod: "先货后款",
       pickupStore: "北京朝阳门店(102325)",
       status: "已开票",
+      downloadStatus: "已下载",
       amount: 60.8,
       title: "美团",
       separateInvoiceRequired: "否",
@@ -15469,6 +15472,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       paymentMethod: "先货后款",
       pickupStore: "北京朝阳门店(102325)",
       status: "已开票",
+      downloadStatus: "未下载",
       amount: 2899,
       title: "美团",
       separateInvoiceRequired: "否",
@@ -15686,6 +15690,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
         invoiceNo: item.invoiceNo || "-",
         storeName: item.storeName,
         pickupStore: item.pickupStore || "-",
+        downloadStatus: getBuyerPcMallInvoiceDownloadStatus(item),
         orderAmount: Number(item.orderAmount ?? item.amount ?? 0),
         applyAmount: Number(item.applyAmount ?? item.amount ?? 0),
         status: item.status,
@@ -15737,6 +15742,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       if (miniappInvoicedFilters.pickupStores.length > 0 && !miniappInvoicedFilters.pickupStores.includes(item.pickupStore || "-")) return false;
       if (!miniappInvoicedFilters.buyerAccounts.includes("全部") && !miniappInvoicedFilters.buyerAccounts.includes(item.buyerAccount)) return false;
       if (miniappInvoicedFilters.invoiceType !== "全部" && item.invoiceType !== miniappInvoicedFilters.invoiceType) return false;
+      if (miniappInvoicedFilters.downloadStatus !== "全部" && item.downloadStatus !== miniappInvoicedFilters.downloadStatus) return false;
       if (miniappInvoicedFilters.separateInvoiceRequired !== "全部" && item.separateInvoiceRequired !== miniappInvoicedFilters.separateInvoiceRequired) return false;
       const invoicedAt = Date.parse(String(item.invoicedAt || "").replace(/-/g, "/"));
       if (startDate && !Number.isNaN(invoicedAt) && invoicedAt < startDate.getTime()) return false;
@@ -17352,7 +17358,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                                   <strong>{item.orderNo}</strong>
                                   <span>〉</span>
                                 </button>
-                                <span className="miniapp-batch-after-sale-tag is-success">已开票</span>
+                                <span className={`miniapp-batch-after-sale-tag ${item.downloadStatus === "已下载" ? "is-success" : "is-muted"}`}>{item.downloadStatus}</span>
                               </div>
                               <div className="miniapp-batch-grid">
                                 <div className="miniapp-batch-field is-store is-contact-entry">
@@ -17630,6 +17636,14 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                                 ))}
                               </div>
                             </div>
+                            <div className="miniapp-filter-field">
+                              <span>发票下载状态</span>
+                              <div className="miniapp-filter-chip-row">
+                                {["全部", "已下载", "未下载"].map((item) => (
+                                  <button className={`miniapp-filter-chip ${miniappInvoicedDraftFilters.downloadStatus === item ? "is-active" : ""}`} key={`invoiced-download-${item}`} type="button" onClick={() => setMiniappInvoicedDraftFilters((current) => ({ ...current, downloadStatus: item }))}>{item}</button>
+                                ))}
+                              </div>
+                            </div>
                           </>
                         ) : null}
                       </div>
@@ -17736,7 +17750,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                     <div className="miniapp-preview-dialog">
                       <button className="miniapp-preview-dialog-close" type="button" aria-label="关闭" onClick={() => setIsMiniappDownloadLinkDialogOpen(false)}>×</button>
                       <h3>提示</h3>
-                      <p>您需要复制下载链接，在浏览器中打开并下载文件。</p>
+                      <p>发票下载链接已生成，您需要复制下载链接，在浏览器中打开并下载文件。</p>
                       <div className="miniapp-preview-dialog-actions">
                         <button type="button" onClick={() => setIsMiniappDownloadLinkDialogOpen(false)}>取消</button>
                         <button className="is-primary" type="button" onClick={handleCopyMiniappGeneratedDownloadLink}>复制链接</button>
@@ -18625,6 +18639,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                                         <p>
                                           <b>{item.priceTag}</b>
                                           <span>{`¥ ${item.price}`}</span>
+                                          <i aria-hidden="true">|</i>
                                           <span>{`库存：${item.stock}`}</span>
                                         </p>
                                         <em>{`规格ID：${item.specId}`}</em>
