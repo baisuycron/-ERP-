@@ -36,38 +36,31 @@ if (Test-Path $stderrLog) {
   Clear-Content $stderrLog -ErrorAction SilentlyContinue
 }
 
-$originalUpperPath = $null
-if (Test-Path Env:PATH) {
-  $originalUpperPath = $env:PATH
-  Remove-Item Env:PATH
-}
-
-try {
-  $launcher = Start-Process -FilePath "powershell.exe" `
-    -ArgumentList @(
-      "-NoProfile",
-      "-ExecutionPolicy", "Bypass",
-      "-File", $runnerScript
-    ) `
-    -WorkingDirectory $root `
-    -WindowStyle Hidden `
-    -RedirectStandardOutput $stdoutLog `
-    -RedirectStandardError $stderrLog `
-    -PassThru
-} finally {
-  if ($null -ne $originalUpperPath) {
-    $env:PATH = $originalUpperPath
-  }
-}
+$startCommand = "start """" /min ""$root\start-vite-stable.cmd"""
+$launcher = Start-Process -FilePath "cmd.exe" `
+  -ArgumentList @("/c", $startCommand) `
+  -WorkingDirectory $root `
+  -WindowStyle Hidden `
+  -PassThru
 
 Set-Content -Path $pidFile -Value $launcher.Id
 
-Start-Sleep -Seconds 5
+function Test-DevServerReachable {
+  try {
+    $statusCode = Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:5173" -TimeoutSec 3 | Select-Object -ExpandProperty StatusCode
+    return ($statusCode -eq 200)
+  } catch {
+    return $false
+  }
+}
+
 $isReachable = $false
-try {
-  $statusCode = Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:5173" -TimeoutSec 3 | Select-Object -ExpandProperty StatusCode
-  $isReachable = ($statusCode -eq 200)
-} catch {
+foreach ($delay in @(2, 3, 5)) {
+  Start-Sleep -Seconds $delay
+  if (Test-DevServerReachable) {
+    $isReachable = $true
+    break
+  }
 }
 
 if (-not $isReachable) {
@@ -76,6 +69,12 @@ if (-not $isReachable) {
   }
   Remove-Item $pidFile -ErrorAction SilentlyContinue
   throw "Dev server did not become reachable on http://127.0.0.1:5173"
+}
+
+Start-Sleep -Seconds 3
+if (-not (Test-DevServerReachable)) {
+  Remove-Item $pidFile -ErrorAction SilentlyContinue
+  throw "Dev server started but did not stay reachable on http://127.0.0.1:5173"
 }
 
 Write-Host "Dev server monitor started and verified at http://127.0.0.1:5173 (PID: $($launcher.Id))"

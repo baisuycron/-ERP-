@@ -765,6 +765,7 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .pc-mall-home-utility-inner, .pc-mall-home-header-inner, .pc-mall-home-main { width: min(1216px, calc(100vw - 32px)); margin: 0 auto; }
 .pc-mall-home-utility-inner { min-height: 36px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .pc-mall-home-utility-left, .pc-mall-home-utility-links, .pc-mall-home-search-tags, .pc-mall-home-floor-tabs { display: flex; align-items: center; gap: 16px; }
+.pc-mall-home-utility-links { white-space: nowrap; }
 .pc-mall-home-utility-account { color: #475467; }
 .pc-mall-home-utility-link { border: none; padding: 0; background: transparent; color: #475467; font-size: 12px; }
 .pc-mall-home-utility-link.is-active { color: #f97316; }
@@ -980,6 +981,7 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .pc-mall-topbar { background: #262626; color: #d1d5db; }
 .pc-mall-topbar-inner { width: min(1760px, calc(100vw - 24px)); height: 38px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
 .pc-mall-brand, .pc-mall-toplinks { display: flex; align-items: center; gap: 16px; }
+.pc-mall-toplinks { white-space: nowrap; }
 .pc-mall-brand-btn, .pc-cart-brand-btn { border: none; padding: 0; background: transparent; }
 .pc-mall-brand-mark { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 5px; background: #ffcb17; color: #111; font-size: 14px; font-weight: 700; }
 .pc-mall-brand-name { color: #fff; font-size: 16px; font-weight: 700; }
@@ -1816,6 +1818,104 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
   color: #1677ff;
   font-size: 14px;
 }
+.pc-mall-export-record-link:disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+.pc-mall-export-processing-overlay {
+  z-index: 240;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(245, 247, 250, 0.72);
+}
+.pc-mall-export-processing-dialog {
+  position: relative;
+  width: 520px;
+  min-height: 142px;
+  padding: 24px 24px 16px;
+  background: #fff;
+  border: 1px solid #d9dee8;
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.18);
+}
+.pc-mall-export-processing-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 24px;
+  line-height: 1;
+}
+.pc-mall-export-processing-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding-right: 32px;
+}
+.pc-mall-export-processing-icon {
+  position: relative;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #ffc52f;
+}
+.pc-mall-export-processing-icon::before,
+.pc-mall-export-processing-icon::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 7px;
+  width: 2px;
+  height: 10px;
+  border-radius: 2px;
+  background: #fff;
+  transform-origin: bottom center;
+}
+.pc-mall-export-processing-icon::after {
+  top: 15px;
+  height: 8px;
+  transform: rotate(-45deg);
+}
+.pc-mall-export-processing-body h3 {
+  margin: 0 0 8px;
+  color: #1f2937;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.pc-mall-export-processing-body p {
+  margin: 0;
+  color: #1f2937;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.pc-mall-export-processing-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+.pc-mall-export-processing-secondary,
+.pc-mall-export-processing-primary {
+  min-width: 98px;
+  height: 34px;
+  border-radius: 2px;
+  padding: 0 18px;
+  font-size: 14px;
+}
+.pc-mall-export-processing-secondary {
+  border: 1px solid #bfc5d0;
+  background: #fff;
+  color: #1f2937;
+}
+.pc-mall-export-processing-primary {
+  border: 1px solid #242424;
+  background: #242424;
+  color: #fff;
+}
 .pc-mall-export-record-muted {
   color: #9ca3af;
 }
@@ -1834,6 +1934,15 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
   justify-content: flex-end;
   gap: 10px;
   padding: 24px;
+}
+@media (min-width: 1280px) {
+  .pc-mall-toplinks {
+    margin-right: 56px;
+  }
+  .pc-mall-home-utility-links,
+  .pc-cart-utility-links {
+    margin-right: 42px;
+  }
 }
 .pc-mall-table td:nth-child(2),
 .pc-mall-table td:nth-child(4),

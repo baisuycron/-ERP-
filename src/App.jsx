@@ -1772,6 +1772,16 @@ const buyerPcMallImportTaskRows = [
   { id: "import-007", type: "买家列表导入", exportedAt: "2026-05-16 02:51:48", operator: "NFSQ369", status: "全部成功", actionLabel: "" },
   { id: "import-008", type: "买家列表导入", exportedAt: "2026-05-16 02:51:47", operator: "NFSQ369", status: "全部成功", actionLabel: "" }
 ];
+const buyerPcMallExportCenterRows = [
+  { id: "export-center-001", type: "发票查询数据导出", exportedAt: "2026-05-22 09:18:36", operator: "NFSQ369", status: "执行成功" },
+  { id: "export-center-002", type: "发票抬头导出", exportedAt: "2026-05-22 09:08:21", operator: "NFSQ369", status: "执行成功" },
+  { id: "export-center-003", type: "购物车商品导出", exportedAt: "2026-05-21 18:42:10", operator: "Shawnee003", status: "执行中" },
+  { id: "export-center-004", type: "订单明细导出", exportedAt: "2026-05-21 17:36:28", operator: "NFSQ369", status: "执行成功" },
+  { id: "export-center-005", type: "商品收藏导出", exportedAt: "2026-05-21 14:12:44", operator: "Shawnee003", status: "执行成功" },
+  { id: "export-center-006", type: "常购清单导出", exportedAt: "2026-05-20 11:05:52", operator: "NFSQ369", status: "执行成功" },
+  { id: "export-center-007", type: "售后订单导出", exportedAt: "2026-05-20 10:58:19", operator: "NFSQ369", status: "执行失败" },
+  { id: "export-center-008", type: "收货地址导出", exportedAt: "2026-05-19 16:24:35", operator: "Shawnee003", status: "执行成功" }
+];
 const buyerPcMallCartSeedGroups = [
   {
     id: "store-1",
@@ -5408,6 +5418,107 @@ function PcMallExportRecordModal({ rows, onClose }) {
   );
 }
 
+function PcMallExportCenterModal({ onClose }) {
+  const currentExportCenterRows = buyerPcMallExportCenterRows;
+  const totalCount = 286;
+
+  return (
+    <div className="modal-overlay pc-mall-export-record-overlay" onClick={onClose} role="presentation">
+      <div className="pc-mall-export-record-modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="pc-mall-export-center-heading">
+        <div className="pc-mall-export-record-head">
+          <h3 id="pc-mall-export-center-heading">导出中心</h3>
+          <button className="pc-mall-export-record-close" type="button" onClick={onClose} aria-label="关闭">×</button>
+        </div>
+        <div className="pc-mall-export-record-body">
+          <table className="pc-mall-export-record-table">
+            <thead>
+              <tr>
+                <th>导出类型</th>
+                <th>导出时间</th>
+                <th>操作人</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentExportCenterRows.map((item) => (
+                <tr key={item.id}>
+                  <td>{item.type}</td>
+                  <td>{item.exportedAt}</td>
+                  <td>{item.operator}</td>
+                  <td>{item.status}</td>
+                  <td>
+                    <button className="pc-mall-export-record-link" type="button" disabled={item.status !== "执行成功"}>点击下载</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="pc-mall-export-record-pagination">
+          <span>{`共${totalCount}条`}</span>
+          <button className="pc-mall-page-size" type="button">10 条/页</button>
+          <div className="pc-mall-page-list">
+            <button className="pc-mall-page-btn is-arrow" type="button" disabled>‹</button>
+            <button className="pc-mall-page-btn is-active" type="button">1</button>
+            <button className="pc-mall-page-btn" type="button">2</button>
+            <button className="pc-mall-page-btn" type="button">3</button>
+            <button className="pc-mall-page-btn" type="button">4</button>
+            <button className="pc-mall-page-btn" type="button">5</button>
+            <span className="pc-mall-page-ellipsis">...</span>
+            <button className="pc-mall-page-btn" type="button">29</button>
+            <button className="pc-mall-page-btn is-arrow" type="button">›</button>
+          </div>
+          <span className="pc-mall-pagination-jump-label">到第</span>
+          <input className="pc-mall-page-input" placeholder="请输入" />
+          <span className="pc-mall-pagination-jump-label">页</span>
+          <button className="pc-mall-page-jump" type="button">跳转</button>
+        </div>
+        <div className="pc-mall-export-record-foot">
+          <button className="pc-mall-btn" type="button" onClick={onClose}>取消</button>
+          <button className="pc-mall-btn pc-mall-btn-dark" type="button">刷新</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PcMallExportProcessingModal({ onClose, onViewProgress }) {
+  const [secondsLeft, setSecondsLeft] = useState(2);
+
+  useEffect(() => {
+    if (secondsLeft <= 0) {
+      onClose();
+      return undefined;
+    }
+
+    const timerId = window.setTimeout(() => {
+      setSecondsLeft((value) => value - 1);
+    }, 1000);
+
+    return () => window.clearTimeout(timerId);
+  }, [onClose, secondsLeft]);
+
+  return (
+    <div className="modal-overlay pc-mall-export-processing-overlay" role="presentation" onClick={onClose}>
+      <div className="pc-mall-export-processing-dialog" role="dialog" aria-modal="true" aria-labelledby="pc-mall-export-processing-title" onClick={(event) => event.stopPropagation()}>
+        <button className="pc-mall-export-processing-close" type="button" onClick={onClose} aria-label="关闭">×</button>
+        <div className="pc-mall-export-processing-body">
+          <span className="pc-mall-export-processing-icon" aria-hidden="true" />
+          <div>
+            <h3 id="pc-mall-export-processing-title">任务处理中...</h3>
+            <p>可在导出中心查看进度和结果</p>
+          </div>
+        </div>
+        <div className="pc-mall-export-processing-actions">
+          <button className="pc-mall-export-processing-secondary" type="button" onClick={onClose}>{`知道了(${secondsLeft}s)`}</button>
+          <button className="pc-mall-export-processing-primary" type="button" onClick={onViewProgress}>查看进度</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function BuyerPcMallInvoiceActionModal({ title, message, confirmText = "确定", onClose, onConfirm }) {
   return (
     <div className="home-invoice-alert-overlay" onClick={onClose} role="presentation">
@@ -6643,7 +6754,7 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
   );
 });
 
-function BuyerPcMallHomeHeader({ allCartItemCount, onOpenCartPage, onOpenCustomerCenter, onOpenHome }) {
+function BuyerPcMallHomeHeader({ allCartItemCount, onOpenCartPage, onOpenCustomerCenter, onOpenExportCenter, onOpenHome }) {
   return (
     <>
       <header className="pc-mall-home-utility-bar">
@@ -6658,6 +6769,7 @@ function BuyerPcMallHomeHeader({ allCartItemCount, onOpenCartPage, onOpenCustome
             <button className="pc-mall-home-utility-link" type="button">微信小程序</button>
             <button className="pc-mall-home-utility-link" type="button">卖家中心⌄</button>
             <button className="pc-mall-home-utility-link" type="button" onClick={onOpenCustomerCenter}>客户中心⌄</button>
+            <button className="pc-mall-home-utility-link" type="button" onClick={onOpenExportCenter}>导出中心</button>
           </div>
         </div>
       </header>
@@ -6696,10 +6808,10 @@ function BuyerPcMallHomeFloatbar({ allCartItemCount }) {
   );
 }
 
-function BuyerPcMallHomePage({ allCartItemCount, onOpenCartPage, onOpenCustomerCenter, onOpenHomeProductDetail, onOpenHome }) {
+function BuyerPcMallHomePage({ allCartItemCount, onOpenCartPage, onOpenCustomerCenter, onOpenExportCenter, onOpenHomeProductDetail, onOpenHome }) {
   return (
     <div className="pc-mall-home-shell">
-      <BuyerPcMallHomeHeader allCartItemCount={allCartItemCount} onOpenCartPage={onOpenCartPage} onOpenCustomerCenter={onOpenCustomerCenter} onOpenHome={onOpenHome} />
+      <BuyerPcMallHomeHeader allCartItemCount={allCartItemCount} onOpenCartPage={onOpenCartPage} onOpenCustomerCenter={onOpenCustomerCenter} onOpenExportCenter={onOpenExportCenter} onOpenHome={onOpenHome} />
 
       <main className="pc-mall-home-main">
         <section className="pc-mall-home-hero-banner">
@@ -6867,7 +6979,7 @@ function BuyerPcMallHomePage({ allCartItemCount, onOpenCartPage, onOpenCustomerC
   );
 }
 
-function BuyerPcMallHomeProductDetailPage({ allCartItemCount, onImmediateBuy, onOpenCartPage, onOpenCustomerCenter, onOpenHome, productId }) {
+function BuyerPcMallHomeProductDetailPage({ allCartItemCount, onImmediateBuy, onOpenCartPage, onOpenCustomerCenter, onOpenExportCenter, onOpenHome, productId }) {
   const detail = buyerPcMallHomeProductDetailById[productId] || buyerPcMallHomeProductDetail;
   const initialSelectedSpecOptions = useMemo(() => (
     Object.fromEntries(detail.specs.map((item) => [item.label, item.selectedIndex || 0]))
@@ -6990,7 +7102,7 @@ function BuyerPcMallHomeProductDetailPage({ allCartItemCount, onImmediateBuy, on
   };
   return (
     <div className="pc-mall-home-shell">
-      <BuyerPcMallHomeHeader allCartItemCount={allCartItemCount} onOpenCartPage={onOpenCartPage} onOpenCustomerCenter={onOpenCustomerCenter} onOpenHome={onOpenHome} />
+      <BuyerPcMallHomeHeader allCartItemCount={allCartItemCount} onOpenCartPage={onOpenCartPage} onOpenCustomerCenter={onOpenCustomerCenter} onOpenExportCenter={onOpenExportCenter} onOpenHome={onOpenHome} />
       {orderConditionToast ? <div className="pc-mall-product-toast is-error">{orderConditionToast}</div> : null}
 
       <main className="pc-mall-product-detail-page">
@@ -7129,7 +7241,7 @@ function BuyerPcMallHomeProductDetailPage({ allCartItemCount, onImmediateBuy, on
   );
 }
 
-function BuyerPcMallCheckoutPage({ allCartItemCount, order, onBackToCart, onChangeQuantity, onOpenCartPage, onOpenCustomerCenter, onOpenHome }) {
+function BuyerPcMallCheckoutPage({ allCartItemCount, order, onBackToCart, onChangeQuantity, onOpenCartPage, onOpenCustomerCenter, onOpenExportCenter, onOpenHome }) {
   const items = Array.isArray(order?.items) ? order.items : [];
   const totalQuantity = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
   const totalAmount = items.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0), 0);
@@ -7158,6 +7270,7 @@ function BuyerPcMallCheckoutPage({ allCartItemCount, order, onBackToCart, onChan
             <button className="pc-cart-utility-link" type="button">微信小程序</button>
             <button className="pc-cart-utility-link" type="button">卖家中心⌄</button>
             <button className="pc-cart-utility-link" type="button" onClick={onOpenCustomerCenter}>客户中心⌄</button>
+            <button className="pc-cart-utility-link" type="button" onClick={onOpenExportCenter}>导出中心</button>
           </div>
         </div>
       </header>
@@ -7333,7 +7446,8 @@ function BuyerPcMallPage({ onPortalActionClick }) {
   const [activeHomeProductId, setActiveHomeProductId] = useState("");
   const [directBuyOrder, setDirectBuyOrder] = useState(null);
   const [activeBuyerInvoiceDetail, setActiveBuyerInvoiceDetail] = useState(null);
-  const [isExportRecordModalOpen, setIsExportRecordModalOpen] = useState(false);
+  const [isExportCenterModalOpen, setIsExportCenterModalOpen] = useState(false);
+  const [isExportProcessingModalOpen, setIsExportProcessingModalOpen] = useState(false);
   const [modifyInvoiceOrders, setModifyInvoiceOrders] = useState([]);
   const [modifyInvoiceInitialForm, setModifyInvoiceInitialForm] = useState(buyerPcMallBatchInvoiceForm);
   const [invoiceActionModal, setInvoiceActionModal] = useState(null);
@@ -7615,6 +7729,13 @@ function BuyerPcMallPage({ onPortalActionClick }) {
     setActiveBuyerInvoiceDetail(null);
     setActiveHomeProductId("");
     setInvoicePageView("list");
+  };
+  const handleOpenExportCenter = () => {
+    setIsExportCenterModalOpen(true);
+  };
+  const handleViewExportProgress = () => {
+    setIsExportProcessingModalOpen(false);
+    setIsExportCenterModalOpen(true);
   };
   const handleOpenPcMallHome = () => {
     setActiveBuyerInvoiceDetail(null);
@@ -8183,7 +8304,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
       setBatchInvoiceNotice("当前没有可导出的查询数据。");
       return;
     }
-    setBatchInvoiceNotice("可申请开票查询数据导出成功");
+    setIsExportProcessingModalOpen(true);
   };
 
   const handleExportAppliedQueryData = () => {
@@ -8192,7 +8313,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
       setBatchInvoiceNotice("当前没有可导出的查询数据。");
       return;
     }
-    setBatchInvoiceNotice("已申请开票查询数据导出成功");
+    setIsExportProcessingModalOpen(true);
   };
 
   const handleExportInvoicedQueryData = () => {
@@ -8201,7 +8322,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
       setBatchInvoiceNotice("当前没有可导出的查询数据。");
       return;
     }
-    setBatchInvoiceNotice("已开具发票查询数据导出成功");
+    setIsExportProcessingModalOpen(true);
   };
 
   const handleBulkDownloadInvoicedInvoices = async () => {
@@ -8545,17 +8666,37 @@ function BuyerPcMallPage({ onPortalActionClick }) {
       hideInvoiceAndReceiverSections
     />
   ) : null;
+  const exportCenterModal = isExportCenterModalOpen ? <PcMallExportCenterModal onClose={() => setIsExportCenterModalOpen(false)} /> : null;
+  const exportProcessingModal = isExportProcessingModalOpen ? <PcMallExportProcessingModal onClose={() => setIsExportProcessingModalOpen(false)} onViewProgress={handleViewExportProgress} /> : null;
 
   if (isHomeView) {
-    return <BuyerPcMallHomePage allCartItemCount={allCartItemCount} onOpenCartPage={handleOpenCartPage} onOpenCustomerCenter={handleOpenCustomerCenter} onOpenHome={handleOpenPcMallHome} onOpenHomeProductDetail={handleOpenHomeProductDetail} />;
+    return (
+      <>
+        <BuyerPcMallHomePage allCartItemCount={allCartItemCount} onOpenCartPage={handleOpenCartPage} onOpenCustomerCenter={handleOpenCustomerCenter} onOpenExportCenter={handleOpenExportCenter} onOpenHome={handleOpenPcMallHome} onOpenHomeProductDetail={handleOpenHomeProductDetail} />
+        {exportProcessingModal}
+        {exportCenterModal}
+      </>
+    );
   }
 
   if (isProductDetailView) {
-    return <BuyerPcMallHomeProductDetailPage allCartItemCount={allCartItemCount} onImmediateBuy={handleOpenDirectBuyCheckout} onOpenCartPage={handleOpenCartPage} onOpenCustomerCenter={handleOpenCustomerCenter} onOpenHome={handleOpenPcMallHome} productId={activeHomeProductId} />;
+    return (
+      <>
+        <BuyerPcMallHomeProductDetailPage allCartItemCount={allCartItemCount} onImmediateBuy={handleOpenDirectBuyCheckout} onOpenCartPage={handleOpenCartPage} onOpenCustomerCenter={handleOpenCustomerCenter} onOpenExportCenter={handleOpenExportCenter} onOpenHome={handleOpenPcMallHome} productId={activeHomeProductId} />
+        {exportProcessingModal}
+        {exportCenterModal}
+      </>
+    );
   }
 
   if (isCheckoutView) {
-    return <BuyerPcMallCheckoutPage allCartItemCount={allCartItemCount} order={directBuyOrder} onBackToCart={handleOpenCartPage} onChangeQuantity={handleChangeDirectBuyQuantity} onOpenCartPage={handleOpenCartPage} onOpenCustomerCenter={handleOpenCustomerCenter} onOpenHome={handleOpenPcMallHome} />;
+    return (
+      <>
+        <BuyerPcMallCheckoutPage allCartItemCount={allCartItemCount} order={directBuyOrder} onBackToCart={handleOpenCartPage} onChangeQuantity={handleChangeDirectBuyQuantity} onOpenCartPage={handleOpenCartPage} onOpenCustomerCenter={handleOpenCustomerCenter} onOpenExportCenter={handleOpenExportCenter} onOpenHome={handleOpenPcMallHome} />
+        {exportProcessingModal}
+        {exportCenterModal}
+      </>
+    );
   }
 
   if (isCartView) {
@@ -8573,6 +8714,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
               <button className="pc-cart-utility-link" type="button">微信小程序</button>
               <button className="pc-cart-utility-link" type="button">卖家中心⌄</button>
               <button className="pc-cart-utility-link" type="button" onClick={handleOpenCustomerCenter}>客户中心⌄</button>
+              <button className="pc-cart-utility-link" type="button" onClick={handleOpenExportCenter}>导出中心</button>
             </div>
           </div>
         </header>
@@ -8706,6 +8848,8 @@ function BuyerPcMallPage({ onPortalActionClick }) {
             </div>
           </div>
         </footer>
+        {exportProcessingModal}
+        {exportCenterModal}
       </div>
     );
   }
@@ -8731,6 +8875,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
               <button className="pc-mall-toplink" type="button">微信小程序</button>
               <button className="pc-mall-toplink" type="button">卖家中心⌄</button>
               <button className="pc-mall-toplink" type="button" onClick={handleOpenCustomerCenter}>客户中心⌄</button>
+              <button className="pc-mall-toplink" type="button" onClick={handleOpenExportCenter}>导出中心</button>
             </div>
           </div>
         </header>
@@ -8857,6 +9002,8 @@ function BuyerPcMallPage({ onPortalActionClick }) {
         </div>
         {isInvoiceTitleModalOpen ? <BuyerPcMallInvoiceTitleModal initialForm={activeInvoiceTitleForm} storeOptions={buyerPcMallStoreOptions} onClose={handleCloseInvoiceTitleModal} onSave={handleSaveInvoiceTitle} onNotice={setBatchInvoiceNotice} /> : null}
         {activeInvoiceTitleStores ? <BuyerPcMallInvoiceTitleStoreModal title={activeInvoiceTitleStores.title} stores={activeInvoiceTitleStores.stores} onClose={handleCloseInvoiceTitleStores} /> : null}
+        {exportProcessingModal}
+        {exportCenterModal}
       </div>
     );
   }
@@ -8880,6 +9027,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
             <button className="pc-mall-toplink" type="button">微信小程序</button>
             <button className="pc-mall-toplink" type="button">卖家中心⌄</button>
             <button className="pc-mall-toplink" type="button" onClick={handleOpenCustomerCenter}>客户中心⌄</button>
+            <button className="pc-mall-toplink" type="button" onClick={handleOpenExportCenter}>导出中心</button>
           </div>
         </div>
       </header>
@@ -8930,7 +9078,6 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                   ))}
                 </div>
                 <div className="pc-mall-tabbar-actions">
-                  <button className="pc-mall-invoice-type-btn pc-mall-invoice-type-btn-secondary" type="button" onClick={() => setIsExportRecordModalOpen(true)}>任务中心</button>
                   <button className="pc-mall-invoice-type-btn" type="button" onClick={handleOpenInvoiceTitleManagement}>发票抬头管理</button>
                 </div>
               </div>
@@ -9494,7 +9641,8 @@ function BuyerPcMallPage({ onPortalActionClick }) {
           onConfirm={handleConfirmInvoiceBatchQueryModal}
         />
       ) : null}
-      {isExportRecordModalOpen ? <PcMallExportRecordModal rows={buyerPcMallExportRecordRows} onClose={() => setIsExportRecordModalOpen(false)} /> : null}
+      {exportProcessingModal}
+      {exportCenterModal}
       {activeProductDetailRow ? <BuyerPcMallProductDetailModal row={activeProductDetailRow} onClose={() => setActiveProductDetailOrderNo("")} /> : null}
       {isInvoiceTitleModalOpen ? <BuyerPcMallInvoiceTitleModal initialForm={activeInvoiceTitleForm} storeOptions={buyerPcMallStoreOptions} onClose={handleCloseInvoiceTitleModal} onSave={handleSaveInvoiceTitle} onNotice={setBatchInvoiceNotice} /> : null}
     </div>
