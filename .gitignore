@@ -1,3 +1,6 @@
 node_modules/
 dist/
 .DS_Store
+vite.dev.pid
+vite.out.log
+vite.err.log

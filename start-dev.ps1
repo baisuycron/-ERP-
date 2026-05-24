@@ -2,10 +2,15 @@ $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $pidFile = Join-Path $root "vite.dev.pid"
- $stdoutLog = Join-Path $root "vite.out.log"
- $stderrLog = Join-Path $root "vite.err.log"
- $runnerScript = Join-Path $root "vite-runner.ps1"
+$stdoutLog = Join-Path $root "vite.out.log"
+$stderrLog = Join-Path $root "vite.err.log"
+$bundledNode = Join-Path (Split-Path $root -Parent) "node-v20.19.1-win-x64\node.exe"
+$viteEntry = Join-Path $root "node_modules\vite\bin\vite.js"
 Set-Location $root
+
+if (-not (Test-Path $viteEntry)) {
+  throw "Missing Vite entry script at $viteEntry"
+}
 
 try {
   $httpStatus = Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:5173" -TimeoutSec 3 | Select-Object -ExpandProperty StatusCode
@@ -36,11 +41,18 @@ if (Test-Path $stderrLog) {
   Clear-Content $stderrLog -ErrorAction SilentlyContinue
 }
 
-$startCommand = "start """" /min ""$root\start-vite-stable.cmd"""
-$launcher = Start-Process -FilePath "cmd.exe" `
-  -ArgumentList @("/c", $startCommand) `
+$nodePath = if (Test-Path $bundledNode) {
+  $bundledNode
+} else {
+  (Get-Command node.exe -ErrorAction Stop).Source
+}
+
+$launcher = Start-Process -FilePath $nodePath `
+  -ArgumentList @($viteEntry, "--host", "127.0.0.1") `
   -WorkingDirectory $root `
   -WindowStyle Hidden `
+  -RedirectStandardOutput $stdoutLog `
+  -RedirectStandardError $stderrLog `
   -PassThru
 
 Set-Content -Path $pidFile -Value $launcher.Id

@@ -5426,7 +5426,7 @@ function PcMallExportCenterModal({ onClose }) {
     <div className="modal-overlay pc-mall-export-record-overlay" onClick={onClose} role="presentation">
       <div className="pc-mall-export-record-modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="pc-mall-export-center-heading">
         <div className="pc-mall-export-record-head">
-          <h3 id="pc-mall-export-center-heading">导出中心</h3>
+          <h3 id="pc-mall-export-center-heading">任务中心</h3>
           <button className="pc-mall-export-record-close" type="button" onClick={onClose} aria-label="关闭">×</button>
         </div>
         <div className="pc-mall-export-record-body">
@@ -5484,34 +5484,19 @@ function PcMallExportCenterModal({ onClose }) {
 }
 
 function PcMallExportProcessingModal({ onClose, onViewProgress }) {
-  const [secondsLeft, setSecondsLeft] = useState(2);
-
-  useEffect(() => {
-    if (secondsLeft <= 0) {
-      onClose();
-      return undefined;
-    }
-
-    const timerId = window.setTimeout(() => {
-      setSecondsLeft((value) => value - 1);
-    }, 1000);
-
-    return () => window.clearTimeout(timerId);
-  }, [onClose, secondsLeft]);
-
   return (
-    <div className="modal-overlay pc-mall-export-processing-overlay" role="presentation" onClick={onClose}>
+    <div className="modal-overlay pc-mall-export-processing-overlay" role="presentation">
       <div className="pc-mall-export-processing-dialog" role="dialog" aria-modal="true" aria-labelledby="pc-mall-export-processing-title" onClick={(event) => event.stopPropagation()}>
         <button className="pc-mall-export-processing-close" type="button" onClick={onClose} aria-label="关闭">×</button>
         <div className="pc-mall-export-processing-body">
           <span className="pc-mall-export-processing-icon" aria-hidden="true" />
           <div>
             <h3 id="pc-mall-export-processing-title">任务处理中...</h3>
-            <p>可在导出中心查看进度和结果</p>
+            <p>可在任务中心查看进度和结果</p>
           </div>
         </div>
         <div className="pc-mall-export-processing-actions">
-          <button className="pc-mall-export-processing-secondary" type="button" onClick={onClose}>{`知道了(${secondsLeft}s)`}</button>
+          <button className="pc-mall-export-processing-secondary" type="button" onClick={onClose}>知道了</button>
           <button className="pc-mall-export-processing-primary" type="button" onClick={onViewProgress}>查看进度</button>
         </div>
       </div>
@@ -8357,6 +8342,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
       markBuyerPcMallInvoicesDownloaded(selectedRows.map((item) => item.orderNo));
       window.setTimeout(() => URL.revokeObjectURL(zipUrl), 30 * 1000);
       setBatchInvoiceNotice(`已开始下载${zipEntries.length}份发票压缩包`);
+      setIsExportProcessingModalOpen(true);
     } catch (error) {
       setBatchInvoiceNotice("批量下载发票失败，请稍后重试");
     }
@@ -8875,7 +8861,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
               <button className="pc-mall-toplink" type="button">微信小程序</button>
               <button className="pc-mall-toplink" type="button">卖家中心⌄</button>
               <button className="pc-mall-toplink" type="button" onClick={handleOpenCustomerCenter}>客户中心⌄</button>
-              <button className="pc-mall-toplink" type="button" onClick={handleOpenExportCenter}>导出中心</button>
+              <button className="pc-mall-toplink" type="button" onClick={handleOpenExportCenter}>任务中心</button>
             </div>
           </div>
         </header>
@@ -9027,7 +9013,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
             <button className="pc-mall-toplink" type="button">微信小程序</button>
             <button className="pc-mall-toplink" type="button">卖家中心⌄</button>
             <button className="pc-mall-toplink" type="button" onClick={handleOpenCustomerCenter}>客户中心⌄</button>
-            <button className="pc-mall-toplink" type="button" onClick={handleOpenExportCenter}>导出中心</button>
+            <button className="pc-mall-toplink" type="button" onClick={handleOpenExportCenter}>任务中心</button>
           </div>
         </div>
       </header>
@@ -14912,7 +14898,7 @@ function ShopInvoicePage({
   );
 }
 
-function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, selectedProducts, selectedGoodsIds, productFieldEditModesByProduct, productFieldErrorsByProduct, onToggleProductFieldEditMode, onToggleGoodsSelection, onRemoveProduct, onBatchRemoveProducts, onBack, onOpenPicker, onOpenSpecPicker, onShowSpecDetail, onTerminateProduct, onUpdateProductFlashPrice, onUpdateProductLimit, onUpdateProductActivityStock, onSave, modalOpen }) {
+function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, selectedProducts, selectedGoodsIds, productFieldEditModesByProduct, productFieldErrorsByProduct, onToggleProductFieldEditMode, onToggleGoodsSelection, onBatchRemoveProducts, onBack, onOpenPicker, onOpenSpecPicker, onShowSpecDetail, onTerminateProduct, onUpdateProductFlashPrice, onUpdateProductLimit, onUpdateProductActivityStock, onSave, modalOpen }) {
   const isSpecialPricePage = isAnySpecialPricePage(pageName);
   const filteredProducts = useMemo(() => selectedProducts.filter((product) => {
     const productKeyword = form.productKeyword.trim();
@@ -14938,7 +14924,7 @@ function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, 
             <button className="btn btn-reset" type="button" onClick={onResetFilters}>重置</button>
             <button className="btn btn-search" type="button">搜索</button>
           </div>
-          {showSelectionControls ? <div className="goods-toolbar"><button className="btn btn-reset" type="button" onClick={onBatchRemoveProducts}>批量删除</button></div> : null}
+          {showSelectionControls ? <div className="goods-toolbar"><button className="btn btn-reset" type="button" onClick={onBatchRemoveProducts}>批量终止</button></div> : null}
           <div className="goods-table-shell"><table className={`goods-table activity-goods-table ${isSpecialPricePage ? "special-price-goods-table" : ""} ${showSelectionControls ? "has-selection" : "no-selection"}`}><thead><tr>{showSelectionControls ? <th><input type="checkbox" checked={allFilteredSelected} onChange={(e) => onToggleGoodsSelection(e.target.checked ? filteredProducts.map((item) => item.id) : [])} /></th> : null}<th>商品</th><th>商城价</th>{!isSpecialPricePage ? <th>商品库存</th> : null}<th><EditableHeader label={isSpecialPricePage ? "专享价" : "限时价"} /></th><th><EditableHeader label={isSpecialPricePage ? "专享价生效件数" : "总限购数量"} suffixIcon={questionHeaderIcon} suffixTooltip={isSpecialPricePage ? "当前商品在每笔订单的购买量达到对应件数后，当前商品全部按专享价结算；\n未达到时，当前商品不享受专享价。" : "单个买家ID最多购买数量，0代表不做限制"} /></th>{!isSpecialPricePage ? <th><EditableHeader label="总活动库存" /></th> : null}<th>规格数量</th><th>操作</th></tr></thead><tbody>{filteredProducts.map((item) => {
             const productFieldEditModes = productFieldEditModesByProduct[item.id] || initialProductFieldEditModes;
             const productFieldErrors = productFieldErrorsByProduct[item.id] || {};
@@ -14960,7 +14946,7 @@ function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, 
                 <td><EditableCellInput label={isSpecialPricePage ? "专享价生效件数" : "总限购数量"} value={totalLimitDisplay} onChange={(e) => onUpdateProductLimit(item.id, e.target.value.replace(/[^\d]/g, ""))} placeholder="请输入" locked={totalLimitLocked} lockedDisplay="按规格维度生效" allowEditButton={!isEditMode} isEditMode={productFieldEditModes.totalLimit} onToggleEdit={() => onToggleProductFieldEditMode(item.id, "totalLimit")} inputMode="numeric" hasError={productFieldErrors.totalLimit} /></td>
                 {!isSpecialPricePage ? <td><EditableCellInput label="总活动库存" value={activityStockDisplay} onChange={(e) => onUpdateProductActivityStock(item.id, e.target.value.replace(/[^\d]/g, ""))} placeholder="请输入" locked={activityStockLocked} lockedDisplay="按规格维度生效" allowEditButton={!isEditMode} isEditMode={productFieldEditModes.activityStock} onToggleEdit={() => onToggleProductFieldEditMode(item.id, "activityStock")} inputMode="numeric" hasError={productFieldErrors.activityStock} /></td> : null}
                 <td><div className="spec-summary"><span>共 {item.specs.length} 个规格，已选 {item.specs.filter((spec) => spec.status === "active").length} 个</span><button type="button" className="spec-open-btn" onClick={() => isProductTerminated ? onShowSpecDetail(item) : onOpenSpecPicker(item.id)}>{isProductTerminated ? "查看" : "编辑"}</button></div></td>
-                <td><div className="row-actions activity-row-actions"><button className="delete-link" type="button" onClick={() => onRemoveProduct(item.id)}>删除商品</button></div></td>
+                <td><div className="row-actions activity-row-actions"><button className="delete-link" type="button" onClick={() => onTerminateProduct(item.id)} disabled={isProductTerminated}>{isProductTerminated ? "已终止" : "单品终止"}</button></div></td>
               </tr>
             );
           })}</tbody></table></div>
@@ -19631,28 +19617,6 @@ export default function App() {
     }));
   };
 
-  const handleRemoveProduct = (productId) => {
-    if (selectedProducts.length <= 1) {
-      setToastMessage("请至少保留一个商品参与活动");
-      return;
-    }
-
-    updateCurrentMarketingState((current) => ({
-      ...current,
-      selectedProducts: current.selectedProducts.filter((item) => item.id !== productId),
-      selectedGoodsIds: current.selectedGoodsIds.filter((item) => item !== productId),
-      selectedPickerProductIds: current.selectedPickerProductIds.filter((item) => item !== productId),
-      selectedSpecIdsByProduct: Object.fromEntries(Object.entries(current.selectedSpecIdsByProduct).filter(([key]) => key !== productId)),
-      productFieldEditModesByProduct: Object.fromEntries(Object.entries(current.productFieldEditModesByProduct || {}).filter(([key]) => key !== productId)),
-      productFieldErrorsByProduct: Object.fromEntries(Object.entries(current.productFieldErrorsByProduct || {}).filter(([key]) => key !== productId))
-    }));
-
-    if (activeSpecProductId === productId) {
-      setIsSpecOpen(false);
-      setActiveSpecProductId("");
-    }
-  };
-
   const handleTerminateProduct = (productId) => {
     updateSelectedProduct(productId, (product) => ({
       ...product,
@@ -19671,18 +19635,12 @@ export default function App() {
     }
 
     const selectedIdSet = new Set(selectedGoodsIds);
-    if (selectedProducts.filter((item) => !selectedIdSet.has(item.id)).length === 0) {
-      setToastMessage("请至少保留一个商品参与活动");
-      return;
-    }
-
     updateCurrentMarketingState((current) => ({
       ...current,
-      selectedProducts: current.selectedProducts.filter((item) => !selectedIdSet.has(item.id)),
-      selectedPickerProductIds: current.selectedPickerProductIds.filter((item) => !selectedIdSet.has(item)),
-      selectedSpecIdsByProduct: Object.fromEntries(Object.entries(current.selectedSpecIdsByProduct).filter(([key]) => !selectedIdSet.has(key))),
-      productFieldEditModesByProduct: Object.fromEntries(Object.entries(current.productFieldEditModesByProduct || {}).filter(([key]) => !selectedIdSet.has(key))),
-      productFieldErrorsByProduct: Object.fromEntries(Object.entries(current.productFieldErrorsByProduct || {}).filter(([key]) => !selectedIdSet.has(key))),
+      selectedProducts: current.selectedProducts.map((item) => (selectedIdSet.has(item.id) ? {
+        ...item,
+        activityTerminated: true
+      } : item)),
       selectedGoodsIds: []
     }));
 
@@ -20748,7 +20706,7 @@ export default function App() {
           ) : (
             <>
               {!(isPrimarySpecialPricePage(currentMarketingPage) || isSecondarySpecialPricePage(currentMarketingPage)) ? <TabSection creating={isCreating} editing={isEditMode} detailing={!isCreating && !!detailActivity} currentMarketingPage={currentMarketingPage} onSwitchToList={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); updateCurrentField("detailActivity", null); }} /> : null}
-              {isCreating ? (isPrimarySpecialPricePage(currentMarketingPage) ? <SpecialPriceCreatePage form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} productFieldEditModesByProduct={productFieldEditModesByProduct || {}} productFieldErrorsByProduct={productFieldErrorsByProduct || {}} onToggleProductFieldEditMode={handleToggleProductFieldEditMode} onToggleGoodsSelection={handleToggleGoodsSelection} onRemoveProduct={handleRemoveProduct} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onShowSpecDetail={setDetailSpecProduct} onTerminateProduct={handleTerminateProduct} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} /> : isSecondarySpecialPricePage(currentMarketingPage) ? <SpecialPrice2CreatePage form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} productFieldEditModesByProduct={productFieldEditModesByProduct || {}} productFieldErrorsByProduct={productFieldErrorsByProduct || {}} onToggleProductFieldEditMode={handleToggleProductFieldEditMode} onToggleGoodsSelection={handleToggleGoodsSelection} onRemoveProduct={handleRemoveProduct} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onShowSpecDetail={setDetailSpecProduct} onTerminateProduct={handleTerminateProduct} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} /> : <CreatePage pageName={currentMarketingPage} form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} productFieldEditModesByProduct={productFieldEditModesByProduct || {}} productFieldErrorsByProduct={productFieldErrorsByProduct || {}} onToggleProductFieldEditMode={handleToggleProductFieldEditMode} onToggleGoodsSelection={handleToggleGoodsSelection} onRemoveProduct={handleRemoveProduct} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onShowSpecDetail={setDetailSpecProduct} onTerminateProduct={handleTerminateProduct} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} />) : detailActivity ? <DetailPage detailActivity={detailActivity} page={detailPage} setPage={(value) => updateCurrentField("detailPage", typeof value === "function" ? value(detailPage) : value)} pageSize={detailPageSize} setPageSize={(value) => updateCurrentField("detailPageSize", value)} onShowSpecDetail={setDetailSpecProduct} /> : <ListPage pageName={currentMarketingPage} filters={filters} setFilters={(value) => updateCurrentField("filters", value)} page={page} setPage={(value) => updateCurrentField("page", typeof value === "function" ? value(page) : value)} pageSize={pageSize} setPageSize={(value) => updateCurrentField("pageSize", value)} onCreate={() => { resetCreateState(); setIsCreating(true); updateCurrentField("detailActivity", null); }} onAction={handleActivityAction} activities={activities} />}
+              {isCreating ? (isPrimarySpecialPricePage(currentMarketingPage) ? <SpecialPriceCreatePage form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} productFieldEditModesByProduct={productFieldEditModesByProduct || {}} productFieldErrorsByProduct={productFieldErrorsByProduct || {}} onToggleProductFieldEditMode={handleToggleProductFieldEditMode} onToggleGoodsSelection={handleToggleGoodsSelection} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onShowSpecDetail={setDetailSpecProduct} onTerminateProduct={handleTerminateProduct} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} /> : isSecondarySpecialPricePage(currentMarketingPage) ? <SpecialPrice2CreatePage form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} productFieldEditModesByProduct={productFieldEditModesByProduct || {}} productFieldErrorsByProduct={productFieldErrorsByProduct || {}} onToggleProductFieldEditMode={handleToggleProductFieldEditMode} onToggleGoodsSelection={handleToggleGoodsSelection} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onShowSpecDetail={setDetailSpecProduct} onTerminateProduct={handleTerminateProduct} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} /> : <CreatePage pageName={currentMarketingPage} form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} productFieldEditModesByProduct={productFieldEditModesByProduct || {}} productFieldErrorsByProduct={productFieldErrorsByProduct || {}} onToggleProductFieldEditMode={handleToggleProductFieldEditMode} onToggleGoodsSelection={handleToggleGoodsSelection} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onShowSpecDetail={setDetailSpecProduct} onTerminateProduct={handleTerminateProduct} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} />) : detailActivity ? <DetailPage detailActivity={detailActivity} page={detailPage} setPage={(value) => updateCurrentField("detailPage", typeof value === "function" ? value(detailPage) : value)} pageSize={detailPageSize} setPageSize={(value) => updateCurrentField("detailPageSize", value)} onShowSpecDetail={setDetailSpecProduct} /> : <ListPage pageName={currentMarketingPage} filters={filters} setFilters={(value) => updateCurrentField("filters", value)} page={page} setPage={(value) => updateCurrentField("page", typeof value === "function" ? value(page) : value)} pageSize={pageSize} setPageSize={(value) => updateCurrentField("pageSize", value)} onCreate={() => { resetCreateState(); setIsCreating(true); updateCurrentField("detailActivity", null); }} onAction={handleActivityAction} activities={activities} />}
             </>
           )}
         </main>
