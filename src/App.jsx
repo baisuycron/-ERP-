@@ -17885,7 +17885,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                               <input value={miniappPendingDraftFilters.keyword} onChange={(event) => setMiniappPendingDraftFilters((current) => ({ ...current, keyword: event.target.value }))} placeholder="请输入订单号/店铺名称" />
                             </label>
                             <div className="miniapp-filter-field">
-                              <span>订单完成时间</span>
+                              <span>支付时间</span>
                               <div className="miniapp-filter-date-row">
                                 <strong>{formatMiniappDateInputValue(getMiniappRangeStartDate(miniappPendingDraftFilters.dateRange))}</strong>
                                 <em>-</em>
