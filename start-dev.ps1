@@ -5,11 +5,11 @@ $pidFile = Join-Path $root "vite.dev.pid"
 $stdoutLog = Join-Path $root "vite.out.log"
 $stderrLog = Join-Path $root "vite.err.log"
 $bundledNode = Join-Path (Split-Path $root -Parent) "node-v20.19.1-win-x64\node.exe"
-$viteEntry = Join-Path $root "node_modules\vite\bin\vite.js"
+$programmaticEntry = Join-Path $root "start-vite-programmatic.mjs"
 Set-Location $root
 
-if (-not (Test-Path $viteEntry)) {
-  throw "Missing Vite entry script at $viteEntry"
+if (-not (Test-Path $programmaticEntry)) {
+  throw "Missing programmatic Vite entry at $programmaticEntry"
 }
 
 try {
@@ -48,7 +48,7 @@ $nodePath = if (Test-Path $bundledNode) {
 }
 
 $launcher = Start-Process -FilePath $nodePath `
-  -ArgumentList @($viteEntry, "--host", "127.0.0.1") `
+  -ArgumentList @($programmaticEntry) `
   -WorkingDirectory $root `
   -WindowStyle Hidden `
   -RedirectStandardOutput $stdoutLog `

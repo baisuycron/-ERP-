@@ -19,11 +19,12 @@ if (Test-Path $bundledNode) {
 }
 $attempt = 0
 $hostArg = "127.0.0.1"
+$portArg = "5173"
 
 while ($true) {
   $attempt += 1
   Write-Output "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] Starting Vite monitor attempt $attempt"
-  & $nodePath $viteEntry --host $hostArg
+  & $nodePath $viteEntry --host $hostArg --port $portArg --strictPort
   $exitCode = $LASTEXITCODE
   Write-Output "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] Vite exited with code $exitCode"
   Start-Sleep -Seconds 2

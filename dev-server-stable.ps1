@@ -10,9 +10,9 @@ if (-not (Test-Path $viteEntry)) {
 }
 
 if (Test-Path $bundledNode) {
-  & $bundledNode $viteEntry --host 127.0.0.1
+  & $bundledNode $viteEntry --host 127.0.0.1 --port 5173 --strictPort
   exit $LASTEXITCODE
 }
 
 $nodePath = (Get-Command node.exe -ErrorAction Stop).Source
-& $nodePath $viteEntry --host 127.0.0.1
+& $nodePath $viteEntry --host 127.0.0.1 --port 5173 --strictPort
