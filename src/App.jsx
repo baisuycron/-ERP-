@@ -2,6 +2,7 @@
 import * as XLSX from "xlsx";
 
 const goodsPageNames = ["商品管理"];
+const tradePageNames = ["交易设置"];
 const buyerPageNames = ["买家列表"];
 const shopPageNames = ["发票管理"];
 const mixedWholesaleConditionOptions = [
@@ -19,6 +20,13 @@ const initialShopWholesaleRule = {
   updatedAt: "2026-04-28 08:58:00",
   updatedBy: "运营小二"
 };
+const supplierTradeLegacyConditionOptions = [
+  { value: "quantity_and_amount", label: "数量和金额同时满足" },
+  { value: "quantity_or_amount", label: "数量和金额满足其一" }
+];
+const supplierTradeSettingsAreaSeedRows = [
+  { id: "trade-area-001", region: "北京", minQuantity: "10", minAmount: "1.00" }
+];
 const shopInvoiceStatusTabs = ["全部", "待开票", "已驳回", "已撤销", "已开票", "发票设置"];
 const shopInvoiceFilterStatusOptions = ["全部", "待开票", "已开票"];
 const shopInvoiceMarkerFilterOptions = ["全部", "即将超时", "超时", "已修改", "撤销重提"];
@@ -1228,7 +1236,7 @@ function getProductWholesaleReason(product, quantity, storeQualified) {
 const menuItems = [
   { label: "首页", icon: "home" },
   { label: "商品", icon: "goods", children: goodsPageNames },
-  { label: "交易", icon: "trade" },
+  { label: "交易", icon: "trade", children: tradePageNames },
   { label: "买家", icon: "buyer", children: buyerPageNames },
   { label: "店铺", icon: "shop", badge: "2", children: shopPageNames },
   { label: "系统", icon: "system" },
@@ -10520,6 +10528,325 @@ function PlatformTradeSettingsPage() {
   );
 }
 
+function SupplierTradeSettingsPage({ shopWholesaleRule, onSaveShopWholesaleRule, onShowToast }) {
+  const [activeTab, setActiveTab] = useState("old");
+  const [oldChanged, setOldChanged] = useState(false);
+  const [newSaved, setNewSaved] = useState(false);
+  const [toast, setToast] = useState("");
+  const [oldRule, setOldRule] = useState({
+    conditionType: "quantity_and_amount",
+    minQuantity: "6",
+    minAmount: "100.00",
+    regionEnabled: false
+  });
+  const [newRule, setNewRule] = useState({
+    enabled: false,
+    goodsMixType: "all",
+    conditionType: "quantity_and_amount",
+    minQuantity: "6",
+    minAmount: "100.00",
+    regionEnabled: false
+  });
+  const [oldAreaRules, setOldAreaRules] = useState(supplierTradeSettingsAreaSeedRows);
+  const [newAreaRules, setNewAreaRules] = useState(supplierTradeSettingsAreaSeedRows);
+
+  useEffect(() => {
+    if (!toast) return undefined;
+    const timerId = window.setTimeout(() => setToast(""), 2200);
+    return () => window.clearTimeout(timerId);
+  }, [toast]);
+
+  const showToast = (message) => {
+    setToast(message);
+    onShowToast?.(message);
+  };
+
+  const updateAreaRules = (target, updater) => {
+    if (target === "old") {
+      setOldAreaRules(updater);
+      return;
+    }
+    setNewAreaRules(updater);
+  };
+
+  const handleAreaRuleChange = (target, id, field, value) => {
+    const normalizedValue = field === "minAmount" ? value.replace(/[^\d.]/g, "") : value.replace(/[^\d]/g, "");
+    updateAreaRules(target, (current) => current.map((item) => (
+      item.id === id ? { ...item, [field]: normalizedValue } : item
+    )));
+  };
+
+  const handleAreaRuleAdjust = (target, id, field, step, fractionDigits = 0) => {
+    updateAreaRules(target, (current) => current.map((item) => {
+      if (item.id !== id) return item;
+      const nextValue = Math.max(Number(item[field] || 0) + step, 0);
+      return {
+        ...item,
+        [field]: fractionDigits ? nextValue.toFixed(fractionDigits) : String(nextValue)
+      };
+    }));
+  };
+
+  const handleAddAreaRule = (target) => {
+    updateAreaRules(target, (current) => [...current, {
+      id: `${target}-trade-area-${current.length + 1}`,
+      region: `地区${current.length + 1}`,
+      minQuantity: "10",
+      minAmount: "1.00"
+    }]);
+  };
+
+  const handleDeleteAreaRule = (target, id) => {
+    updateAreaRules(target, (current) => current.filter((item) => item.id !== id));
+  };
+
+  const renderCounter = (value, onChange, onDecrease, onIncrease, extraClassName = "") => (
+    <div className={`supplier-trade-html-counter${extraClassName ? ` ${extraClassName}` : ""}`}>
+      <button type="button" onClick={onDecrease}>-</button>
+      <input value={value} onChange={onChange} />
+      <button type="button" onClick={onIncrease}>+</button>
+    </div>
+  );
+
+  const handleSaveOld = () => {
+    setOldChanged(true);
+    setNewSaved(false);
+    onSaveShopWholesaleRule?.({
+      ...shopWholesaleRule,
+      conditionType: oldRule.conditionType,
+      minQuantity: oldRule.minQuantity,
+      minAmount: oldRule.minAmount,
+      enabled: oldRule.regionEnabled
+    });
+    showToast("旧版起购设置已保存，当前买家下单继续走旧版");
+  };
+
+  const handleSaveNew = () => {
+    setNewSaved(true);
+    setOldChanged(false);
+    showToast("新版混批配置已预保存，未灰度生效前不影响买家下单");
+  };
+
+  const handleSyncFromOld = () => {
+    setNewRule((current) => ({
+      ...current,
+      minQuantity: oldRule.minQuantity,
+      minAmount: oldRule.minAmount,
+      conditionType: oldRule.conditionType
+    }));
+    setNewAreaRules(oldAreaRules.map((item) => ({ ...item })));
+    setOldChanged(false);
+    showToast("已根据当前旧版配置更新新版配置");
+  };
+
+  return (
+    <div className="supplier-trade-html-page">
+      {toast ? <div className="supplier-trade-html-toast">{toast}</div> : null}
+
+      <div className="supplier-trade-html-page-card">
+        <div className="supplier-trade-html-notice">
+          <strong>新版店铺混批预配置通知</strong><br />
+          当前为新版店铺混批预配置期，您可以提前配置并保存新版混批规则。<br />
+          1、预配置期间，买家下单规则仍继续沿用当前已生效的「店铺起购」设置，新版混批配置暂不会影响买家下单。<br />
+          2、请您于 XXXX年XX月XX日 前完成新版店铺混批预配置。若逾期未完成配置，功能正式生效后可能影响买家下单，请及时处理。<br />
+          3、新版店铺混批的正式生效时间以平台通知为准，请关注后续通知。<br />
+          4、如需了解具体配置方式，请查看《新版店铺混批操作手册》。
+        </div>
+
+        <div className="supplier-trade-html-tabs">
+          <button type="button" className={`supplier-trade-html-tab${activeTab === "old" ? " is-active" : ""}`} onClick={() => setActiveTab("old")}>当前生效规则（店铺起购设置）</button>
+          <button type="button" className={`supplier-trade-html-tab${activeTab === "new" ? " is-active" : ""}`} onClick={() => setActiveTab("new")}>新版店铺混批设置（预配置）</button>
+        </div>
+
+        {activeTab === "old" ? (
+          <div className="supplier-trade-html-panel is-active">
+            <div className="supplier-trade-html-status-row">
+              <div>
+                <div className="supplier-trade-html-status-title">当前买家下单规则 <span className="supplier-trade-html-pill is-green">正在生效</span></div>
+                <div className="supplier-trade-html-status-desc">新版店铺混批未生效前，您在此处修改规则，会继续影响当前买家下单判断</div>
+              </div>
+            </div>
+
+            <div className="supplier-trade-html-form">
+              <div className="supplier-trade-html-form-row">
+                <div className="supplier-trade-html-label">起购量验证方式：</div>
+                {supplierTradeLegacyConditionOptions.map((option) => (
+                  <label className="supplier-trade-html-radio" key={option.value}>
+                    <input type="radio" checked={oldRule.conditionType === option.value} onChange={() => setOldRule((current) => ({ ...current, conditionType: option.value }))} />
+                    {option.label}
+                  </label>
+                ))}
+              </div>
+
+              <div className="supplier-trade-html-form-row">
+                <div className="supplier-trade-html-label">起购数量：</div>
+                {renderCounter(
+                  oldRule.minQuantity,
+                  (event) => setOldRule((current) => ({ ...current, minQuantity: event.target.value.replace(/[^\d]/g, "") })),
+                  () => setOldRule((current) => ({ ...current, minQuantity: String(Math.max(Number(current.minQuantity || 0) - 1, 0)) })),
+                  () => setOldRule((current) => ({ ...current, minQuantity: String(Number(current.minQuantity || 0) + 1) }))
+                )}
+              </div>
+              <div className="supplier-trade-html-help">0表示不限制</div>
+
+              <div className="supplier-trade-html-form-row">
+                <div className="supplier-trade-html-label">起购金额：</div>
+                {renderCounter(
+                  oldRule.minAmount,
+                  (event) => setOldRule((current) => ({ ...current, minAmount: event.target.value.replace(/[^\d.]/g, "") })),
+                  () => setOldRule((current) => ({ ...current, minAmount: Math.max(Number(current.minAmount || 0) - 1, 0).toFixed(2) })),
+                  () => setOldRule((current) => ({ ...current, minAmount: (Number(current.minAmount || 0) + 1).toFixed(2) }))
+                )}
+              </div>
+              <div className="supplier-trade-html-help">0表示不限制</div>
+
+              <div className="supplier-trade-html-form-row">
+                <div className="supplier-trade-html-label">是否开启区域起购量：</div>
+                <span className={`supplier-trade-html-switch${oldRule.regionEnabled ? "" : " is-off"}`} onClick={() => setOldRule((current) => ({ ...current, regionEnabled: !current.regionEnabled }))} />
+              </div>
+
+              {oldRule.regionEnabled ? (
+                <>
+                  <div className="supplier-trade-html-table-wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>配送地区</th>
+                          <th>起购数量</th>
+                          <th>起购金额（元）</th>
+                          <th>操作</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {oldAreaRules.map((item) => (
+                          <tr key={item.id}>
+                            <td className="region">{item.region} <button type="button" className="supplier-trade-html-link supplier-trade-html-inline-edit">编辑</button></td>
+                            <td>{renderCounter(item.minQuantity, (event) => handleAreaRuleChange("old", item.id, "minQuantity", event.target.value), () => handleAreaRuleAdjust("old", item.id, "minQuantity", -1), () => handleAreaRuleAdjust("old", item.id, "minQuantity", 1))}</td>
+                            <td><input className="supplier-trade-html-amount-input" value={item.minAmount} onChange={(event) => handleAreaRuleChange("old", item.id, "minAmount", event.target.value)} /></td>
+                            <td><button type="button" className="supplier-trade-html-link" onClick={() => handleDeleteAreaRule("old", item.id)}>删除</button></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="supplier-trade-html-table-actions"><button type="button" className="supplier-trade-html-link" onClick={() => handleAddAreaRule("old")}>新增地区</button></div>
+                </>
+              ) : null}
+
+              <div className="supplier-trade-html-btns">
+                <button type="button" className="supplier-trade-html-btn is-primary" onClick={handleSaveOld}>保存旧版设置</button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="supplier-trade-html-panel is-active">
+            <div className="supplier-trade-html-status-row">
+              <div>
+                <div className="supplier-trade-html-status-title">新版店铺混批设置 <span className="supplier-trade-html-pill is-orange">预配置，暂不生效</span></div>
+                <div className="supplier-trade-html-status-desc">您可在此处提前预配置新版店铺混批的相关规则，新版店铺混批未正式生效前，修改此处配置不会影响买家下单。</div>
+              </div>
+            </div>
+
+            {oldChanged && !newSaved ? (
+              <div className="supplier-trade-html-warning-box">
+                <div>旧版起购设置已发生变化，新版混批配置可能不是最新的。建议同步后再预保存新版配置。</div>
+                <button type="button" className="supplier-trade-html-btn is-ghost" onClick={handleSyncFromOld}>同步旧版配置到新版配置</button>
+              </div>
+            ) : null}
+
+            <div className="supplier-trade-html-form">
+              <div className="supplier-trade-html-form-row">
+                <div className="supplier-trade-html-label">店铺混批：</div>
+                <span className={`supplier-trade-html-switch${newRule.enabled ? "" : " is-off"}`} onClick={() => setNewRule((current) => ({ ...current, enabled: !current.enabled }))} />
+              </div>
+
+              <div className="supplier-trade-html-form-row">
+                <div className="supplier-trade-html-label">商品混批规则：</div>
+                <label className="supplier-trade-html-radio">
+                  <input type="radio" checked={newRule.goodsMixType === "all"} onChange={() => setNewRule((current) => ({ ...current, goodsMixType: "all" }))} />
+                  全店商品混批
+                </label>
+                <label className="supplier-trade-html-radio">
+                  <input type="radio" checked={newRule.goodsMixType === "partial"} onChange={() => setNewRule((current) => ({ ...current, goodsMixType: "partial" }))} />
+                  部分商品混批
+                </label>
+              </div>
+
+              <div className="supplier-trade-html-form-row">
+                <div className="supplier-trade-html-label">起批门槛验证方式：</div>
+                {supplierTradeLegacyConditionOptions.map((option) => (
+                  <label className="supplier-trade-html-radio" key={option.value}>
+                    <input type="radio" checked={newRule.conditionType === option.value} onChange={() => setNewRule((current) => ({ ...current, conditionType: option.value }))} />
+                    {option.label}
+                  </label>
+                ))}
+              </div>
+
+              <div className="supplier-trade-html-form-row">
+                <div className="supplier-trade-html-label">店铺起批门槛：</div>
+                <span>订单商品数量满</span>
+                {renderCounter(
+                  newRule.minQuantity,
+                  (event) => setNewRule((current) => ({ ...current, minQuantity: event.target.value.replace(/[^\d]/g, "") })),
+                  () => setNewRule((current) => ({ ...current, minQuantity: String(Math.max(Number(current.minQuantity || 0) - 1, 0)) })),
+                  () => setNewRule((current) => ({ ...current, minQuantity: String(Number(current.minQuantity || 0) + 1) })),
+                  " is-inline"
+                )}
+                <span>件且金额满</span>
+                {renderCounter(
+                  newRule.minAmount,
+                  (event) => setNewRule((current) => ({ ...current, minAmount: event.target.value.replace(/[^\d.]/g, "") })),
+                  () => setNewRule((current) => ({ ...current, minAmount: Math.max(Number(current.minAmount || 0) - 1, 0).toFixed(2) })),
+                  () => setNewRule((current) => ({ ...current, minAmount: (Number(current.minAmount || 0) + 1).toFixed(2) })),
+                  " is-inline"
+                )}
+                <span>元</span>
+              </div>
+
+              <div className="supplier-trade-html-form-row">
+                <div className="supplier-trade-html-label">是否开启区域混批：</div>
+                <span className={`supplier-trade-html-switch${newRule.regionEnabled ? "" : " is-off"}`} onClick={() => setNewRule((current) => ({ ...current, regionEnabled: !current.regionEnabled }))} />
+              </div>
+
+              {newRule.regionEnabled ? (
+                <>
+                  <div className="supplier-trade-html-table-wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>配送地区</th>
+                          <th>起批量</th>
+                          <th>起批金额（元）</th>
+                          <th>操作</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {newAreaRules.map((item) => (
+                          <tr key={item.id}>
+                            <td className="region">{item.region} <button type="button" className="supplier-trade-html-link supplier-trade-html-inline-edit">编辑</button></td>
+                            <td>{renderCounter(item.minQuantity, (event) => handleAreaRuleChange("new", item.id, "minQuantity", event.target.value), () => handleAreaRuleAdjust("new", item.id, "minQuantity", -1), () => handleAreaRuleAdjust("new", item.id, "minQuantity", 1))}</td>
+                            <td>{renderCounter(item.minAmount, (event) => handleAreaRuleChange("new", item.id, "minAmount", event.target.value), () => handleAreaRuleAdjust("new", item.id, "minAmount", -1, 2), () => handleAreaRuleAdjust("new", item.id, "minAmount", 1, 2))}</td>
+                            <td><button type="button" className="supplier-trade-html-link" onClick={() => handleDeleteAreaRule("new", item.id)}>删除</button></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="supplier-trade-html-table-actions"><button type="button" className="supplier-trade-html-link" onClick={() => handleAddAreaRule("new")}>新增地区</button></div>
+                </>
+              ) : null}
+
+              <div className="supplier-trade-html-btns">
+                <button type="button" className="supplier-trade-html-btn is-primary" onClick={handleSaveNew}>预保存新版配置</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ShopInvoiceRejectedReasonCard({ rejectedAt, rejectReason, onClose }) {
   const reasonText = String(rejectReason || "").trim();
   const rejectedTime = String(rejectedAt || "").trim();
@@ -19394,6 +19721,7 @@ export default function App() {
     activePortalPage: "admin",
     activeSection: "home",
     activeGoodsPage: "商品管理",
+    activeTradePage: "交易设置",
     activeBuyerPage: "买家列表",
     activeShopPage: "发票管理",
     currentMarketingPage: "专享价",
@@ -19403,10 +19731,13 @@ export default function App() {
     ["admin", "buyer-pc-mall", "platform-center", "miniapp-mall"].includes(storedAdminView.activePortalPage) ? storedAdminView.activePortalPage : "admin"
   ));
   const [activeSection, setActiveSection] = useState(() => (
-    ["home", "goods", "buyer", "shop", "marketing"].includes(storedAdminView.activeSection) ? storedAdminView.activeSection : "home"
+    ["home", "goods", "trade", "buyer", "shop", "marketing"].includes(storedAdminView.activeSection) ? storedAdminView.activeSection : "home"
   ));
   const [activeGoodsPage, setActiveGoodsPage] = useState(() => (
     goodsPageNames.includes(storedAdminView.activeGoodsPage) ? storedAdminView.activeGoodsPage : "商品管理"
+  ));
+  const [activeTradePage, setActiveTradePage] = useState(() => (
+    tradePageNames.includes(storedAdminView.activeTradePage) ? storedAdminView.activeTradePage : "交易设置"
   ));
   const [activeBuyerPage, setActiveBuyerPage] = useState(() => (
     storedAdminView.activeBuyerPage === "导入买家" || buyerPageNames.includes(storedAdminView.activeBuyerPage) ? storedAdminView.activeBuyerPage : "买家列表"
@@ -19473,12 +19804,13 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState("");
   const [isGlobalExportRecordModalOpen, setIsGlobalExportRecordModalOpen] = useState(false);
   const isGoodsSection = activeSection === "goods";
+  const isTradeSection = activeSection === "trade";
   const isHomeSection = activeSection === "home";
   const isBuyerSection = activeSection === "buyer";
   const isShopSection = activeSection === "shop";
   const isMarketingSection = activeSection === "marketing";
   const isTodoPage = activeUtilityPage === "todo";
-  const currentPageTitle = isTodoPage ? "待办事项" : isHomeSection ? "首页-控制台" : isGoodsSection ? activeGoodsPage : isBuyerSection ? activeBuyerPage : isShopSection ? activeShopTab : currentMarketingPage;
+  const currentPageTitle = isTodoPage ? "待办事项" : isHomeSection ? "首页-控制台" : isGoodsSection ? activeGoodsPage : isTradeSection ? activeTradePage : isBuyerSection ? activeBuyerPage : isShopSection ? activeShopTab : currentMarketingPage;
   const platformTopActions = useMemo(() => ([
     { key: "supplier-admin", label: "供应商后台", icon: "supplier-admin" },
     { key: "pc-mall", label: "买家PC商城", icon: "pc-mall" },
@@ -19535,12 +19867,13 @@ export default function App() {
       activePortalPage,
       activeSection,
       activeGoodsPage,
+      activeTradePage,
       activeBuyerPage,
       activeShopPage,
       currentMarketingPage,
       activeUtilityPage
     });
-  }, [activePortalPage, activeSection, activeGoodsPage, activeBuyerPage, activeShopPage, currentMarketingPage, activeUtilityPage]);
+  }, [activePortalPage, activeSection, activeGoodsPage, activeTradePage, activeBuyerPage, activeShopPage, currentMarketingPage, activeUtilityPage]);
 
   const closeAllCreateOverlays = () => {
     setIsPickerOpen(false);
@@ -20227,6 +20560,20 @@ export default function App() {
     setActiveSection("goods");
     setActiveUtilityPage("");
     setActiveGoodsPage(pageName);
+    setEditingBuyer(null);
+    setIsAddBuyerOpen(false);
+    setIsCreating(false);
+    setIsEditMode(false);
+    setDetailSpecProduct(null);
+    setToastMessage("");
+    closeAllCreateOverlays();
+  };
+
+  const handleSwitchTradePage = (pageName) => {
+    setActivePortalPage("admin");
+    setActiveSection("trade");
+    setActiveUtilityPage("");
+    setActiveTradePage(pageName);
     setEditingBuyer(null);
     setIsAddBuyerOpen(false);
     setIsCreating(false);
@@ -20951,11 +21298,14 @@ export default function App() {
             }
 
             const isGoodsMenu = item.label === "商品";
+            const isTradeMenu = item.label === "交易";
             const isBuyerMenu = item.label === "买家";
             const isShopMenu = item.label === "店铺";
-            const activeParent = isGoodsMenu ? isGoodsSection : isBuyerMenu ? isBuyerSection : isShopMenu ? isShopSection : isMarketingSection && item.label === "营销";
+            const activeParent = isGoodsMenu ? isGoodsSection : isTradeMenu ? isTradeSection : isBuyerMenu ? isBuyerSection : isShopMenu ? isShopSection : isMarketingSection && item.label === "营销";
             const handleParentClick = isGoodsMenu
               ? () => handleSwitchGoodsPage(item.children[0])
+              : isTradeMenu
+              ? () => handleSwitchTradePage(item.children[0])
               : isBuyerMenu
               ? () => handleSwitchBuyerPage(item.children[0])
               : isShopMenu
@@ -20981,6 +21331,8 @@ export default function App() {
                   {item.children.map((child) => {
                     const isActiveChild = isGoodsMenu
                       ? activeGoodsPage === child && isGoodsSection
+                      : isTradeMenu
+                      ? activeTradePage === child && isTradeSection
                       : isBuyerMenu
                       ? activeBuyerPage === child && isBuyerSection
                       : isShopMenu
@@ -20988,6 +21340,8 @@ export default function App() {
                         : currentMarketingPage === child && isMarketingSection;
                     const handleClick = isGoodsMenu
                       ? () => handleSwitchGoodsPage(child)
+                      : isTradeMenu
+                      ? () => handleSwitchTradePage(child)
                       : isBuyerMenu
                       ? () => handleSwitchBuyerPage(child)
                       : isShopMenu
@@ -21032,6 +21386,12 @@ export default function App() {
               onToggleMixedWholesale={handleToggleGoodsMixedWholesale}
               shopWholesaleRule={shopWholesaleRule}
               onSaveShopWholesaleRule={setShopWholesaleRule}
+            />
+          ) : isTradeSection ? (
+            <SupplierTradeSettingsPage
+              shopWholesaleRule={shopWholesaleRule}
+              onSaveShopWholesaleRule={setShopWholesaleRule}
+              onShowToast={setToastMessage}
             />
           ) : isBuyerSection ? (
             activeBuyerPage === "导入买家" ? (
