@@ -1264,7 +1264,7 @@ const supplierDashboardShippingAssessmentCards = [
 ];
 const supplierDashboardFulfillmentCards = [
   { value: "0小时0分钟", label: "子订单整体平台发货时长", tooltip: "所有子订单发货时长（发货日期 - 下单支付成功日期）之和 / 发货子订单总数（包含售后订单）" },
-  { value: "1", label: "履约异常子订单量", tooltip: "超48H发货子订单数+超48H未发货子订单数" },
+  { value: "1", label: "子订单履约异常量", tooltip: "超48H发货子订单数+超48H未发货子订单数" },
   { value: "50%", label: "子订单履约异常率", tooltip: "(超48h发货子订单数+超48H未发货子订单数) / 支付子订单" }
 ];
 const supplierDashboardAccountCards = [
@@ -5407,7 +5407,12 @@ function PcMallExportRecordModal({ rows, onClose }) {
                   <td>{item.type}</td>
                   <td>{item.exportedAt}</td>
                   <td>{item.operator}</td>
-                  <td>{item.status}</td>
+                  <td>
+                    <div className="pc-mall-export-record-status">
+                      <span>{item.status}</span>
+                      {isExportTab ? <em>成功1000条，失败0条</em> : null}
+                    </div>
+                  </td>
                   <td>
                     {isExportTab ? (
                       <button className="pc-mall-export-record-link" type="button">点击下载</button>
@@ -10669,17 +10674,17 @@ function SupplierTradeSettingsPage({ shopWholesaleRule, onSaveShopWholesaleRule,
 
       <div className="supplier-trade-html-page-card">
         <div className="supplier-trade-html-notice">
-          <strong>新版店铺混批预配置通知</strong><br />
+          <strong>新版店铺混批预配置通知！！！</strong><br />
           当前为新版店铺混批预配置期，您可以提前配置并保存新版混批规则。<br />
-          1、预配置期间，买家下单规则仍继续沿用当前已生效的「店铺起购」设置，新版混批配置暂不会影响买家下单。<br />
+          1、预配置期间，买家下单规则仍继续沿用当前已生效的「起购量」设置，新版混批配置暂不会影响买家下单。<br />
           2、请您于 XXXX年XX月XX日 前完成新版店铺混批预配置。若逾期未完成配置，功能正式生效后可能影响买家下单，请及时处理。<br />
           3、新版店铺混批的正式生效时间以平台通知为准，请关注后续通知。<br />
           4、如需了解具体配置方式，请查看《新版店铺混批操作手册》。
         </div>
 
         <div className="supplier-trade-html-tabs">
-          <button type="button" className={`supplier-trade-html-tab${activeTab === "old" ? " is-active" : ""}`} onClick={() => setActiveTab("old")}>当前生效规则（店铺起购设置）</button>
-          <button type="button" className={`supplier-trade-html-tab${activeTab === "new" ? " is-active" : ""}`} onClick={() => setActiveTab("new")}>新版店铺混批设置（预配置）</button>
+          <button type="button" className={`supplier-trade-html-tab${activeTab === "old" ? " is-active" : ""}`} onClick={() => setActiveTab("old")}>起购量（生效中）</button>
+          <button type="button" className={`supplier-trade-html-tab${activeTab === "new" ? " is-active" : ""}`} onClick={() => setActiveTab("new")}>店铺混批（未生效）</button>
         </div>
 
         {activeTab === "old" ? (
@@ -10758,7 +10763,7 @@ function SupplierTradeSettingsPage({ shopWholesaleRule, onSaveShopWholesaleRule,
               ) : null}
 
               <div className="supplier-trade-html-btns">
-                <button type="button" className="supplier-trade-html-btn is-primary" onClick={handleSaveOld}>保存旧版设置</button>
+                <button type="button" className="supplier-trade-html-btn is-primary" onClick={handleSaveOld}>保存</button>
               </div>
             </div>
           </div>
@@ -18361,14 +18366,6 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                               </div>
                             </div>
                             <div className="miniapp-filter-field">
-                              <span>发票类型</span>
-                              <div className="miniapp-filter-chip-row">
-                                {["全部", "电子普通发票", "电子增值税专用发票"].map((item) => (
-                                  <button className={`miniapp-filter-chip ${miniappAppliedDraftFilters.invoiceType === item ? "is-active" : ""}`} key={`applied-type-${item}`} type="button" onClick={() => setMiniappAppliedDraftFilters((current) => ({ ...current, invoiceType: item }))}>{item}</button>
-                                ))}
-                              </div>
-                            </div>
-                            <div className="miniapp-filter-field">
                               <span>需要单独开票</span>
                               <div className="miniapp-filter-chip-row">
                                 {["全部", "是", "否"].map((item) => (
@@ -18419,26 +18416,10 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                               </div>
                             </div>
                             <div className="miniapp-filter-field">
-                              <span>发票类型</span>
-                              <div className="miniapp-filter-chip-row">
-                                {["全部", "电子普通发票", "电子增值税专用发票"].map((item) => (
-                                  <button className={`miniapp-filter-chip ${miniappInvoicedDraftFilters.invoiceType === item ? "is-active" : ""}`} key={`invoiced-type-${item}`} type="button" onClick={() => setMiniappInvoicedDraftFilters((current) => ({ ...current, invoiceType: item }))}>{item}</button>
-                                ))}
-                              </div>
-                            </div>
-                            <div className="miniapp-filter-field">
                               <span>需要单独开票</span>
                               <div className="miniapp-filter-chip-row">
                                 {["全部", "是", "否"].map((item) => (
                                   <button className={`miniapp-filter-chip ${miniappInvoicedDraftFilters.separateInvoiceRequired === item ? "is-active" : ""}`} key={`invoiced-single-${item}`} type="button" onClick={() => setMiniappInvoicedDraftFilters((current) => ({ ...current, separateInvoiceRequired: item }))}>{item}</button>
-                                ))}
-                              </div>
-                            </div>
-                            <div className="miniapp-filter-field">
-                              <span>发票下载状态</span>
-                              <div className="miniapp-filter-chip-row">
-                                {["全部", "已下载", "未下载"].map((item) => (
-                                  <button className={`miniapp-filter-chip ${miniappInvoicedDraftFilters.downloadStatus === item ? "is-active" : ""}`} key={`invoiced-download-${item}`} type="button" onClick={() => setMiniappInvoicedDraftFilters((current) => ({ ...current, downloadStatus: item }))}>{item}</button>
                                 ))}
                               </div>
                             </div>

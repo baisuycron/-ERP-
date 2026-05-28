@@ -1865,6 +1865,18 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
   color: #1677ff;
   font-size: 14px;
 }
+.pc-mall-export-record-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.pc-mall-export-record-status em {
+  color: #8b95a5;
+  font-size: 12px;
+  font-style: normal;
+  line-height: 1.4;
+}
 .pc-mall-export-record-link:disabled {
   color: #9ca3af;
   cursor: not-allowed;
