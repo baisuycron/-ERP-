@@ -8172,6 +8172,26 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
   padding: 12px 16px 10px;
 }
 
+.supplier-dashboard-performance-row {
+  display: grid;
+  grid-template-columns: minmax(420px, 0.9fr) minmax(0, 1.35fr);
+  gap: 12px;
+}
+
+.supplier-dashboard-performance-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.supplier-dashboard-performance-panel .supplier-dashboard-section-head {
+  min-height: 64px;
+}
+
+.supplier-dashboard-performance-panel .supplier-dashboard-date-range {
+  min-width: 280px;
+}
+
 .supplier-dashboard-date-range {
   display: inline-grid;
   grid-template-columns: 1fr 28px 1fr 24px;
@@ -8205,6 +8225,14 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 
 .supplier-dashboard-metric-grid-four {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.supplier-dashboard-metric-grid-one {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.supplier-dashboard-metric-grid-three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .supplier-dashboard-metric-grid-five {

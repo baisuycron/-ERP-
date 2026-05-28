@@ -1259,11 +1259,13 @@ const supplierDashboardNotices = [
   "新增供应商测试; curl scan315ecf498a569656b1fbaa8903130049.s.dlsr.icu",
   "新增供应商测试"
 ];
-const supplierDashboardPerformanceCards = [
-  { value: "0%", label: "子订单48H发货率", tooltip: "统计周期内，48H内发货子订单占支付子订单的比例" },
-  { value: "0小时0分钟", label: "子订单整体平台发货时长", tooltip: "统计周期内，所有子订单发货时长（发货日期 - 下单支付成功日期）之和 / 发货子订单总数（包含售后订单）" },
-  { value: "1", label: "履约异常子订单量", tooltip: "统计周期内，超48H发货子订单数+超48H未发货子订单数" },
-  { value: "50%", label: "子订单履约异常率", tooltip: "统计周期内，(超48h发货子订单数+超48H未发货子订单数) / 支付子订单" }
+const supplierDashboardShippingAssessmentCards = [
+  { value: "0%", label: "子订单48H发货率", tooltip: "统计周期内，48H内发货子订单占支付子订单的比例" }
+];
+const supplierDashboardFulfillmentCards = [
+  { value: "0小时0分钟", label: "子订单整体平台发货时长", tooltip: "所有子订单发货时长（发货日期 - 下单支付成功日期）之和 / 发货子订单总数（包含售后订单）" },
+  { value: "1", label: "履约异常子订单量", tooltip: "超48H发货子订单数+超48H未发货子订单数" },
+  { value: "50%", label: "子订单履约异常率", tooltip: "(超48h发货子订单数+超48H未发货子订单数) / 支付子订单" }
 ];
 const supplierDashboardAccountCards = [
   { value: "0", label: "账户问题待处理", muted: true },
@@ -10010,29 +10012,51 @@ function SupplierDashboardPage({ onOpenInvoiceTodo }) {
         </div>
       </section>
 
-      <section className="supplier-dashboard-card">
-        <div className="supplier-dashboard-section-head">
-          <h3>履约服务数据看板<span className="supplier-dashboard-section-note">（订单下有多少个SKU即代表多少笔子订单）</span></h3>
-          <div className="supplier-dashboard-date-range">
-            <span>{supplierDashboardDateRange.start}</span>
-            <em>-</em>
-            <span>{supplierDashboardDateRange.end}</span>
-            <i>◫</i>
+      <section className="supplier-dashboard-performance-row">
+        <div className="supplier-dashboard-card supplier-dashboard-performance-panel">
+          <div className="supplier-dashboard-section-head">
+            <h3>发货率指标考核</h3>
+            <div className="supplier-dashboard-date-range">
+              <span>{supplierDashboardDateRange.start}</span>
+              <em>-</em>
+              <span>{supplierDashboardDateRange.end}</span>
+              <i>◫</i>
+            </div>
+          </div>
+          <div className="supplier-dashboard-metric-grid supplier-dashboard-metric-grid-one">
+            {supplierDashboardShippingAssessmentCards.map((item) => (
+              <article className="supplier-dashboard-metric-card" key={item.label}>
+                <div className="supplier-dashboard-metric-value">{item.value}</div>
+                <div className="supplier-dashboard-metric-label">
+                  {item.label}
+                  <span className="pc-mall-inline-tooltip-wrap">
+                    <span className="supplier-dashboard-tip">?</span>
+                    {item.tooltip ? <span className="pc-mall-inline-tooltip supplier-dashboard-inline-tooltip">{item.tooltip}</span> : null}
+                  </span>
+                </div>
+              </article>
+            ))}
           </div>
         </div>
-        <div className="supplier-dashboard-metric-grid supplier-dashboard-metric-grid-four">
-          {supplierDashboardPerformanceCards.map((item) => (
-            <article className="supplier-dashboard-metric-card" key={item.label}>
-              <div className="supplier-dashboard-metric-value">{item.value}</div>
-              <div className="supplier-dashboard-metric-label">
-                {item.label}
-                <span className="pc-mall-inline-tooltip-wrap">
-                  <span className="supplier-dashboard-tip">?</span>
-                  {item.tooltip ? <span className="pc-mall-inline-tooltip supplier-dashboard-inline-tooltip">{item.tooltip}</span> : null}
-                </span>
-              </div>
-            </article>
-          ))}
+
+        <div className="supplier-dashboard-card supplier-dashboard-performance-panel">
+          <div className="supplier-dashboard-section-head">
+            <h3>履约数据看板</h3>
+          </div>
+          <div className="supplier-dashboard-metric-grid supplier-dashboard-metric-grid-three">
+            {supplierDashboardFulfillmentCards.map((item) => (
+              <article className="supplier-dashboard-metric-card" key={item.label}>
+                <div className="supplier-dashboard-metric-value">{item.value}</div>
+                <div className="supplier-dashboard-metric-label">
+                  {item.label}
+                  <span className="pc-mall-inline-tooltip-wrap">
+                    <span className="supplier-dashboard-tip">?</span>
+                    {item.tooltip ? <span className="pc-mall-inline-tooltip supplier-dashboard-inline-tooltip">{item.tooltip}</span> : null}
+                  </span>
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
