@@ -745,6 +745,28 @@ function getShopInvoiceApproachingTimeoutAt(row, overdueDays = 5) {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
+function formatShopInvoiceCountdownDuration(durationMs) {
+  const totalSeconds = Math.max(0, Math.floor(Math.abs(durationMs) / 1000));
+  const days = Math.floor(totalSeconds / (24 * 60 * 60));
+  const hours = Math.floor((totalSeconds % (24 * 60 * 60)) / (60 * 60));
+  const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
+  const seconds = totalSeconds % 60;
+  return `${days}天${hours}小时${minutes}分${seconds}秒`;
+}
+
+function getShopInvoiceRemainingTimeoutText(row, now = Date.now()) {
+  if (!row || row.orderStatus !== "已完成" || row.invoiceStatus !== "待开票") return "-";
+
+  const timeoutAt = getShopInvoiceApproachingTimeoutAt(row);
+  if (!timeoutAt) return "-";
+
+  const timeoutTime = Date.parse(timeoutAt.replace(/-/g, "/"));
+  if (Number.isNaN(timeoutTime)) return "-";
+
+  const diff = timeoutTime - now;
+  return `${diff >= 0 ? "剩余" : "超时"}${formatShopInvoiceCountdownDuration(diff)}`;
+}
+
 function hasShopInvoiceApproachingBadge(row) {
   return Boolean(row?.approachingTimeoutAt) || isShopInvoiceApplicationApproachingOverdue(row);
 }
@@ -1081,7 +1103,7 @@ const supplierGoodsRows = [
     shopCategory: "一级分类",
     stock: "146",
     sold: "12",
-    badge: "混批",
+    badge: "起批",
     participateMixedWholesale: true,
     minOrderQuantity: 10,
     wholesaleTiers: [
@@ -1107,7 +1129,7 @@ const supplierGoodsRows = [
     shopCategory: "一级分类",
     stock: "994",
     sold: "69",
-    badge: "混批",
+    badge: "起批",
     participateMixedWholesale: false,
     minOrderQuantity: 10,
     wholesaleTiers: [
@@ -1136,7 +1158,7 @@ function supportsWholesaleAmount(conditionType) {
 }
 
 function formatWholesaleRuleText(rule) {
-  if (!rule?.enabled) return "未开启店铺混批";
+  if (!rule?.enabled) return "未开启店铺起批";
 
   const quantityText = rule.minQuantity ? `满 ${rule.minQuantity} 件` : "";
   const amountText = rule.minAmount ? `满 ${rule.minAmount} 元` : "";
@@ -1151,7 +1173,7 @@ function formatWholesaleRuleText(rule) {
     case "quantity_and_amount":
       return `${quantityText}${quantityText && amountText ? "且" : ""}${amountText}可下单`;
     default:
-      return "未配置店铺混批规则";
+      return "未配置店铺起批规则";
   }
 }
 
@@ -1176,8 +1198,8 @@ function isStoreWholesaleQualified(rule, quantity, amount) {
 }
 
 function getStoreWholesaleRemainingMessage(rule, quantity, amount) {
-  if (!rule?.enabled) return "店铺暂未开启混批";
-  if (isStoreWholesaleQualified(rule, quantity, amount)) return "已满足店铺混批条件，参与混批商品可享受起批批发价。";
+  if (!rule?.enabled) return "店铺暂未开启起批";
+  if (isStoreWholesaleQualified(rule, quantity, amount)) return "已满足店铺起批条件，参与起批商品可享受起批批发价。";
 
   const remainingQty = Math.max(Number(rule.minQuantity || 0) - quantity, 0);
   const remainingAmount = Math.max(Number(rule.minAmount || 0) - amount, 0);
@@ -1192,7 +1214,7 @@ function getStoreWholesaleRemainingMessage(rule, quantity, amount) {
     case "quantity_and_amount":
       return `还需加 ${remainingQty} 件，并再加 ${remainingAmount.toFixed(0)} 元即可下单`;
     default:
-      return "请完善店铺混批配置";
+      return "请完善店铺起批配置";
   }
 }
 
@@ -1225,13 +1247,13 @@ function getProductCheckoutPrice(product, quantity, storeQualified) {
 
 function getProductWholesaleReason(product, quantity, storeQualified) {
   if (isProductSelfWholesaleQualified(product, quantity)) return "已满足商品起批条件";
-  if (product?.participateMixedWholesale && storeQualified) return "当前商品因店铺混批达标，已享受起批批发价";
+  if (product?.participateMixedWholesale && storeQualified) return "当前商品因店铺起批达标，已享受起批批发价";
   if (!product?.participateMixedWholesale) {
     const remain = Math.max(Number(product?.minOrderQuantity || 0) - quantity, 0);
-    return `该商品不参与店铺混批，还需购买 ${remain} 件起批`;
+    return `该商品不参与店铺起批，还需购买 ${remain} 件起批`;
   }
   const remain = Math.max(Number(product?.minOrderQuantity || 0) - quantity, 0);
-  return `该商品还需购买 ${remain} 件起批，或凑满店铺混批条件`;
+  return `该商品还需购买 ${remain} 件起批，或凑满店铺起批条件`;
 }
 const menuItems = [
   { label: "首页", icon: "home" },
@@ -1700,7 +1722,7 @@ const buyerPcMallHomeProducts = [
   },
   {
     id: "home-goods-10",
-    nameSegments: ["单规格混批（按产品报价）"],
+    nameSegments: ["单规格起批（按产品报价）"],
     detailLine: "",
     priceText: "¥10.00",
     salesText: "月销100以内 年销10+",
@@ -1820,9 +1842,9 @@ const buyerPcMallCartSeedGroups = [
     promotionTag: "满减",
     promotionText: "已购满100.00元，已减20.00元",
     items: [
-      { id: "cart-1", name: "小尼首次审核260128", sku: "69476373", spec: "深灰色，160/80(XS)", price: 8, quantity: 1, image: "花", selected: true, tag: "混批", limit: 20, purchasedCount: 5 },
-      { id: "cart-2", name: "小尼首次审核260128", sku: "69476373", spec: "灰色，160/80(XS)", price: 8, quantity: 5, image: "花", selected: true, tag: "混批", limit: 25, purchasedCount: 0 },
-      { id: "cart-3", name: "20260324单规格商品", sku: "55070505", spec: "默认规格", price: 55, quantity: 4, image: "人", selected: true, tag: "混批", hint: "再选6件或232.00元满足起批条件" }
+      { id: "cart-1", name: "小尼首次审核260128", sku: "69476373", spec: "深灰色，160/80(XS)", price: 8, quantity: 1, image: "花", selected: true, tag: "起批", limit: 20, purchasedCount: 5 },
+      { id: "cart-2", name: "小尼首次审核260128", sku: "69476373", spec: "灰色，160/80(XS)", price: 8, quantity: 5, image: "花", selected: true, tag: "起批", limit: 25, purchasedCount: 0 },
+      { id: "cart-3", name: "20260324单规格商品", sku: "55070505", spec: "默认规格", price: 55, quantity: 4, image: "人", selected: true, tag: "起批", hint: "再选6件或232.00元满足起批条件" }
     ]
   },
   {
@@ -2023,6 +2045,216 @@ const buyerPcMallProductDetailSeed = {
   ]
 };
 const shopInvoiceManagementRows = [
+  {
+    orderNo: "2026052010152501",
+    invoiceType: "电子增值税专用发票",
+    originalInvoiceType: "电子增值税专用发票",
+    invoiceTitle: "本周样本科技有限公司",
+    originalInvoiceTitle: "本周样本科技有限公司",
+    taxpayerId: "91310000MA5WEEK001",
+    orderStatus: "已完成",
+    orderAmount: "¥1200.00",
+    afterSaleStatus: "-",
+    afterSaleAmount: "¥0.00",
+    amount: "¥1200.00",
+    shouldInvoiceAmount: "¥1200.00",
+    invoiceAmountWithTax: "¥1200.00",
+    buyerAccount: "week-sample-a (ID:25001)",
+    paymentMethod: "先货后款",
+    store: "本周一闪购店\n(ID:2252501)",
+    paidAt: "2026-05-20 10:15:25",
+    appliedAt: "2026-05-20 10:25:25",
+    modifiedAt: "2026-05-20 10:25:25",
+    applicationStatus: "待开票",
+    invoicedAt: "-",
+    invoiceNo: "-",
+    invoiceMethod: "手动",
+    invoiceStatus: "待开票",
+    invoiceStatusTone: "warning",
+    afterSaleStatusDetail: "-",
+    afterSaleExpired: "否",
+    actions: ["发票详情", "确认开票", "驳回"]
+  },
+  {
+    orderNo: "2026052111162602",
+    invoiceType: "电子普通发票",
+    originalInvoiceType: "电子普通发票",
+    invoiceTitle: "本周样本商贸有限公司",
+    originalInvoiceTitle: "本周样本商贸有限公司",
+    taxpayerId: "91310000MA5WEEK002",
+    orderStatus: "已完成",
+    orderAmount: "¥860.00",
+    afterSaleStatus: "-",
+    afterSaleAmount: "¥0.00",
+    amount: "¥860.00",
+    shouldInvoiceAmount: "¥860.00",
+    invoiceAmountWithTax: "¥860.00",
+    buyerAccount: "week-sample-b (ID:25002)",
+    paymentMethod: "先货后款",
+    store: "本周二闪购店\n(ID:2252502)",
+    paidAt: "2026-05-21 11:16:26",
+    appliedAt: "2026-05-21 11:26:26",
+    modifiedAt: "2026-05-21 11:26:26",
+    applicationStatus: "待开票",
+    invoicedAt: "-",
+    invoiceNo: "-",
+    invoiceMethod: "系统",
+    invoiceStatus: "待开票",
+    invoiceStatusTone: "warning",
+    afterSaleStatusDetail: "-",
+    afterSaleExpired: "否",
+    actions: ["发票详情", "确认开票", "驳回"]
+  },
+  {
+    orderNo: "2026052212172703",
+    invoiceType: "电子增值税专用发票",
+    originalInvoiceType: "电子增值税专用发票",
+    invoiceTitle: "本周样本供应链有限公司",
+    originalInvoiceTitle: "本周样本供应链有限公司",
+    taxpayerId: "91310000MA5WEEK003",
+    orderStatus: "已完成",
+    orderAmount: "¥2380.00",
+    afterSaleStatus: "-",
+    afterSaleAmount: "¥0.00",
+    amount: "¥2380.00",
+    shouldInvoiceAmount: "¥2380.00",
+    invoiceAmountWithTax: "¥2380.00",
+    buyerAccount: "week-sample-c (ID:25003)",
+    paymentMethod: "先款后货",
+    store: "本周三闪购店\n(ID:2252503)",
+    paidAt: "2026-05-22 12:17:27",
+    appliedAt: "2026-05-22 12:27:27",
+    modifiedAt: "2026-05-22 12:27:27",
+    applicationStatus: "待开票",
+    invoicedAt: "-",
+    invoiceNo: "-",
+    invoiceMethod: "手动",
+    invoiceStatus: "待开票",
+    invoiceStatusTone: "warning",
+    afterSaleStatusDetail: "-",
+    afterSaleExpired: "否",
+    actions: ["发票详情", "确认开票", "驳回"]
+  },
+  {
+    orderNo: "2026052313182804",
+    invoiceType: "电子普通发票",
+    originalInvoiceType: "电子普通发票",
+    invoiceTitle: "本周样本优选有限公司",
+    originalInvoiceTitle: "本周样本优选有限公司",
+    taxpayerId: "91310000MA5WEEK004",
+    orderStatus: "已完成",
+    orderAmount: "¥520.00",
+    afterSaleStatus: "-",
+    afterSaleAmount: "¥0.00",
+    amount: "¥520.00",
+    shouldInvoiceAmount: "¥520.00",
+    invoiceAmountWithTax: "¥520.00",
+    buyerAccount: "week-sample-d (ID:25004)",
+    paymentMethod: "先货后款",
+    store: "本周四闪购店\n(ID:2252504)",
+    paidAt: "2026-05-23 13:18:28",
+    appliedAt: "2026-05-23 13:28:28",
+    modifiedAt: "2026-05-23 13:28:28",
+    applicationStatus: "待开票",
+    invoicedAt: "-",
+    invoiceNo: "-",
+    invoiceMethod: "系统",
+    invoiceStatus: "待开票",
+    invoiceStatusTone: "warning",
+    afterSaleStatusDetail: "-",
+    afterSaleExpired: "否",
+    actions: ["发票详情", "确认开票", "驳回"]
+  },
+  {
+    orderNo: "2026052414192905",
+    invoiceType: "电子增值税专用发票",
+    originalInvoiceType: "电子增值税专用发票",
+    invoiceTitle: "本周样本数智有限公司",
+    originalInvoiceTitle: "本周样本数智有限公司",
+    taxpayerId: "91310000MA5WEEK005",
+    orderStatus: "已完成",
+    orderAmount: "¥3160.00",
+    afterSaleStatus: "-",
+    afterSaleAmount: "¥0.00",
+    amount: "¥3160.00",
+    shouldInvoiceAmount: "¥3160.00",
+    invoiceAmountWithTax: "¥3160.00",
+    buyerAccount: "week-sample-e (ID:25005)",
+    paymentMethod: "先款后货",
+    store: "本周五闪购店\n(ID:2252505)",
+    paidAt: "2026-05-24 14:19:29",
+    appliedAt: "2026-05-24 14:29:29",
+    modifiedAt: "2026-05-24 14:29:29",
+    applicationStatus: "待开票",
+    invoicedAt: "-",
+    invoiceNo: "-",
+    invoiceMethod: "手动",
+    invoiceStatus: "待开票",
+    invoiceStatusTone: "warning",
+    afterSaleStatusDetail: "-",
+    afterSaleExpired: "否",
+    actions: ["发票详情", "确认开票", "驳回"]
+  },
+  {
+    orderNo: "2026052515203006",
+    invoiceType: "电子普通发票",
+    originalInvoiceType: "电子普通发票",
+    invoiceTitle: "本周样本生活有限公司",
+    originalInvoiceTitle: "本周样本生活有限公司",
+    taxpayerId: "91310000MA5WEEK006",
+    orderStatus: "已完成",
+    orderAmount: "¥990.00",
+    afterSaleStatus: "-",
+    afterSaleAmount: "¥0.00",
+    amount: "¥990.00",
+    shouldInvoiceAmount: "¥990.00",
+    invoiceAmountWithTax: "¥990.00",
+    buyerAccount: "week-sample-f (ID:25006)",
+    paymentMethod: "先货后款",
+    store: "本周六闪购店\n(ID:2252506)",
+    paidAt: "2026-05-25 15:20:30",
+    appliedAt: "2026-05-25 15:30:30",
+    modifiedAt: "2026-05-25 15:30:30",
+    applicationStatus: "待开票",
+    invoicedAt: "-",
+    invoiceNo: "-",
+    invoiceMethod: "系统",
+    invoiceStatus: "待开票",
+    invoiceStatusTone: "warning",
+    afterSaleStatusDetail: "-",
+    afterSaleExpired: "否",
+    actions: ["发票详情", "确认开票", "驳回"]
+  },
+  {
+    orderNo: "2026052616213107",
+    invoiceType: "电子增值税专用发票",
+    originalInvoiceType: "电子普通发票",
+    invoiceTitle: "本周样本运营有限公司",
+    originalInvoiceTitle: "本周样本运营有限公司",
+    taxpayerId: "91310000MA5WEEK007",
+    orderStatus: "已完成",
+    orderAmount: "¥1780.00",
+    afterSaleStatus: "-",
+    afterSaleAmount: "¥0.00",
+    amount: "¥1780.00",
+    shouldInvoiceAmount: "¥1780.00",
+    invoiceAmountWithTax: "¥1780.00",
+    buyerAccount: "week-sample-g (ID:25007)",
+    paymentMethod: "先款后货",
+    store: "本周日闪购店\n(ID:2252507)",
+    paidAt: "2026-05-26 16:21:31",
+    appliedAt: "2026-05-26 16:31:31",
+    modifiedAt: "2026-05-26 16:31:31",
+    applicationStatus: "待开票",
+    invoicedAt: "-",
+    invoiceNo: "-",
+    invoiceMethod: "手动",
+    invoiceStatus: "待开票",
+    invoiceStatusTone: "warning",
+    afterSaleStatusDetail: "-",
+    afterSaleExpired: "否",
+    actions: ["发票详情", "确认开票", "驳回"]
+  },
   {
     orderNo: "2026040119104267",
     invoiceType: "电子增值税专用发票",
@@ -2696,6 +2928,8 @@ const normalizedShopInvoiceManagementRows = shopInvoiceManagementRows.map((row) 
     invoiceContent: row.invoiceContent || (["2026040315224679", "2026040716524309", "2026040814382551", "2026040909231674"].includes(row.orderNo) ? "商品明细" : "商品类别"),
     invoiceBatch: row.invoiceBatch || shopInvoiceBatchByOrderNo[row.orderNo] || "-",
     invoiceRemark: row.invoiceRemark || "-",
+    invoiceTimeoutAt: getShopInvoiceApproachingTimeoutAt(row) || "-",
+    invoiceUploadedAt: row.invoiceUploadedAt || (row.invoiceNo && row.invoiceNo !== "-" ? row.invoicedAt : "-"),
     orderStatus: row.orderStatus,
     afterSaleStatus: afterSaleSummary.afterSaleStatus,
     afterSaleStatusDetail: afterSaleSummary.afterSaleStatusDetail
@@ -2710,6 +2944,8 @@ const normalizedShopInvoiceManagementRows = shopInvoiceManagementRows.map((row) 
 const shopInvoiceColumnDefinitions = [
   { key: "select", label: "", width: 44, alwaysVisible: true, frozen: true, renderHeader: () => <input type="checkbox" />, renderCell: () => <input type="checkbox" /> },
   { key: "orderNo", label: "订单号", width: 220, visible: true, frozen: true, renderCell: (item) => <button className="buyer-link-btn" type="button">{item.orderNo}</button> },
+  { key: "invoiceTimeoutAt", label: "开票超时时间", width: 180, visible: true, renderCell: (item) => item.invoiceTimeoutAt || "-" },
+  { key: "remainingTimeoutDays", label: "剩余超时天数", width: 190, visible: true, renderCell: (item) => getShopInvoiceRemainingTimeoutText(item) },
   {
     key: "shopInfo",
     label: "店铺信息",
@@ -2757,6 +2993,7 @@ const shopInvoiceColumnDefinitions = [
   { key: "appliedAt", label: "申请时间", width: 180, visible: true, renderCell: (item) => item.appliedAt },
   { key: "invoicedAt", label: "开票时间", width: 180, visible: true, headerClassName: "shop-invoice-col-invoiced-at", cellClassName: "shop-invoice-col-invoiced-at", renderCell: (item) => item.invoicedAt },
   { key: "invoiceNo", label: "发票号码", width: 180, visible: true, renderCell: (item) => item.invoiceNo },
+  { key: "invoiceUploadedAt", label: "发票上传时间", width: 180, visible: true, renderCell: (item) => item.invoiceUploadedAt || "-" },
   { key: "invoiceMethod", label: "开票方式", width: 120, visible: true, renderCell: (item) => item.invoiceMethod },
   { key: "invoiceStatus", label: "开票状态", width: 110, visible: true, renderCell: (item) => <span className={`shop-invoice-status-tag is-${item.invoiceStatusTone || "default"}`}>{item.invoiceStatus}</span> },
   { key: "afterSaleExpired", label: "是否过售后期", width: 130, visible: true, renderCell: (item) => item.afterSaleExpired },
@@ -7102,7 +7339,7 @@ function BuyerPcMallHomeProductDetailPage({ allCartItemCount, onImmediateBuy, on
           name: detail.title,
           shopName: detail.shopName,
           image: detail.image || "flowers",
-          tag: detail.promo || "混批",
+          tag: detail.promo || "起批",
           sku: item.specId,
           spec: [colorValue ? `颜色:${colorValue}` : "", item.version ? `规格:${item.version}` : ""].filter(Boolean).join(" "),
           limit: item.limit,
@@ -7191,7 +7428,7 @@ function BuyerPcMallHomeProductDetailPage({ allCartItemCount, onImmediateBuy, on
               )}
               <button type="button">♡ 关注</button>
             </div>
-            <div className="pc-mall-product-info-row"><span>促销</span><strong className="is-selected">混批</strong><em>全店满10件且满100元可混批采购</em></div>
+            <div className="pc-mall-product-info-row"><span>促销</span><strong className="is-selected">起批</strong><em>全店满10件且满100元可起批采购</em></div>
             <div className="pc-mall-product-info-row"><span>发货</span><em>{detail.shippingFrom || "湖南/长沙"}&nbsp;&nbsp;配送至&nbsp;&nbsp;{detail.shippingTo || "内蒙古自治区/鄂尔多斯市/杭锦旗"}&nbsp;&nbsp;{detail.freightText || "运费0元，24小时内发货"}</em></div>
             <div className="pc-mall-product-info-row"><span>服务</span><em>电子普通发票 · 电子增值税专用发票 · 确认收货后，不支持售后</em></div>
             {detail.specs.map((item) => (
@@ -10146,7 +10383,7 @@ function SupplierGoodsManagementPage({ goodsRows, onToggleMixedWholesale, shopWh
     const amount = Number(ruleDraft.minAmount || 0);
 
     if (!ruleDraft.conditionType) {
-      setPageNotice("请选择混批条件类型");
+      setPageNotice("请选择起批条件类型");
       return;
     }
 
@@ -10181,7 +10418,7 @@ function SupplierGoodsManagementPage({ goodsRows, onToggleMixedWholesale, shopWh
       updatedAt: "2026-04-28 09:18:00",
       updatedBy: "运营小二"
     });
-    setPageNotice("店铺混批规则保存成功，新提交订单将按最新规则校验。");
+    setPageNotice("店铺起批规则保存成功，新提交订单将按最新规则校验。");
   };
 
   return (
@@ -10190,8 +10427,8 @@ function SupplierGoodsManagementPage({ goodsRows, onToggleMixedWholesale, shopWh
       <section className="content-card supplier-wholesale-rule-card">
         <div className="supplier-wholesale-rule-head">
           <div>
-            <h3>店铺混批规则配置</h3>
-            <p>店铺混批按店铺维度独立校验，保存后立即生效，仅影响新提交订单。</p>
+            <h3>店铺起批规则配置</h3>
+            <p>店铺起批按店铺维度独立校验，保存后立即生效，仅影响新提交订单。</p>
           </div>
           <button
             type="button"
@@ -10319,7 +10556,7 @@ function SupplierGoodsManagementPage({ goodsRows, onToggleMixedWholesale, shopWh
                   <th>来源</th>
                   <th>付款方式</th>
                   <th>状态</th>
-                  <th>参与店铺混批</th>
+                  <th>参与店铺起批</th>
                   <th>商品货号</th>
                   <th>商品品牌</th>
                   <th>商品类目</th>
@@ -10674,17 +10911,17 @@ function SupplierTradeSettingsPage({ shopWholesaleRule, onSaveShopWholesaleRule,
 
       <div className="supplier-trade-html-page-card">
         <div className="supplier-trade-html-notice">
-          <strong>新版店铺混批预配置通知！！！</strong><br />
-          当前为新版店铺混批预配置期，您可以提前配置并保存新版混批规则。<br />
-          1、预配置期间，买家下单规则仍继续沿用当前已生效的「起购量」设置，新版混批配置暂不会影响买家下单。<br />
-          2、请您于 XXXX年XX月XX日 前完成新版店铺混批预配置。若逾期未完成配置，功能正式生效后可能影响买家下单，请及时处理。<br />
-          3、新版店铺混批的正式生效时间以平台通知为准，请关注后续通知。<br />
-          4、如需了解具体配置方式，请查看《新版店铺混批操作手册》。
+          <strong>新版店铺起批预配置通知！！！</strong><br />
+          当前为新版店铺起批预配置期，您可以提前配置并保存新版起批规则。<br />
+          1、预配置期间，买家下单规则仍继续沿用当前已生效的「店铺起批」设置，新版起批配置暂不会影响买家下单。<br />
+          2、请您于 XXXX年XX月XX日 前完成新版店铺起批预配置。若逾期未完成配置，功能正式生效后可能影响买家下单，请及时处理。<br />
+          3、新版店铺起批的正式生效时间以平台通知为准，请关注后续通知。<br />
+          4、如需了解具体配置方式，请查看《新版店铺起批操作手册》。
         </div>
 
         <div className="supplier-trade-html-tabs">
-          <button type="button" className={`supplier-trade-html-tab${activeTab === "old" ? " is-active" : ""}`} onClick={() => setActiveTab("old")}>起购量（生效中）</button>
-          <button type="button" className={`supplier-trade-html-tab${activeTab === "new" ? " is-active" : ""}`} onClick={() => setActiveTab("new")}>店铺混批（未生效）</button>
+          <button type="button" className={`supplier-trade-html-tab${activeTab === "old" ? " is-active" : ""}`} onClick={() => setActiveTab("old")}>店铺起批（生效中）</button>
+          <button type="button" className={`supplier-trade-html-tab${activeTab === "new" ? " is-active" : ""}`} onClick={() => setActiveTab("new")}>店铺起批（未生效）</button>
         </div>
 
         {activeTab === "old" ? (
@@ -10692,7 +10929,7 @@ function SupplierTradeSettingsPage({ shopWholesaleRule, onSaveShopWholesaleRule,
             <div className="supplier-trade-html-status-row">
               <div>
                 <div className="supplier-trade-html-status-title">当前买家下单规则 <span className="supplier-trade-html-pill is-green">正在生效</span></div>
-                <div className="supplier-trade-html-status-desc">新版店铺混批未生效前，您在此处修改规则，会继续影响当前买家下单判断</div>
+                <div className="supplier-trade-html-status-desc">新版店铺起批未生效前，您在此处修改规则，会继续影响当前买家下单判断</div>
               </div>
             </div>
 
@@ -10771,14 +11008,14 @@ function SupplierTradeSettingsPage({ shopWholesaleRule, onSaveShopWholesaleRule,
           <div className="supplier-trade-html-panel is-active">
             <div className="supplier-trade-html-status-row">
               <div>
-                <div className="supplier-trade-html-status-title">新版店铺混批设置 <span className="supplier-trade-html-pill is-orange">预配置，暂不生效</span></div>
-                <div className="supplier-trade-html-status-desc">您可在此处提前预配置新版店铺混批的相关规则，新版店铺混批未正式生效前，修改此处配置不会影响买家下单。</div>
+                <div className="supplier-trade-html-status-title">新版店铺起批设置 <span className="supplier-trade-html-pill is-orange">预配置，暂不生效</span></div>
+                <div className="supplier-trade-html-status-desc">您可在此处提前预配置新版店铺起批的相关规则，新版店铺起批未正式生效前，修改此处配置不会影响买家下单。</div>
               </div>
             </div>
 
             {oldChanged && !newSaved ? (
               <div className="supplier-trade-html-warning-box">
-                <div>旧版起购设置已发生变化，新版混批配置可能不是最新的。建议同步后再预保存新版配置。</div>
+                <div>旧版店铺起批设置已发生变化，新版混批配置可能不是最新的。建议同步后再预保存新版配置。</div>
                 <button type="button" className="supplier-trade-html-btn is-ghost" onClick={handleSyncFromOld}>同步旧版配置到新版配置</button>
               </div>
             ) : null}
@@ -10812,7 +11049,7 @@ function SupplierTradeSettingsPage({ shopWholesaleRule, onSaveShopWholesaleRule,
               </div>
 
               <div className="supplier-trade-html-form-row">
-                <div className="supplier-trade-html-label">店铺起批门槛：</div>
+                <div className="supplier-trade-html-label">店铺混批门槛：</div>
                 <span>订单商品数量满</span>
                 {renderCounter(
                   newRule.minQuantity,
@@ -13424,6 +13661,7 @@ function ShopInvoicePage({
   const [modifyInvoiceErrors, setModifyInvoiceErrors] = useState(initialShopInvoiceModifyErrors);
   const [shopInvoiceColumnPrefs, setShopInvoiceColumnPrefs] = useState(initialShopInvoiceColumnPrefs);
   const [shopInvoiceColumnOrder, setShopInvoiceColumnOrder] = useState(initialShopInvoiceColumnOrder);
+  const [invoiceCountdownNow, setInvoiceCountdownNow] = useState(() => Date.now());
   const [draggingColumnKey, setDraggingColumnKey] = useState("");
   const [afterSaleHeaderTooltip, setAfterSaleHeaderTooltip] = useState(null);
   const [orderMarkerTooltip, setOrderMarkerTooltip] = useState(null);
@@ -13792,6 +14030,13 @@ function ShopInvoicePage({
     if (activeShopTab === "发票信息" || !activeInvoiceDetailNo) return;
     setActiveInvoiceDetailNo("");
   }, [activeInvoiceDetailNo, activeShopTab]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setInvoiceCountdownNow(Date.now());
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     setIsRejectedCardVisible(true);
@@ -14291,6 +14536,7 @@ function ShopInvoicePage({
           shouldInvoiceAmount: confirmInvoiceForm.invoiceAmountWithTax.trim(),
           invoicedAt: submittedDate,
           invoiceNo: confirmInvoiceForm.invoiceNo.trim(),
+          invoiceUploadedAt: submittedDate,
           invoiceMethod: "手动",
           invoiceStatus: "已开票",
           invoiceStatusTone: "success",
@@ -14372,6 +14618,7 @@ function ShopInvoicePage({
           shouldInvoiceAmount: modifyInvoiceForm.invoiceAmountWithTax.trim(),
           invoicedAt: submittedDate,
           invoiceNo: modifyInvoiceForm.invoiceNo.trim(),
+          invoiceUploadedAt: submittedDate,
           invoiceMethod: "手动",
           invoiceStatus: "已开票",
           invoiceStatusTone: "success",
@@ -14423,6 +14670,10 @@ function ShopInvoicePage({
   };
 
   const renderInvoiceTableCell = (item, column) => {
+    if (column.key === "remainingTimeoutDays") {
+      return getShopInvoiceRemainingTimeoutText(item, invoiceCountdownNow);
+    }
+
     if (column.key === "select") {
       if (!showSelectableCheckboxes) return null;
       return (
@@ -16424,7 +16675,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   const allWholesaleStoresValid = wholesaleStoreGroups.every((group) => group.canSubmit);
   const wholesaleOrderHint = allWholesaleStoresValid
     ? "已按提交订单时的最新商品与店铺规则重新校验。"
-    : "存在未满足起批或混批条件的商品，暂不可提交订单。";
+    : "存在未满足起批条件的商品，暂不可提交订单。";
   const invoiceTypeOptions = ["电子普通发票", "电子增值税专用发票"];
   const titleTypeOptions = ["个人", "企业"];
   const isMineTab = activeTab === "mine";
@@ -19348,7 +19599,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                         <span>促销</span>
                         <div className="miniapp-flash-promo-tags">
                           <b>限时购</b>
-                          <b>混批</b>
+                          <b>起批</b>
                         </div>
                         <i>〉</i>
                       </div>
@@ -19455,9 +19706,9 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                   </section>
 
                   <section className="miniapp-wholesale-rule-panel">
-                    <div className="miniapp-wholesale-rule-badge">支持店铺混批</div>
+                    <div className="miniapp-wholesale-rule-badge">支持店铺起批</div>
                     <h4>{formatWholesaleRuleText(shopWholesaleRule)}</h4>
-                    <p>{activeWholesaleProduct?.participateMixedWholesale ? "当前商品已开启“参与店铺混批”，可通过商品自身起批达标或店铺混批达标获得下单资格。" : "当前商品未参与店铺混批，仅可按商品自身起批规则下单。"}</p>
+                    <p>{activeWholesaleProduct?.participateMixedWholesale ? "当前商品已开启“参与店铺起批”，可通过商品自身起批达标或店铺起批达标获得下单资格。" : "当前商品未参与店铺起批，仅可按商品自身起批规则下单。"}</p>
                     <div className={`miniapp-wholesale-rule-inline ${activeWholesaleStoreGroup?.isQualified ? "is-qualified" : ""}`}>{activeWholesaleStoreGroup?.progressText}</div>
                   </section>
 
@@ -19498,7 +19749,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
 
                 <main className="miniapp-wholesale-content">
                   <section className={`miniapp-wholesale-confirm-banner ${allWholesaleStoresValid ? "is-qualified" : "is-warning"}`}>
-                    <strong>{allWholesaleStoresValid ? "店铺混批校验通过" : "仍有商品未通过校验"}</strong>
+                    <strong>{allWholesaleStoresValid ? "店铺起批校验通过" : "仍有商品未通过校验"}</strong>
                     <p>{wholesaleOrderHint}</p>
                   </section>
 
@@ -19509,7 +19760,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                           <h4>{group.store}</h4>
                           <span>{formatWholesaleRuleText(shopWholesaleRule)}</span>
                         </div>
-                        <strong className={group.isQualified ? "is-qualified" : ""}>{group.isQualified ? "已满足店铺混批条件" : group.progressText}</strong>
+                        <strong className={group.isQualified ? "is-qualified" : ""}>{group.isQualified ? "已满足店铺起批条件" : group.progressText}</strong>
                       </div>
                       <div className="miniapp-wholesale-store-items">
                         {group.items.map((item) => (
@@ -19527,7 +19778,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                         ))}
                       </div>
                       <div className="miniapp-wholesale-store-summary">
-                        <span>{`参与混批 ${group.mixedWholesaleQuantity} 件 / ¥${group.mixedWholesaleAmount.toFixed(0)}`}</span>
+                        <span>{`参与起批 ${group.mixedWholesaleQuantity} 件 / ¥${group.mixedWholesaleAmount.toFixed(0)}`}</span>
                         <strong>{`合计 ¥${group.items.reduce((sum, item) => sum + item.lineAmount, 0).toFixed(0)}`}</strong>
                       </div>
                     </section>
@@ -19563,7 +19814,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                   {activeTab === "cart" ? (
                     <div className="miniapp-wholesale-cart-page">
                       <section className="miniapp-wholesale-cart-banner">
-                        <strong>店铺混批购物车</strong>
+                        <strong>店铺起批购物车</strong>
                         <p>购物车与确认订单页会按提交时的最新店铺规则重新校验。</p>
                       </section>
                       {wholesaleStoreGroups.map((group) => (
@@ -19573,7 +19824,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                               <h4>{group.store}</h4>
                               <span>{formatWholesaleRuleText(shopWholesaleRule)}</span>
                             </div>
-                            <strong className={group.isQualified ? "is-qualified" : ""}>{group.isQualified ? "已满足店铺混批条件" : group.progressText}</strong>
+                            <strong className={group.isQualified ? "is-qualified" : ""}>{group.isQualified ? "已满足店铺起批条件" : group.progressText}</strong>
                           </div>
                           <div className="miniapp-wholesale-store-items">
                             {group.items.map((item) => (
@@ -19599,7 +19850,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                   ) : activeTab === "store" ? (
                     <div className="miniapp-wholesale-store-list-page">
                       <section className="miniapp-wholesale-cart-banner">
-                        <strong>店铺混批看板</strong>
+                        <strong>店铺起批看板</strong>
                         <p>当前按店铺独立累计件数和金额，不同店铺之间不合并计算。</p>
                       </section>
                       {wholesaleStoreGroups.map((group) => (
@@ -19612,7 +19863,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                             <strong className={group.isQualified ? "is-qualified" : ""}>{group.progressText}</strong>
                           </div>
                           <div className="miniapp-wholesale-store-summary">
-                            <span>{`参与混批 ${group.mixedWholesaleQuantity} 件 / ¥${group.mixedWholesaleAmount.toFixed(0)}`}</span>
+                            <span>{`参与起批 ${group.mixedWholesaleQuantity} 件 / ¥${group.mixedWholesaleAmount.toFixed(0)}`}</span>
                             <button type="button" className="miniapp-wholesale-inline-link" onClick={() => { setSelectedWholesaleProductId(group.items[0]?.id || ""); setMiniappView("wholesale-detail"); }}>查看商品详情</button>
                           </div>
                         </section>
@@ -19625,7 +19876,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                           <button className="miniapp-wholesale-product-tile" key={item.id} type="button" onClick={() => { setSelectedWholesaleProductId(item.id); setMiniappView("wholesale-detail"); }}>
                             <div className={`miniapp-wholesale-tile-image is-${item.image}`} />
                             <strong>{item.title}</strong>
-                            <span>{item.participateMixedWholesale ? `支持混批 · ${formatWholesaleRuleText(shopWholesaleRule)}` : `自身 ${item.minOrderQuantity} 件起批`}</span>
+                            <span>{item.participateMixedWholesale ? `支持起批 · ${formatWholesaleRuleText(shopWholesaleRule)}` : `自身 ${item.minOrderQuantity} 件起批`}</span>
                             <em>{`¥${Number(item.retailPrice || item.price || 0).toFixed(0)}`}</em>
                           </button>
                         ))}
@@ -19666,7 +19917,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                       </section>
 
                       <section className="miniapp-section">
-                        <h3>店铺混批专区</h3>
+                        <h3>店铺起批专区</h3>
                         <div className="miniapp-wholesale-entry-card">
                           <div>
                             <strong>{activeWholesaleProduct?.store}</strong>
@@ -20592,7 +20843,7 @@ export default function App() {
     setGoodsRows((current) => current.map((item) => (
       item.id === productId ? { ...item, participateMixedWholesale: !item.participateMixedWholesale } : item
     )));
-    setToastMessage("商品混批状态已更新，仅影响新提交订单。");
+    setToastMessage("商品起批状态已更新，仅影响新提交订单。");
   };
 
   const handleSwitchShopPage = (pageName) => {
