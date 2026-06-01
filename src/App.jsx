@@ -86,6 +86,7 @@ const initialMiniappInvoicedFilters = {
   downloadStatus: "全部",
   separateInvoiceRequired: "全部"
 };
+const shopInvoiceRollingSampleTimeoutAt = formatShopInvoiceDateTime(Date.now() + 15 * 24 * 60 * 60 * 1000);
 
 const normalizeShopInvoiceMode = (value) => {
   if (value === "单独开票" || value === "是") return "是";
@@ -698,52 +699,63 @@ async function createZipBlobFromEntries(entries) {
   return new Blob([...localChunks, ...centralChunks, new Uint8Array(endHeader)], { type: "application/zip" });
 }
 
+function formatShopInvoiceDateTime(value) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
+function getShopInvoiceTimeoutTime(row, overdueDays = 5) {
+  if (!row) return Number.NaN;
+
+  const explicitTimeoutAt = String(row.invoiceTimeoutAt || row.approachingTimeoutAt || "").trim();
+  if (explicitTimeoutAt && explicitTimeoutAt !== "-") {
+    return Date.parse(explicitTimeoutAt.replace(/-/g, "/"));
+  }
+
+  const normalizedValue = String(row.appliedAt || "").trim();
+  if (!normalizedValue || normalizedValue === "-") return Number.NaN;
+
+  const parsedTime = Date.parse(normalizedValue.replace(/-/g, "/"));
+  if (Number.isNaN(parsedTime)) return Number.NaN;
+
+  return parsedTime + overdueDays * 24 * 60 * 60 * 1000;
+}
+
 function isShopInvoiceApplicationOverdue(row, overdueDays = 5) {
   if (!row || row.orderStatus !== "已完成" || row.invoiceStatus !== "待开票") return false;
 
-  const normalizedValue = String(row.appliedAt || "").trim();
-  if (!normalizedValue || normalizedValue === "-") return false;
+  const timeoutTime = getShopInvoiceTimeoutTime(row, overdueDays);
+  if (Number.isNaN(timeoutTime)) return false;
 
-  const parsedTime = Date.parse(normalizedValue.replace(/-/g, "/"));
-  if (Number.isNaN(parsedTime)) return false;
-
-  return Date.now() - parsedTime >= overdueDays * 24 * 60 * 60 * 1000;
+  return Date.now() >= timeoutTime;
 }
 
 function isShopInvoiceApplicationApproachingOverdue(row, overdueDays = 5, warningDays = 1) {
   if (!row || row.orderStatus !== "已完成" || row.invoiceStatus !== "待开票") return false;
 
-  const normalizedValue = String(row.appliedAt || "").trim();
-  if (!normalizedValue || normalizedValue === "-") return false;
+  const timeoutTime = getShopInvoiceTimeoutTime(row, overdueDays);
+  if (Number.isNaN(timeoutTime)) return false;
 
-  const parsedTime = Date.parse(normalizedValue.replace(/-/g, "/"));
-  if (Number.isNaN(parsedTime)) return false;
-
-  const elapsed = Date.now() - parsedTime;
-  const warningThreshold = (overdueDays - warningDays) * 24 * 60 * 60 * 1000;
-  const overdueThreshold = overdueDays * 24 * 60 * 60 * 1000;
-
-  return elapsed >= warningThreshold && elapsed < overdueThreshold;
+  const diff = timeoutTime - Date.now();
+  const warningWindow = warningDays * 24 * 60 * 60 * 1000;
+  return diff > 0 && diff <= warningWindow;
 }
 
 function getShopInvoiceApproachingTimeoutAt(row, overdueDays = 5) {
   if (!row) return "";
-  if (row.approachingTimeoutAt) return row.approachingTimeoutAt;
 
-  const normalizedValue = String(row.appliedAt || "").trim();
-  if (!normalizedValue || normalizedValue === "-") return "";
+  const timeoutTime = getShopInvoiceTimeoutTime(row, overdueDays);
+  if (Number.isNaN(timeoutTime)) return "";
 
-  const parsedTime = Date.parse(normalizedValue.replace(/-/g, "/"));
-  if (Number.isNaN(parsedTime)) return "";
-
-  const timeoutDate = new Date(parsedTime + overdueDays * 24 * 60 * 60 * 1000);
-  const year = timeoutDate.getFullYear();
-  const month = String(timeoutDate.getMonth() + 1).padStart(2, "0");
-  const day = String(timeoutDate.getDate()).padStart(2, "0");
-  const hours = String(timeoutDate.getHours()).padStart(2, "0");
-  const minutes = String(timeoutDate.getMinutes()).padStart(2, "0");
-  const seconds = String(timeoutDate.getSeconds()).padStart(2, "0");
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  return formatShopInvoiceDateTime(timeoutTime);
 }
 
 function formatShopInvoiceCountdownDuration(durationMs) {
@@ -1865,9 +1877,9 @@ const buyerPcMallCartSeedGroups = [
 const buyerPcMallInvoiceTitleRows = [
   {
     id: "title-1",
-    title: "zd增值税专用发票抬头",
-    invoiceType: "电子增值税专用发票",
-    invoiceTypeTone: "blue",
+    title: "zd电子普通发票抬头",
+    invoiceType: "电子普通发票",
+    invoiceTypeTone: "purple",
     titleType: "企业",
     taxpayerId: "1331132342134",
     registeredAddress: "湖南省长沙市芙蓉区朝阳街道湖南大剧院",
@@ -1900,6 +1912,7 @@ const buyerPcMallInvoiceTitleRows = [
     id: "title-3",
     title: "企业01",
     invoiceType: "电子普通发票",
+    invoiceTypes: ["电子普通发票", "电子增值税专用发票"],
     invoiceTypeTone: "purple",
     titleType: "企业",
     taxpayerId: "33126",
@@ -2066,6 +2079,7 @@ const shopInvoiceManagementRows = [
     paidAt: "2026-05-20 10:15:25",
     appliedAt: "2026-05-20 10:25:25",
     modifiedAt: "2026-05-20 10:25:25",
+    invoiceTimeoutAt: shopInvoiceRollingSampleTimeoutAt,
     applicationStatus: "待开票",
     invoicedAt: "-",
     invoiceNo: "-",
@@ -2096,6 +2110,7 @@ const shopInvoiceManagementRows = [
     paidAt: "2026-05-21 11:16:26",
     appliedAt: "2026-05-21 11:26:26",
     modifiedAt: "2026-05-21 11:26:26",
+    invoiceTimeoutAt: shopInvoiceRollingSampleTimeoutAt,
     applicationStatus: "待开票",
     invoicedAt: "-",
     invoiceNo: "-",
@@ -3382,6 +3397,19 @@ function getBuyerPcMallSupportedInvoiceTypeText(shopName, storeName) {
   return supportedTypes.length > 0 ? `可开：${supportedTypes.join("、")}` : "可开：-";
 }
 
+function getInvoiceTypeMismatchMessage(supportedInvoiceTypes) {
+  const normalizedTypes = Array.isArray(supportedInvoiceTypes)
+    ? supportedInvoiceTypes.filter(Boolean)
+    : String(supportedInvoiceTypes || "")
+      .split("、")
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+  return normalizedTypes.length > 0
+    ? `该店铺仅支持${normalizedTypes.join("、")}`
+    : "该店铺暂未配置可开票类型";
+}
+
 function getMiniappSupportedInvoiceTypeText(row) {
   const supportedInvoiceType = String(row?.supportedInvoiceType || "").trim();
   if (supportedInvoiceType) return supportedInvoiceType;
@@ -4330,8 +4358,13 @@ function normalizeBuyerPcMallSupportedInvoiceTypes(titleType = "企业", invoice
       .split("、")
       .map((item) => item.trim())
       .filter(Boolean);
-  const includesSpecial = titleType === "企业" && (source.includes(buyerPcMallSpecialInvoiceType) || String(invoiceTypes || "").includes("专用发票"));
-  return includesSpecial ? [buyerPcMallNormalInvoiceType, buyerPcMallSpecialInvoiceType] : [buyerPcMallNormalInvoiceType];
+
+  if (titleType !== "企业") {
+    return [buyerPcMallNormalInvoiceType];
+  }
+
+  const normalized = buyerPcMallInvoiceTypeOptions.filter((option) => source.includes(option));
+  return normalized.length > 0 ? normalized : [buyerPcMallNormalInvoiceType];
 }
 
 function getBuyerPcMallSupportedInvoiceTypesFromRow(row) {
@@ -6143,6 +6176,10 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
     const receiverPhone = form.receiverPhone.trim();
     const receiverEmail = form.receiverEmail.trim();
     const requiresTaxpayerId = form.titleType === "企业";
+    if (requiresTaxpayerId && nextInvoiceTypes.length === 0) {
+      onNotice("企业抬头至少勾选一种发票类型");
+      return;
+    }
     const requiresSpecialInvoiceFields = requiresTaxpayerId && nextInvoiceTypes.includes(buyerPcMallSpecialInvoiceType);
     const nextErrors = {
       titleName: !titleName,
@@ -6215,7 +6252,7 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
                 .filter((option) => option !== buyerPcMallSpecialInvoiceType || isEnterpriseTitle)
                 .map((option) => {
                   const checked = supportedInvoiceTypes.includes(option);
-                  const disabled = option === buyerPcMallNormalInvoiceType;
+                  const disabled = !isEnterpriseTitle;
                   return (
                     <label className={`pc-mall-title-modal-checkbox ${checked ? "is-checked" : ""} ${disabled ? "is-disabled" : ""}`} key={option}>
                       <input
@@ -6226,6 +6263,10 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
                           const nextTypes = event.target.checked
                             ? [...supportedInvoiceTypes, option]
                             : supportedInvoiceTypes.filter((item) => item !== option);
+                          if (isEnterpriseTitle && nextTypes.length === 0) {
+                            onNotice("企业抬头至少勾选一种发票类型");
+                            return;
+                          }
                           handleChange("invoiceTypes", nextTypes);
                         }}
                       />
@@ -6235,6 +6276,14 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
                 })}
             </div>
           </div>
+          {isEnterpriseTitle ? (
+            <div className="pc-mall-title-modal-tip-row">
+              <span />
+              <p className="pc-mall-title-modal-tip">
+                如选择多种发票类型，则提交开票申请时，系统将根据店铺支持的类型自动匹配；若店铺仅支持电子普通发票，将按电子普通发票信息提交开票申请。
+              </p>
+            </div>
+          ) : null}
 
           <label className="pc-mall-title-modal-row">
             <span>闪购门店</span>
@@ -6382,7 +6431,8 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
   invoiceTitleRows = [],
   onOrderItemsChange,
   enableBatchTitleReplace = false,
-  showOrderFilterTabs = false
+  showOrderFilterTabs = false,
+  onAdjustInvoiceTitle
 }) {
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState(initialBatchInvoiceFieldErrors);
@@ -6393,8 +6443,10 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
   const [batchReplaceTitleId, setBatchReplaceTitleId] = useState("");
   const [batchReplaceInvoiceContent, setBatchReplaceInvoiceContent] = useState("");
   const [batchReplaceSingleInvoice, setBatchReplaceSingleInvoice] = useState("");
+  const [invoiceTitleTooltip, setInvoiceTitleTooltip] = useState(null);
   const modalBodyRef = useRef(null);
   const pendingScrollTopRef = useRef(null);
+  const invoiceTitleTooltipRef = useRef(null);
   const batchTableClassName = `pc-mall-table pc-mall-batch-table${allowToggleOrder ? "" : " is-without-toggle"}${hideInvoiceAndReceiverSections ? " has-row-invoice-fields" : ""}${enableBatchTitleReplace ? " has-batch-content-column" : ""}`;
 
   useEffect(() => {
@@ -6419,6 +6471,28 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
     pendingScrollTopRef.current = null;
   }, [form.invoiceType]);
 
+  useLayoutEffect(() => {
+    if (!invoiceTitleTooltip || !invoiceTitleTooltipRef.current) return;
+
+    const tooltipWidth = invoiceTitleTooltipRef.current.offsetWidth || 0;
+    if (!tooltipWidth) return;
+
+    const viewportPadding = 16;
+    const halfWidth = tooltipWidth / 2;
+    const clampedLeft = Math.min(
+      window.innerWidth - viewportPadding - halfWidth,
+      Math.max(viewportPadding + halfWidth, invoiceTitleTooltip.preferredLeft)
+    );
+
+    if (Math.abs(clampedLeft - invoiceTitleTooltip.left) > 0.5) {
+      setInvoiceTitleTooltip((current) => (
+        current
+          ? { ...current, left: clampedLeft }
+          : current
+      ));
+    }
+  }, [invoiceTitleTooltip]);
+
   const hideTitleType = form.invoiceType === "电子增值税专用发票";
   const isPersonalBatchInvoiceTitle = form.titleType === "个人";
   const isEnterpriseBatchInvoiceTitle = form.titleType === "企业";
@@ -6434,7 +6508,7 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
       const supportedInvoiceTypes = getBuyerPcMallSupportedInvoiceTypes(item.shop, item.store);
       const selectedInvoiceType = item.invoiceType || "";
       if (supportedInvoiceTypes.length > 0 && selectedInvoiceType && !supportedInvoiceTypes.includes(selectedInvoiceType)) {
-        result[item.orderNo] = "该店铺仅支持电子增值税专用发票";
+        result[item.orderNo] = getInvoiceTypeMismatchMessage(supportedInvoiceTypes);
         return result;
       }
 
@@ -6512,6 +6586,25 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
         [field]: value
       };
     }));
+  };
+
+  const handleShowInvoiceTitleTooltip = (event, titleRow) => {
+    const content = getBuyerPcMallInvoiceTitleTooltip(titleRow);
+    if (!content || content === "发票抬头信息暂无") return;
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    const preferredLeft = rect.left + (rect.width / 2);
+
+    setInvoiceTitleTooltip({
+      content,
+      preferredLeft,
+      left: preferredLeft,
+      top: rect.bottom + 8
+    });
+  };
+
+  const handleHideInvoiceTitleTooltip = () => {
+    setInvoiceTitleTooltip(null);
   };
 
   const handleChange = (field, value) => {
@@ -7052,15 +7145,21 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                                       </div>
                                     )}
                                     <span className="pc-mall-inline-tooltip-wrap pc-mall-batch-title-view-wrap">
-                                      <button className="pc-mall-batch-title-view-btn" type="button">查看</button>
-                                      <span className="pc-mall-inline-tooltip">{getBuyerPcMallInvoiceTitleTooltip(invoiceTitleRows.find((titleItem) => titleItem.id === item.invoiceTitleId) || null)}</span>
+                                      <button
+                                        className="pc-mall-batch-title-view-btn"
+                                        type="button"
+                                        onMouseEnter={(event) => handleShowInvoiceTitleTooltip(event, invoiceTitleRows.find((titleItem) => titleItem.id === item.invoiceTitleId) || null)}
+                                        onMouseLeave={handleHideInvoiceTitleTooltip}
+                                      >
+                                        查看
+                                      </button>
                                     </span>
                                   </div>
                                   {showOrderFilterTabs && submitAttempted && orderValidationByOrderNo[item.orderNo] ? (
                                     <div className="pc-mall-batch-order-error">
                                       <span className="pc-mall-batch-order-error-text">{orderValidationByOrderNo[item.orderNo]}</span>
-                                      {orderValidationByOrderNo[item.orderNo] === "该店铺仅支持电子增值税专用发票" ? (
-                                        <button className="pc-mall-batch-title-adjust-btn" type="button" onClick={() => onNotice("请调整发票抬头后重新提交")}>去调整</button>
+                                      {orderValidationByOrderNo[item.orderNo].startsWith("该店铺仅支持") ? (
+                                        <button className="pc-mall-batch-title-adjust-btn" type="button" onClick={() => onAdjustInvoiceTitle?.(item)}>去调整</button>
                                       ) : null}
                                     </div>
                                   ) : null}
@@ -7146,6 +7245,19 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
           <button className="pc-mall-btn pc-mall-batch-footer-btn" type="button" onClick={onClose}>取消</button>
           <button className="pc-mall-batch-submit-btn" type="button" onClick={handleSubmit}>{submitButtonText}</button>
         </div>
+        {invoiceTitleTooltip ? (
+          <div
+            ref={invoiceTitleTooltipRef}
+            className="shop-invoice-fixed-tooltip pc-mall-title-fixed-tooltip"
+            style={{
+              left: `${invoiceTitleTooltip.left}px`,
+              top: `${invoiceTitleTooltip.top}px`,
+              transform: "translate(-50%, 0)"
+            }}
+          >
+            {invoiceTitleTooltip.content}
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -8310,6 +8422,22 @@ function BuyerPcMallPage({ onPortalActionClick }) {
   const handleOpenInvoiceTitleManagement = () => {
     setInvoicePageView("title-management");
   };
+
+  const handleAdjustInvoiceTitleForOrder = (orderItem) => {
+    if (!orderItem) return;
+
+    const matchedTitle = orderItem.invoiceTitleId
+      ? invoiceTitleRows.find((item) => item.id === orderItem.invoiceTitleId)
+      : invoiceTitleRows.find((item) => item.title === orderItem.invoiceTitle);
+
+    if (!matchedTitle) {
+      setBatchInvoiceNotice("未找到对应的发票抬头，请先在发票抬头管理中补充后再提交");
+      return;
+    }
+
+    setActiveInvoiceTitleForm(createBuyerPcMallInvoiceTitleFormFromRow(matchedTitle));
+    setIsInvoiceTitleModalOpen(true);
+  };
   const handleOpenCartPage = () => {
     setInvoicePageView("cart");
     setActiveBuyerInvoiceDetail(null);
@@ -9218,6 +9346,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
       showSeparateInvoiceColumn
       hideInvoiceAndReceiverSections
       showOrderFilterTabs
+      onAdjustInvoiceTitle={handleAdjustInvoiceTitleForOrder}
     />
   ) : null;
   const modifyInvoiceModal = modifyInvoiceOrders.length > 0 ? (
@@ -9245,6 +9374,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
       hideInvoiceAndReceiverSections
       allowRemoveOrder={false}
       enableBatchTitleReplace={modifyInvoiceOrders.length > 1}
+      onAdjustInvoiceTitle={handleAdjustInvoiceTitleForOrder}
     />
   ) : null;
   const singleInvoiceModal = singleInvoiceOrder ? (
@@ -9277,6 +9407,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
       showSeparateInvoiceColumn
       editableSeparateInvoiceColumn
       hideInvoiceAndReceiverSections
+      onAdjustInvoiceTitle={handleAdjustInvoiceTitleForOrder}
     />
   ) : null;
   const exportCenterModal = isExportCenterModalOpen ? <PcMallExportCenterModal onClose={() => setIsExportCenterModalOpen(false)} /> : null;
@@ -9554,42 +9685,50 @@ function BuyerPcMallPage({ onPortalActionClick }) {
               <div className="pc-mall-invoice-title-list">
                 {filteredInvoiceTitleRows.map((item) => (
                   <article className="pc-mall-invoice-title-card" key={item.id}>
-                    <div className="pc-mall-invoice-title-card-main">
-                      <div className="pc-mall-invoice-title-name">{item.title}</div>
-                      <div className="pc-mall-invoice-title-tags">
-                        {item.isDefault ? <span className="pc-mall-invoice-title-default-tag">默认</span> : null}
-                        {getBuyerPcMallSupportedInvoiceTypesFromRow(item).map((invoiceType) => (
-                          <span className={`pc-mall-invoice-tag is-${getBuyerPcMallInvoiceTypeTone(invoiceType)}`} key={`${item.id}-${invoiceType}`}>{invoiceType}</span>
-                        ))}
-                        <span className="pc-mall-invoice-title-type-tag">{item.titleType}</span>
-                      </div>
-                      {getBuyerPcMallInvoiceTitleStoreBindings(item).length > 0 ? (
-                        <div className="pc-mall-invoice-title-store-row">
-                          <span className="pc-mall-invoice-title-store-label">闪购门店：</span>
-                          <span className="pc-mall-invoice-title-store-summary" title={getBuyerPcMallInvoiceTitlePrimaryStore(item)}>
-                            {getBuyerPcMallInvoiceTitlePrimaryStore(item)}
-                          </span>
-                          <button className="pc-mall-invoice-title-store-link" type="button" onClick={() => handleOpenInvoiceTitleStores(item)}>全部</button>
-                        </div>
-                      ) : null}
-                      <div className="pc-mall-invoice-title-info-grid">
-                        {item.taxpayerId ? <div><span>纳税人识别号：</span><strong>{item.taxpayerId}</strong></div> : null}
-                        {item.registeredAddress ? <div><span>注册地址：</span><strong>{item.registeredAddress}</strong></div> : null}
-                        {item.phone ? <div><span>注册电话：</span><strong>{item.phone}</strong></div> : null}
-                        {item.bank ? <div><span>开户银行：</span><strong>{item.bank}</strong></div> : null}
-                        {item.bankAccount ? <div><span>开户银行账号：</span><strong>{item.bankAccount}</strong></div> : null}
-                        {item.receiverPhone ? <div><span>收票人手机：</span><strong>{item.receiverPhone}</strong></div> : null}
-                        {item.receiverEmail ? <div><span>收票人邮箱：</span><strong>{item.receiverEmail}</strong></div> : null}
-                      </div>
-                    </div>
-                    <div className="pc-mall-invoice-title-actions">
-                      <button className={`pc-mall-invoice-title-default-btn ${item.isDefault ? "is-active" : ""}`} type="button">
-                        <span className="pc-mall-invoice-title-default-dot" />
-                        设为默认
-                      </button>
-                      <button className="pc-mall-invoice-title-icon-btn" type="button" onClick={() => handleOpenEditInvoiceTitleModal(item)}>编辑</button>
-                      <button className="pc-mall-invoice-title-icon-btn" type="button" onClick={() => handleDeleteInvoiceTitle(item.id)}>删除</button>
-                    </div>
+                    {(() => {
+                      const supportedInvoiceTypes = getBuyerPcMallSupportedInvoiceTypesFromRow(item);
+                      const supportsSpecialInvoice = supportedInvoiceTypes.includes(buyerPcMallSpecialInvoiceType);
+                      return (
+                        <>
+                          <div className="pc-mall-invoice-title-card-main">
+                            <div className="pc-mall-invoice-title-name">{item.title}</div>
+                            <div className="pc-mall-invoice-title-tags">
+                              {item.isDefault ? <span className="pc-mall-invoice-title-default-tag">默认</span> : null}
+                              {supportedInvoiceTypes.map((invoiceType) => (
+                                <span className={`pc-mall-invoice-tag is-${getBuyerPcMallInvoiceTypeTone(invoiceType)}`} key={`${item.id}-${invoiceType}`}>{invoiceType}</span>
+                              ))}
+                              <span className="pc-mall-invoice-title-type-tag">{item.titleType}</span>
+                            </div>
+                            {getBuyerPcMallInvoiceTitleStoreBindings(item).length > 0 ? (
+                              <div className="pc-mall-invoice-title-store-row">
+                                <span className="pc-mall-invoice-title-store-label">闪购门店：</span>
+                                <span className="pc-mall-invoice-title-store-summary" title={getBuyerPcMallInvoiceTitlePrimaryStore(item)}>
+                                  {getBuyerPcMallInvoiceTitlePrimaryStore(item)}
+                                </span>
+                                <button className="pc-mall-invoice-title-store-link" type="button" onClick={() => handleOpenInvoiceTitleStores(item)}>全部</button>
+                              </div>
+                            ) : null}
+                            <div className="pc-mall-invoice-title-info-grid">
+                              {item.taxpayerId ? <div><span>纳税人识别号：</span><strong>{item.taxpayerId}</strong></div> : null}
+                              {supportsSpecialInvoice && item.registeredAddress ? <div><span>注册地址：</span><strong>{item.registeredAddress}</strong></div> : null}
+                              {supportsSpecialInvoice && item.phone ? <div><span>注册电话：</span><strong>{item.phone}</strong></div> : null}
+                              {supportsSpecialInvoice && item.bank ? <div><span>开户银行：</span><strong>{item.bank}</strong></div> : null}
+                              {supportsSpecialInvoice && item.bankAccount ? <div><span>开户银行账号：</span><strong>{item.bankAccount}</strong></div> : null}
+                              {item.receiverPhone ? <div><span>收票人手机：</span><strong>{item.receiverPhone}</strong></div> : null}
+                              {item.receiverEmail ? <div><span>收票人邮箱：</span><strong>{item.receiverEmail}</strong></div> : null}
+                            </div>
+                          </div>
+                          <div className="pc-mall-invoice-title-actions">
+                            <button className={`pc-mall-invoice-title-default-btn ${item.isDefault ? "is-active" : ""}`} type="button">
+                              <span className="pc-mall-invoice-title-default-dot" />
+                              设为默认
+                            </button>
+                            <button className="pc-mall-invoice-title-icon-btn" type="button" onClick={() => handleOpenEditInvoiceTitleModal(item)}>编辑</button>
+                            <button className="pc-mall-invoice-title-icon-btn" type="button" onClick={() => handleDeleteInvoiceTitle(item.id)}>删除</button>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </article>
                 ))}
                 {filteredInvoiceTitleRows.length === 0 ? <div className="pc-mall-invoice-title-empty">暂无符合条件的发票抬头</div> : null}
@@ -17729,16 +17868,16 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       }
 
       if (row.orderNo === "20260212022895774") {
-        result[row.id] = "该店铺仅支持电子增值税专用发票";
+        result[row.id] = getInvoiceTypeMismatchMessage(supportedInvoiceType);
         return result;
       }
 
       if (row.orderNo === "20260212022895773") {
-        result[row.id] = "该店铺仅支持电子增值税专用发票";
+        result[row.id] = getInvoiceTypeMismatchMessage(supportedInvoiceType);
         return result;
       }
 
-      result[row.id] = "该店铺仅支持电子增值税专用发票";
+      result[row.id] = getInvoiceTypeMismatchMessage(supportedInvoiceType);
       return result;
     }, {})
   ), [miniappBatchInvoiceRows, miniappBatchTitleSelections, miniappInvoiceTitleMetaByTitle]);
