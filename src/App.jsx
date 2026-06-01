@@ -3096,6 +3096,9 @@ const buyerPcMallBatchInvoiceForm = {
   receiverEmail: "",
   remark: ""
 };
+const buyerPcMallNormalInvoiceType = "电子普通发票";
+const buyerPcMallSpecialInvoiceType = "电子增值税专用发票";
+const buyerPcMallInvoiceTypeOptions = [buyerPcMallNormalInvoiceType, buyerPcMallSpecialInvoiceType];
 const buyerPcMallDefaultReceiverPhone = "13800138000";
 const buyerPcMallDefaultReceiverEmail = "nfsq369@shandianbangbang.com";
 const initialBatchInvoiceFieldErrors = {
@@ -3122,7 +3125,8 @@ const buyerPcMallDetailActionLabels = {
 };
 const initialBuyerPcMallInvoiceTitleForm = {
   id: "",
-  invoiceType: "电子普通发票",
+  invoiceType: buyerPcMallNormalInvoiceType,
+  invoiceTypes: [buyerPcMallNormalInvoiceType],
   titleType: "企业",
   storeName: "",
   titleName: "",
@@ -4319,6 +4323,33 @@ function createBuyerPcMallInvoiceBatchNo(date = new Date(), suffix = "001") {
   return `KP${year}${month}-${suffix}`;
 }
 
+function normalizeBuyerPcMallSupportedInvoiceTypes(titleType = "企业", invoiceTypes = []) {
+  const source = Array.isArray(invoiceTypes)
+    ? invoiceTypes
+    : String(invoiceTypes || "")
+      .split("、")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  const includesSpecial = titleType === "企业" && (source.includes(buyerPcMallSpecialInvoiceType) || String(invoiceTypes || "").includes("专用发票"));
+  return includesSpecial ? [buyerPcMallNormalInvoiceType, buyerPcMallSpecialInvoiceType] : [buyerPcMallNormalInvoiceType];
+}
+
+function getBuyerPcMallSupportedInvoiceTypesFromRow(row) {
+  return normalizeBuyerPcMallSupportedInvoiceTypes(row?.titleType || "企业", row?.invoiceTypes || row?.invoiceType || "");
+}
+
+function formatBuyerPcMallSupportedInvoiceTypes(invoiceTypes = []) {
+  return normalizeBuyerPcMallSupportedInvoiceTypes("企业", invoiceTypes).join("、");
+}
+
+function getBuyerPcMallPrimaryInvoiceType(invoiceTypes = []) {
+  return normalizeBuyerPcMallSupportedInvoiceTypes("企业", invoiceTypes)[0] || buyerPcMallNormalInvoiceType;
+}
+
+function getBuyerPcMallInvoiceTypeTone(invoiceType = "") {
+  return String(invoiceType).includes("专用") ? "blue" : "purple";
+}
+
 function createBuyerPcMallAppliedInvoiceRow(order, form, appliedAt = formatBuyerPcMallDateTime(), invoiceBatch = "") {
   const titleType = form.invoiceType === "电子增值税专用发票" ? "企业" : form.titleType;
   return {
@@ -4354,9 +4385,10 @@ function createBuyerPcMallBatchInvoiceFormFromTitleRow(row) {
   if (!row) return buyerPcMallBatchInvoiceForm;
 
   const [firstStore] = getBuyerPcMallInvoiceTitleStoreBindings(row);
+  const supportedInvoiceTypes = getBuyerPcMallSupportedInvoiceTypesFromRow(row);
   return {
     ...buyerPcMallBatchInvoiceForm,
-    invoiceType: row.invoiceType || buyerPcMallBatchInvoiceForm.invoiceType,
+    invoiceType: getBuyerPcMallPrimaryInvoiceType(supportedInvoiceTypes),
     titleType: row.titleType || buyerPcMallBatchInvoiceForm.titleType,
     titleName: row.title || "",
     taxpayerId: row.taxpayerId || "",
@@ -4388,10 +4420,11 @@ function createBuyerPcMallBatchOrderInvoiceFields(titleRow) {
     };
   }
 
+  const supportedInvoiceTypes = getBuyerPcMallSupportedInvoiceTypesFromRow(titleRow);
   return {
     invoiceTitleId: titleRow.id,
     invoiceTitle: titleRow.title || "",
-    invoiceType: titleRow.invoiceType || buyerPcMallBatchInvoiceForm.invoiceType,
+    invoiceType: getBuyerPcMallPrimaryInvoiceType(supportedInvoiceTypes),
     titleType: titleRow.titleType || buyerPcMallBatchInvoiceForm.titleType,
     taxpayerId: titleRow.taxpayerId || "",
     registeredAddress: titleRow.registeredAddress || "",
@@ -4421,9 +4454,11 @@ function createBuyerPcMallEmptyOrderInvoiceFields() {
 function createBuyerPcMallInvoiceTitleFormFromRow(row) {
   if (!row) return initialBuyerPcMallInvoiceTitleForm;
 
+  const supportedInvoiceTypes = getBuyerPcMallSupportedInvoiceTypesFromRow(row);
   return {
     id: row.id || "",
-    invoiceType: row.invoiceType || initialBuyerPcMallInvoiceTitleForm.invoiceType,
+    invoiceType: getBuyerPcMallPrimaryInvoiceType(supportedInvoiceTypes),
+    invoiceTypes: supportedInvoiceTypes,
     titleType: row.titleType || initialBuyerPcMallInvoiceTitleForm.titleType,
     storeName: getBuyerPcMallInvoiceTitlePrimaryStore(row) || "",
     titleName: row.title || "",
@@ -4441,8 +4476,11 @@ function createBuyerPcMallInvoiceTitleFormFromRow(row) {
 function getBuyerPcMallInvoiceTitleTooltip(titleRow) {
   if (!titleRow) return "发票抬头信息暂无";
 
+  const supportedInvoiceTypes = getBuyerPcMallSupportedInvoiceTypesFromRow(titleRow);
+  const supportsSpecialInvoice = supportedInvoiceTypes.includes(buyerPcMallSpecialInvoiceType);
+
   const lines = [
-    `发票类型：${titleRow.invoiceType || "-"}`,
+    `发票类型：${formatBuyerPcMallSupportedInvoiceTypes(supportedInvoiceTypes) || "-"}`,
     `抬头类型：${titleRow.titleType || "-"}`,
     `发票抬头：${titleRow.title || "-"}`
   ];
@@ -4451,7 +4489,7 @@ function getBuyerPcMallInvoiceTitleTooltip(titleRow) {
     lines.push(`纳税人识别号：${titleRow.taxpayerId || "-"}`);
   }
 
-  if (titleRow.invoiceType === "电子增值税专用发票") {
+  if (supportsSpecialInvoice) {
     lines.push(`注册地址：${titleRow.registeredAddress || "-"}`);
     lines.push(`注册电话：${titleRow.phone || "-"}`);
     lines.push(`开户银行：${titleRow.bank || "-"}`);
@@ -6021,13 +6059,20 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
   const [errors, setErrors] = useState(initialBuyerPcMallInvoiceTitleFieldErrors);
 
   useEffect(() => {
-    setForm(initialForm.invoiceType === "电子增值税专用发票" ? { ...initialForm, titleType: "企业" } : initialForm);
+    const nextTitleType = initialForm.titleType || "企业";
+    const invoiceTypes = normalizeBuyerPcMallSupportedInvoiceTypes(nextTitleType, initialForm.invoiceTypes || initialForm.invoiceType);
+    setForm({
+      ...initialForm,
+      titleType: nextTitleType,
+      invoiceType: getBuyerPcMallPrimaryInvoiceType(invoiceTypes),
+      invoiceTypes
+    });
     setErrors(initialBuyerPcMallInvoiceTitleFieldErrors);
   }, [initialForm]);
 
-  const hideTitleType = form.invoiceType === "电子增值税专用发票";
   const isEnterpriseTitle = form.titleType === "企业";
-  const needsSpecialInvoiceFields = isEnterpriseTitle && form.invoiceType === "电子增值税专用发票";
+  const supportedInvoiceTypes = normalizeBuyerPcMallSupportedInvoiceTypes(form.titleType, form.invoiceTypes || form.invoiceType);
+  const supportsSpecialInvoice = supportedInvoiceTypes.includes(buyerPcMallSpecialInvoiceType);
   const titleNameLabel = isEnterpriseTitle ? "企业抬头名称" : "个人姓名";
   const titleNamePlaceholder = isEnterpriseTitle ? "请输入企业抬头名称" : "请输入个人姓名";
   const modalTitle = form.id ? "编辑发票抬头" : "新增发票抬头";
@@ -6035,9 +6080,12 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
   const handleChange = (field, value) => {
     setForm((current) => {
       if (field === "titleType") {
+        const nextInvoiceTypes = normalizeBuyerPcMallSupportedInvoiceTypes(value, current.invoiceTypes || current.invoiceType);
         return {
           ...current,
           titleType: value,
+          invoiceType: getBuyerPcMallPrimaryInvoiceType(nextInvoiceTypes),
+          invoiceTypes: nextInvoiceTypes,
           taxpayerId: value === "个人" ? "" : current.taxpayerId,
           registeredAddress: value === "个人" ? "" : current.registeredAddress,
           phone: value === "个人" ? "" : current.phone,
@@ -6046,22 +6094,16 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
         };
       }
 
-      if (field === "invoiceType" && value !== "电子增值税专用发票") {
+      if (field === "invoiceTypes") {
+        const nextInvoiceTypes = normalizeBuyerPcMallSupportedInvoiceTypes(current.titleType, value);
         return {
           ...current,
-          [field]: value,
-          registeredAddress: "",
-          phone: "",
-          bank: "",
-          bankAccount: ""
-        };
-      }
-
-      if (field === "invoiceType" && value === "电子增值税专用发票") {
-        return {
-          ...current,
-          [field]: value,
-          titleType: "企业"
+          invoiceType: getBuyerPcMallPrimaryInvoiceType(nextInvoiceTypes),
+          invoiceTypes: nextInvoiceTypes,
+          registeredAddress: nextInvoiceTypes.includes(buyerPcMallSpecialInvoiceType) ? current.registeredAddress : "",
+          phone: nextInvoiceTypes.includes(buyerPcMallSpecialInvoiceType) ? current.phone : "",
+          bank: nextInvoiceTypes.includes(buyerPcMallSpecialInvoiceType) ? current.bank : "",
+          bankAccount: nextInvoiceTypes.includes(buyerPcMallSpecialInvoiceType) ? current.bankAccount : ""
         };
       }
 
@@ -6078,7 +6120,7 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
       }));
     }
 
-    if (field === "titleType" || field === "invoiceType") {
+    if (field === "titleType" || field === "invoiceTypes") {
       setErrors((current) => ({
         ...current,
         taxpayerId: field === "titleType" ? false : current.taxpayerId,
@@ -6091,6 +6133,7 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
   };
 
   const handleSave = () => {
+    const nextInvoiceTypes = normalizeBuyerPcMallSupportedInvoiceTypes(form.titleType, form.invoiceTypes || form.invoiceType);
     const titleName = form.titleName.trim();
     const taxpayerId = form.taxpayerId.trim();
     const registeredAddress = form.registeredAddress.trim();
@@ -6100,7 +6143,7 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
     const receiverPhone = form.receiverPhone.trim();
     const receiverEmail = form.receiverEmail.trim();
     const requiresTaxpayerId = form.titleType === "企业";
-    const requiresSpecialInvoiceFields = requiresTaxpayerId && form.invoiceType === "电子增值税专用发票";
+    const requiresSpecialInvoiceFields = requiresTaxpayerId && nextInvoiceTypes.includes(buyerPcMallSpecialInvoiceType);
     const nextErrors = {
       titleName: !titleName,
       taxpayerId: requiresTaxpayerId && !taxpayerId,
@@ -6132,6 +6175,8 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
 
     onSave({
       ...form,
+      invoiceType: getBuyerPcMallPrimaryInvoiceType(nextInvoiceTypes),
+      invoiceTypes: nextInvoiceTypes,
       titleName,
       taxpayerId: requiresTaxpayerId ? taxpayerId : "",
       registeredAddress: requiresSpecialInvoiceFields ? registeredAddress : "",
@@ -6153,28 +6198,43 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
 
         <div className="pc-mall-title-modal-body">
           <div className="pc-mall-title-modal-row">
-            <span>发票类型 <em>*</em></span>
+            <span>抬头类型 <em>*</em></span>
             <div className="pc-mall-chip-row">
-              {["电子普通发票", "电子增值税专用发票"].map((option) => (
-                <button className={`pc-mall-chip pc-mall-title-modal-chip ${form.invoiceType === option ? "is-active" : ""}`} key={option} type="button" onClick={() => handleChange("invoiceType", option)}>
+              {["企业", "个人"].map((option) => (
+                <button className={`pc-mall-chip pc-mall-title-modal-chip pc-mall-title-modal-chip-small ${form.titleType === option ? "is-active" : ""}`} key={option} type="button" onClick={() => handleChange("titleType", option)}>
                   {option}
                 </button>
               ))}
             </div>
           </div>
 
-          {!hideTitleType ? (
-            <div className="pc-mall-title-modal-row">
-              <span>抬头类型 <em>*</em></span>
-              <div className="pc-mall-chip-row">
-                {["企业", "个人"].map((option) => (
-                  <button className={`pc-mall-chip pc-mall-title-modal-chip pc-mall-title-modal-chip-small ${form.titleType === option ? "is-active" : ""}`} key={option} type="button" onClick={() => handleChange("titleType", option)}>
-                    {option}
-                  </button>
-                ))}
-              </div>
+          <div className="pc-mall-title-modal-row">
+            <span>发票类型 <em>*</em></span>
+            <div className="pc-mall-title-modal-checkbox-group">
+              {buyerPcMallInvoiceTypeOptions
+                .filter((option) => option !== buyerPcMallSpecialInvoiceType || isEnterpriseTitle)
+                .map((option) => {
+                  const checked = supportedInvoiceTypes.includes(option);
+                  const disabled = option === buyerPcMallNormalInvoiceType;
+                  return (
+                    <label className={`pc-mall-title-modal-checkbox ${checked ? "is-checked" : ""} ${disabled ? "is-disabled" : ""}`} key={option}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        disabled={disabled}
+                        onChange={(event) => {
+                          const nextTypes = event.target.checked
+                            ? [...supportedInvoiceTypes, option]
+                            : supportedInvoiceTypes.filter((item) => item !== option);
+                          handleChange("invoiceTypes", nextTypes);
+                        }}
+                      />
+                      <span>{option}</span>
+                    </label>
+                  );
+                })}
             </div>
-          ) : null}
+          </div>
 
           <label className="pc-mall-title-modal-row">
             <span>闪购门店</span>
@@ -6201,7 +6261,7 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
                   <input className={errors.taxpayerId ? "is-error" : ""} placeholder="请输入纳税人识别号" value={form.taxpayerId} onChange={(event) => handleChange("taxpayerId", event.target.value)} />
                 </div>
               </label>
-              {needsSpecialInvoiceFields ? (
+              {supportsSpecialInvoice ? (
                 <>
                   <label className="pc-mall-title-modal-row">
                     <span>注册地址 <em>*</em></span>
@@ -6367,14 +6427,14 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
   const orderValidationByOrderNo = useMemo(() => (
     orderItems.reduce((result, item) => {
       if (isBuyerPcMallHiddenStoreRow(item) && !item.invoiceTitleId) {
-        result[item.orderNo] = "发票抬头不能为空，请选择发票抬头。";
+        result[item.orderNo] = "发票抬头不能为空";
         return result;
       }
 
       const supportedInvoiceTypes = getBuyerPcMallSupportedInvoiceTypes(item.shop, item.store);
       const selectedInvoiceType = item.invoiceType || "";
       if (supportedInvoiceTypes.length > 0 && selectedInvoiceType && !supportedInvoiceTypes.includes(selectedInvoiceType)) {
-        result[item.orderNo] = `当前订单关联发票抬头需开${selectedInvoiceType}，但卖家店铺仅支持开${supportedInvoiceTypes.join("、")}，无法提交开票申请，请联系卖家或调整发票抬头。`;
+        result[item.orderNo] = "该店铺仅支持电子增值税专用发票";
         return result;
       }
 
@@ -6952,9 +7012,6 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                             <td>
                               <div className="pc-mall-batch-order-cell">
                                 <button className="pc-mall-order-link" type="button">{item.orderNo}</button>
-                                {showOrderFilterTabs && submitAttempted && orderValidationByOrderNo[item.orderNo] ? (
-                                  <div className="pc-mall-batch-order-error">{orderValidationByOrderNo[item.orderNo]}</div>
-                                ) : null}
                               </div>
                             </td>
                             <td>
@@ -6980,23 +7037,33 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                             </td>
                             {hideInvoiceAndReceiverSections ? (
                               <td>
-                                <div className="pc-mall-batch-table-select-wrap">
-                                  {isBuyerPcMallHiddenStoreRow(item) ? (
-                                    <BuyerPcMallInvoiceTitleSearchSelect
-                                      value={item.invoiceTitleId || ""}
-                                      options={invoiceTitleRows}
-                                      onChange={(value) => handleChangeOrderItem(item.orderNo, "invoiceTitleId", value)}
-                                      hasError={Boolean(orderItemErrors.invoiceTitleByOrderNo[item.orderNo])}
-                                    />
-                                  ) : (
-                                    <div className="pc-mall-batch-title-field">
-                                      <div className="pc-mall-batch-title-text">{item.invoiceTitle || "-"}</div>
+                                <div className="pc-mall-batch-title-cell">
+                                  <div className="pc-mall-batch-table-select-wrap">
+                                    {isBuyerPcMallHiddenStoreRow(item) ? (
+                                      <BuyerPcMallInvoiceTitleSearchSelect
+                                        value={item.invoiceTitleId || ""}
+                                        options={invoiceTitleRows}
+                                        onChange={(value) => handleChangeOrderItem(item.orderNo, "invoiceTitleId", value)}
+                                        hasError={Boolean(orderItemErrors.invoiceTitleByOrderNo[item.orderNo])}
+                                      />
+                                    ) : (
+                                      <div className="pc-mall-batch-title-field">
+                                        <div className="pc-mall-batch-title-text">{item.invoiceTitle || "-"}</div>
+                                      </div>
+                                    )}
+                                    <span className="pc-mall-inline-tooltip-wrap pc-mall-batch-title-view-wrap">
+                                      <button className="pc-mall-batch-title-view-btn" type="button">查看</button>
+                                      <span className="pc-mall-inline-tooltip">{getBuyerPcMallInvoiceTitleTooltip(invoiceTitleRows.find((titleItem) => titleItem.id === item.invoiceTitleId) || null)}</span>
+                                    </span>
+                                  </div>
+                                  {showOrderFilterTabs && submitAttempted && orderValidationByOrderNo[item.orderNo] ? (
+                                    <div className="pc-mall-batch-order-error">
+                                      <span className="pc-mall-batch-order-error-text">{orderValidationByOrderNo[item.orderNo]}</span>
+                                      {orderValidationByOrderNo[item.orderNo] === "该店铺仅支持电子增值税专用发票" ? (
+                                        <button className="pc-mall-batch-title-adjust-btn" type="button" onClick={() => onNotice("请调整发票抬头后重新提交")}>去调整</button>
+                                      ) : null}
                                     </div>
-                                  )}
-                                  <span className="pc-mall-inline-tooltip-wrap pc-mall-batch-title-view-wrap">
-                                    <button className="pc-mall-batch-title-view-btn" type="button">查看</button>
-                                    <span className="pc-mall-inline-tooltip">{getBuyerPcMallInvoiceTitleTooltip(invoiceTitleRows.find((titleItem) => titleItem.id === item.invoiceTitleId) || null)}</span>
-                                  </span>
+                                  ) : null}
                                 </div>
                               </td>
                             ) : null}
@@ -8422,11 +8489,13 @@ function BuyerPcMallPage({ onPortalActionClick }) {
     setBatchInvoiceNotice("删除发票抬头成功");
   };
   const handleSaveInvoiceTitle = (form) => {
+    const supportedInvoiceTypes = normalizeBuyerPcMallSupportedInvoiceTypes(form.titleType, form.invoiceTypes);
     const nextRow = {
       id: form.id || `title-${Date.now()}`,
       title: form.titleName,
-      invoiceType: form.invoiceType,
-      invoiceTypeTone: form.invoiceType.includes("专用") ? "blue" : "purple",
+      invoiceType: getBuyerPcMallPrimaryInvoiceType(supportedInvoiceTypes),
+      invoiceTypes: supportedInvoiceTypes,
+      invoiceTypeTone: getBuyerPcMallInvoiceTypeTone(getBuyerPcMallPrimaryInvoiceType(supportedInvoiceTypes)),
       titleType: form.titleType,
       taxpayerId: form.taxpayerId,
       registeredAddress: form.registeredAddress,
@@ -9489,7 +9558,9 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                       <div className="pc-mall-invoice-title-name">{item.title}</div>
                       <div className="pc-mall-invoice-title-tags">
                         {item.isDefault ? <span className="pc-mall-invoice-title-default-tag">默认</span> : null}
-                        <span className={`pc-mall-invoice-tag is-${item.invoiceTypeTone}`}>{item.invoiceType}</span>
+                        {getBuyerPcMallSupportedInvoiceTypesFromRow(item).map((invoiceType) => (
+                          <span className={`pc-mall-invoice-tag is-${getBuyerPcMallInvoiceTypeTone(invoiceType)}`} key={`${item.id}-${invoiceType}`}>{invoiceType}</span>
+                        ))}
                         <span className="pc-mall-invoice-title-type-tag">{item.titleType}</span>
                       </div>
                       {getBuyerPcMallInvoiceTitleStoreBindings(item).length > 0 ? (
@@ -9745,107 +9816,107 @@ function BuyerPcMallPage({ onPortalActionClick }) {
 
                 <div className="pc-mall-table-wrap pc-mall-table-wrap-pending">
                   <table className="pc-mall-table pc-mall-table-pending">
-                    <thead>
-                      <tr>
-                        <th><input type="checkbox" checked={allInvoiceRowsSelected} disabled={selectableInvoiceOrderNos.length === 0} onChange={(e) => handleToggleAllInvoiceRows(e.target.checked)} /></th>
-                        <th>订单号</th>
-                        <th>
-                          <span className="pc-mall-header-with-tip">
-                            <span>订单总额</span>
-                            <span className="shop-invoice-summary-tip pc-mall-header-tip">
-                              <img className="shop-invoice-summary-tip-icon" src={questionHeaderIcon} alt="" aria-hidden="true" />
-                              <span className="shop-invoice-summary-tooltip">订单总额 = 总商品金额 - 折扣/优惠金额 + 运费</span>
-                            </span>
-                          </span>
-                        </th>
-                        <th>
-                          <span className="pc-mall-header-with-tip">
-                            <span>售后状态</span>
-                            <span className="shop-invoice-summary-tip pc-mall-header-tip">
-                              <img className="shop-invoice-summary-tip-icon" src={questionHeaderIcon} alt="" aria-hidden="true" />
-                              <span className="shop-invoice-summary-tooltip">{shopInvoiceAfterSaleStatusTooltip}</span>
-                            </span>
-                          </span>
-                        </th>
-                        <th>
-                          <span className="pc-mall-header-with-tip">
-                            <span>售后金额</span>
-                            <span className="shop-invoice-summary-tip pc-mall-header-tip">
-                              <img className="shop-invoice-summary-tip-icon" src={questionHeaderIcon} alt="" aria-hidden="true" />
-                              <span className="shop-invoice-summary-tooltip">售后金额 = 售后中金额 + 已退款金额</span>
-                            </span>
-                          </span>
-                        </th>
-                        <th>支付时间</th>
-                        <th>付款方式</th>
-                        <th>店铺名称</th>
-                        <th>闪购门店</th>
-                        <th>开票状态</th>
-                        <th>操作</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {displayedPendingInvoiceRows.map((item) => {
-                        const applyDisabledReason = item.applyDisabledReason || (item.afterSaleStatus === "售后中" ? "售后状态为 售后中的订单，不允许申请开票" : "");
-                        const isApplyDisabled = Boolean(applyDisabledReason);
-
-                        return (
-                        <tr key={item.orderNo}>
-                          <td><input type="checkbox" checked={selectedInvoiceOrderNos.includes(item.orderNo)} disabled={isApplyDisabled} onChange={() => handleToggleInvoiceRow(item.orderNo)} /></td>
-                          <td><button className="pc-mall-order-link" type="button">{item.orderNo}</button></td>
-                          <td>{item.price}</td>
-                          <td>
-                            <div className="pc-mall-status-cell">
-                              <span>{item.afterSaleStatus || "-"}</span>
-                              {item.afterSaleStatus === "售后中" ? (
-                                <span className="pc-mall-inline-tooltip-wrap">
-                                  <button className="pc-mall-inline-link" type="button">查看</button>
-                                  <span className="pc-mall-inline-tooltip">{getBuyerPcMallInvoiceAfterSaleViewTooltip(item)}</span>
-                                </span>
-                              ) : null}
-                            </div>
-                          </td>
-                          <td>{item.afterSaleAmount || "¥0.00"}</td>
-                          <td>{item.time}</td>
-                          <td>{item.paymentMethod || "-"}</td>
-                          <td>
-                            <div className="pc-mall-shop-cell">
-                              <span>{item.shop}</span>
-                              <PcMallContactSellerIconButton />
-                            </div>
-                          </td>
-                          <td>
-                            <div className="pc-mall-store-cell">
-                              <div>{item.store}</div>
-                              {item.storeId ? <div>{item.storeId}</div> : null}
-                            </div>
-                          </td>
-                          <td>
-                            <div className="pc-mall-status-cell">
-                              <span>{item.status}</span>
-                              {item.extraStatus ? (
-                                <span className="pc-mall-inline-tooltip-wrap">
-                                  <button className="pc-mall-inline-link" type="button">{item.extraStatus}</button>
-                                  {item.status === "已驳回" ? (
-                                    <span className="pc-mall-inline-tooltip">{`驳回原因：${item.rejectReason || "平台审核未通过，请核对开票信息后重试。"}\n驳回日期：${item.rejectedAt || "-"}`}</span>
-                                  ) : null}
-                                </span>
-                              ) : null}
-                            </div>
-                          </td>
-                          <td>
-                            <div className="pc-mall-action-cell">
-                              <span className={`pc-mall-inline-tooltip-wrap${isApplyDisabled ? " is-disabled-trigger" : ""}`}>
-                                <button className="pc-mall-apply-btn" type="button" disabled={isApplyDisabled} onClick={() => handleOpenSingleInvoiceModal(item.orderNo)}>申请开票</button>
-                                {isApplyDisabled ? <span className="pc-mall-inline-tooltip">{applyDisabledReason}</span> : null}
+                      <thead>
+                        <tr>
+                          <th><input type="checkbox" checked={allInvoiceRowsSelected} disabled={selectableInvoiceOrderNos.length === 0} onChange={(e) => handleToggleAllInvoiceRows(e.target.checked)} /></th>
+                          <th>订单号</th>
+                          <th>
+                            <span className="pc-mall-header-with-tip">
+                              <span>订单总额</span>
+                              <span className="shop-invoice-summary-tip pc-mall-header-tip">
+                                <img className="shop-invoice-summary-tip-icon" src={questionHeaderIcon} alt="" aria-hidden="true" />
+                                <span className="shop-invoice-summary-tooltip">订单总额 = 总商品金额 - 折扣/优惠金额 + 运费</span>
                               </span>
-                            </div>
-                          </td>
+                            </span>
+                          </th>
+                          <th>
+                            <span className="pc-mall-header-with-tip">
+                              <span>售后状态</span>
+                              <span className="shop-invoice-summary-tip pc-mall-header-tip">
+                                <img className="shop-invoice-summary-tip-icon" src={questionHeaderIcon} alt="" aria-hidden="true" />
+                                <span className="shop-invoice-summary-tooltip">{shopInvoiceAfterSaleStatusTooltip}</span>
+                              </span>
+                            </span>
+                          </th>
+                          <th>
+                            <span className="pc-mall-header-with-tip">
+                              <span>售后金额</span>
+                              <span className="shop-invoice-summary-tip pc-mall-header-tip">
+                                <img className="shop-invoice-summary-tip-icon" src={questionHeaderIcon} alt="" aria-hidden="true" />
+                                <span className="shop-invoice-summary-tooltip">售后金额 = 售后中金额 + 已退款金额</span>
+                              </span>
+                            </span>
+                          </th>
+                          <th>支付时间</th>
+                          <th>付款方式</th>
+                          <th>店铺名称</th>
+                          <th>闪购门店</th>
+                          <th>开票状态</th>
+                          <th>操作</th>
                         </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {displayedPendingInvoiceRows.map((item) => {
+                          const applyDisabledReason = item.applyDisabledReason || (item.afterSaleStatus === "售后中" ? "售后状态为 售后中的订单，不允许申请开票" : "");
+                          const isApplyDisabled = Boolean(applyDisabledReason);
+
+                          return (
+                          <tr key={item.orderNo}>
+                            <td><input type="checkbox" checked={selectedInvoiceOrderNos.includes(item.orderNo)} disabled={isApplyDisabled} onChange={() => handleToggleInvoiceRow(item.orderNo)} /></td>
+                            <td><button className="pc-mall-order-link" type="button">{item.orderNo}</button></td>
+                            <td>{item.price}</td>
+                            <td>
+                              <div className="pc-mall-status-cell">
+                                <span>{item.afterSaleStatus || "-"}</span>
+                                {item.afterSaleStatus === "售后中" ? (
+                                  <span className="pc-mall-inline-tooltip-wrap">
+                                    <button className="pc-mall-inline-link" type="button">查看</button>
+                                    <span className="pc-mall-inline-tooltip">{getBuyerPcMallInvoiceAfterSaleViewTooltip(item)}</span>
+                                  </span>
+                                ) : null}
+                              </div>
+                            </td>
+                            <td>{item.afterSaleAmount || "¥0.00"}</td>
+                            <td>{item.time}</td>
+                            <td>{item.paymentMethod || "-"}</td>
+                            <td>
+                              <div className="pc-mall-shop-cell">
+                                <span>{item.shop}</span>
+                                <PcMallContactSellerIconButton />
+                              </div>
+                            </td>
+                            <td>
+                              <div className="pc-mall-store-cell">
+                                <div>{item.store}</div>
+                                {item.storeId ? <div>{item.storeId}</div> : null}
+                              </div>
+                            </td>
+                            <td>
+                              <div className="pc-mall-status-cell">
+                                <span>{item.status}</span>
+                                {item.extraStatus ? (
+                                  <span className="pc-mall-inline-tooltip-wrap">
+                                    <button className="pc-mall-inline-link" type="button">{item.extraStatus}</button>
+                                    {item.status === "已驳回" ? (
+                                      <span className="pc-mall-inline-tooltip">{`驳回原因：${item.rejectReason || "平台审核未通过，请核对开票信息后重试。"}\n驳回日期：${item.rejectedAt || "-"}`}</span>
+                                    ) : null}
+                                  </span>
+                                ) : null}
+                              </div>
+                            </td>
+                            <td>
+                              <div className="pc-mall-action-cell">
+                                <span className={`pc-mall-inline-tooltip-wrap${isApplyDisabled ? " is-disabled-trigger" : ""}`}>
+                                  <button className="pc-mall-apply-btn" type="button" disabled={isApplyDisabled} onClick={() => handleOpenSingleInvoiceModal(item.orderNo)}>申请开票</button>
+                                  {isApplyDisabled ? <span className="pc-mall-inline-tooltip">{applyDisabledReason}</span> : null}
+                                </span>
+                              </div>
+                            </td>
+                          </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                 </div>
                   </>
                 ) : null}
@@ -17648,7 +17719,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       const selectedInvoiceType = selectedTitle ? (miniappInvoiceTitleMetaByTitle[selectedTitle]?.invoiceType || "") : "";
       const supportedInvoiceType = row.supportedInvoiceType || "";
       if (!selectedTitle) {
-        result[row.id] = "发票抬头不能为空，请选择发票抬头。";
+        result[row.id] = "发票抬头不能为空";
         return result;
       }
 
@@ -17658,16 +17729,16 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       }
 
       if (row.orderNo === "20260212022895774") {
-        result[row.id] = "当前订单关联发票抬头需开普通发票，但卖家店铺仅支持开增值税专用发票，无法提交开票申请，请联系卖家或调整发票抬头。";
+        result[row.id] = "该店铺仅支持电子增值税专用发票";
         return result;
       }
 
       if (row.orderNo === "20260212022895773") {
-        result[row.id] = "当前订单关联发票抬头需开电子增值税专用发票，但卖家店铺仅支持开电子普通发票，无法提交开票申请，请联系卖家或调整发票抬头。";
+        result[row.id] = "该店铺仅支持电子增值税专用发票";
         return result;
       }
 
-      result[row.id] = `当前订单关联发票抬头需开${selectedInvoiceType}，但卖家店铺仅支持开${supportedInvoiceType}，无法提交开票申请，请联系卖家或调整发票抬头。`;
+      result[row.id] = "该店铺仅支持电子增值税专用发票";
       return result;
     }, {})
   ), [miniappBatchInvoiceRows, miniappBatchTitleSelections, miniappInvoiceTitleMetaByTitle]);

@@ -5,6 +5,7 @@ $pidFile = Join-Path $root "vite.dev.pid"
 $stdoutLog = Join-Path $root "vite.out.log"
 $stderrLog = Join-Path $root "vite.err.log"
 $bundledNode = Join-Path (Split-Path $root -Parent) "node-v20.19.1-win-x64\node.exe"
+$codexNode = "C:\Users\Thunderobot\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe"
 $programmaticEntry = Join-Path $root "start-vite-programmatic.mjs"
 Set-Location $root
 
@@ -43,6 +44,8 @@ if (Test-Path $stderrLog) {
 
 $nodePath = if (Test-Path $bundledNode) {
   $bundledNode
+} elseif (Test-Path $codexNode) {
+  $codexNode
 } else {
   (Get-Command node.exe -ErrorAction Stop).Source
 }

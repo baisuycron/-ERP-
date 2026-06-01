@@ -3,6 +3,7 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $root
 $bundledNode = Join-Path (Split-Path $root -Parent) "node-v20.19.1-win-x64\node.exe"
+$codexNode = "C:\Users\Thunderobot\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe"
 $viteEntry = Join-Path $root "node_modules\vite\bin\vite.js"
 
 if (-not (Test-Path $viteEntry)) {
@@ -11,6 +12,11 @@ if (-not (Test-Path $viteEntry)) {
 
 if (Test-Path $bundledNode) {
   & $bundledNode $viteEntry --host 127.0.0.1 --port 5173 --strictPort
+  exit $LASTEXITCODE
+}
+
+if (Test-Path $codexNode) {
+  & $codexNode $viteEntry --host 127.0.0.1 --port 5173 --strictPort
   exit $LASTEXITCODE
 }
 
