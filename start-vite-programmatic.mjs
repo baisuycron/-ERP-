@@ -11,7 +11,10 @@ const server = await createServer({
   },
 });
 
+const keepAlive = setInterval(() => {}, 1 << 30);
+
 const closeServer = async () => {
+  clearInterval(keepAlive);
   await server.close();
   process.exit(0);
 };

@@ -47,6 +47,9 @@ $nodePath = if (Test-Path $bundledNode) {
   (Get-Command node.exe -ErrorAction Stop).Source
 }
 
+# Work around the Windows environment collision between Path and PATH.
+Remove-Item Env:PATH -ErrorAction SilentlyContinue
+
 $launcher = Start-Process -FilePath $nodePath `
   -ArgumentList @($programmaticEntry) `
   -WorkingDirectory $root `
