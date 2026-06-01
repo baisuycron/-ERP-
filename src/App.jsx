@@ -5,6 +5,7 @@ const goodsPageNames = ["商品管理"];
 const tradePageNames = ["交易设置"];
 const buyerPageNames = ["买家列表"];
 const shopPageNames = ["发票管理"];
+const servicePageNames = ["在线客服"];
 const mixedWholesaleConditionOptions = [
   { value: "quantity", label: "满 X 件" },
   { value: "amount", label: "满 Y 元" },
@@ -1265,7 +1266,7 @@ const menuItems = [
   { label: "统计", icon: "stats" },
   { label: "营销", icon: "marketing", children: ["专享价", "专享价2", "限时购1", "限时购"] },
   { label: "小程序", icon: "miniapp" },
-  { label: "客服", icon: "service" }
+  { label: "客服", icon: "service", badge: "7", children: servicePageNames }
 ];
 const supplierDashboardDateRange = {
   start: "2026-04-05",
@@ -4011,34 +4012,102 @@ function createShopInvoiceOrderDetail(row) {
   if (!row) return null;
   const seed = shopInvoiceOrderDetailSeed[row.orderNo];
   const afterSaleSummary = getShopInvoiceOrderAfterSaleSummary(getShopInvoiceOrderAfterSaleStatuses(row, seed));
+  const parseReceiverInfo = (value) => {
+    const normalized = String(value || "").trim();
+    if (!normalized || normalized === "-") {
+      return {
+        receiverName: "-",
+        receiverPhone: "-",
+        receiverInfoText: "-"
+      };
+    }
+    const [receiverName = "-", receiverPhone = "-"] = normalized.split(/\s{2,}|\s+/);
+    return {
+      receiverName,
+      receiverPhone,
+      receiverInfoText: normalized
+    };
+  };
+  const createOperationLogs = () => (
+    sortShopInvoiceHistoryRecords(row.historyRecords || []).map((record, index) => ({
+      operator: index === 0 ? "定时任务自动确认收货" : row.buyerAccount || "系统",
+      time: record.time || "-",
+      description: record.description || record.label || "-"
+    }))
+  );
+  const createLogisticsInfo = (storeName) => ({
+    company: "百世快递",
+    code: String(row.orderNo || "").slice(0, 8) || "-",
+    statusText: `暂无物流信息，请稍后再试，如有信息推送不及时，请前往物流官网查询`,
+    storeName
+  });
+
   if (seed) {
+    const receiverMeta = parseReceiverInfo(seed.receiverInfo);
     return {
       orderNo: row.orderNo,
       orderStatusText: seed.orderStatusText,
       afterSaleStatusText: afterSaleSummary.afterSaleStatus === "-" ? seed.afterSaleStatusText : afterSaleSummary.afterSaleStatusDetail,
       receiverInfo: seed.receiverInfo,
+      receiverName: receiverMeta.receiverName,
+      receiverPhone: receiverMeta.receiverPhone,
       address: seed.address,
       paidAt: seed.paidAt || row.paidAt,
       buyerAccount: seed.buyerAccount,
       storeName: seed.storeName,
       storeId: seed.storeId,
+      paymentMethod: row.paymentMethod || "先款后货",
+      paymentStatusText: "已付款",
+      deliveryStatusText: seed.orderStatusText === "已完成" ? "部分发货" : "待发货",
+      orderCreatedAt: row.appliedAt || row.paidAt || "-",
+      tradeNo: `${String(row.orderNo || "").slice(-6)}${String(row.orderNo || "").slice(0, 6)}1670000${String(row.orderNo || "").slice(-4)}`,
+      shippedAt: row.invoicedAt && row.invoicedAt !== "-" ? row.invoicedAt : seed.paidAt || row.paidAt || "-",
+      completedAt: row.invoicedAt && row.invoicedAt !== "-" ? row.invoicedAt : seed.paidAt || row.paidAt || "-",
+      paymentChannel: "美团支付",
+      receiverMobile: receiverMeta.receiverPhone,
+      invoiceHeadlineType: isPersonalInvoiceTitle(row.invoiceTitle) ? "个人抬头" : "专票抬头",
+      invoiceReceiverPhone: receiverMeta.receiverPhone === "-" ? "13512340003" : receiverMeta.receiverPhone,
+      registerAddress: `${seed.address.split(" ").slice(0, 2).join(" ")} 111`,
+      registerPhone: "0755123456",
+      bankName: "招商银行深圳福田支行",
+      bankAccount: row.taxpayerId && row.taxpayerId !== "-" ? row.taxpayerId : "2026042715102520",
       remark: seed.remark,
       items: seed.items,
-      summary: seed.summary
+      summary: seed.summary,
+      logisticsInfo: createLogisticsInfo(seed.storeName),
+      operationLogs: createOperationLogs()
     };
   }
 
   const [storeName = row.store, storeId = ""] = String(row.store || "").split("\n");
+  const receiverMeta = parseReceiverInfo("-");
   return {
     orderNo: row.orderNo,
     orderStatusText: row.orderStatus,
     afterSaleStatusText: row.afterSaleStatusDetail || row.afterSaleStatus || "-",
     receiverInfo: "-",
+    receiverName: receiverMeta.receiverName,
+    receiverPhone: receiverMeta.receiverPhone,
     address: "-",
     paidAt: row.paidAt,
     buyerAccount: row.buyerAccount,
     storeName,
     storeId,
+    paymentMethod: row.paymentMethod || "先款后货",
+    paymentStatusText: "已付款",
+    deliveryStatusText: row.orderStatus === "已完成" ? "部分发货" : "待发货",
+    orderCreatedAt: row.appliedAt || row.paidAt || "-",
+    tradeNo: `${String(row.orderNo || "").slice(-6)}${String(row.orderNo || "").slice(0, 6)}1670000${String(row.orderNo || "").slice(-4)}`,
+    shippedAt: row.invoicedAt && row.invoicedAt !== "-" ? row.invoicedAt : row.paidAt || "-",
+    completedAt: row.invoicedAt && row.invoicedAt !== "-" ? row.invoicedAt : row.paidAt || "-",
+    paymentChannel: "美团支付",
+    receiverMobile: "151****5151",
+    invoiceHeadlineType: isPersonalInvoiceTitle(row.invoiceTitle) ? "个人抬头" : "专票抬头",
+    invoiceReceiverPhone: "13512340003",
+    registerAddress: row.taxpayerId && row.taxpayerId !== "-" ? row.taxpayerId : "2026042715102520",
+    registerPhone: "0755123456",
+    bankName: "招商银行深圳福田支行",
+    bankAccount: row.taxpayerId && row.taxpayerId !== "-" ? row.taxpayerId : "2026042715102520",
     remark: "-",
     items: [
       {
@@ -4063,7 +4132,9 @@ function createShopInvoiceOrderDetail(row) {
       afterSaleAmount: row.afterSaleAmount,
       applyInvoiceAmount: row.amount,
       shouldInvoiceAmount: row.shouldInvoiceAmount
-    }
+    },
+    logisticsInfo: createLogisticsInfo(storeName),
+    operationLogs: createOperationLogs()
   };
 }
 
@@ -10631,6 +10702,178 @@ function SupplierGoodsManagementPage({ goodsRows, onToggleMixedWholesale, shopWh
   );
 }
 
+const onlineCustomerChats = [
+  { id: "xiaoxiuhua", label: "物流", name: "xiaoxiuhua", preview: "[OK]", time: "10:20", active: true, avatar: "photo" },
+  { id: "hlbaimingdanzhihao18", label: "", name: "hlbaimingdanzhihao18", preview: "确认收货地址", time: "星期五", avatar: "user" },
+  { id: "haishangAccount07", label: "售后", name: "haishangAccount07", preview: "[在线表格]", time: "星期五", unread: 4, avatar: "user" },
+  { id: "Shawnee003", label: "", name: "Shawnee003", preview: "确认收货地址", time: "星期五", avatar: "user" },
+  { id: "185****0009", label: "", name: "185****0009", preview: "确认收货地址", time: "2026/05/22", avatar: "user" },
+  { id: "hlbaimingdan01", label: "", name: "hlbaimingdan01", preview: "确认收货地址", time: "2026/05/20", avatar: "user" },
+  { id: "bigkingHSM", label: "", name: "bigkingHSM", preview: "确认收货地址", time: "2026/05/19", avatar: "user" },
+  { id: "gto5516173", label: "", name: "gto5516173", preview: "确认收货地址", time: "2026/05/18", avatar: "user" },
+  { id: "haishangAccount", label: "", name: "haishangAccoun...", preview: "确认收货地址", time: "2026/05/15", avatar: "user" },
+  { id: "shawnee031", label: "", name: "shawnee031", preview: "确认收货地址", time: "2026/05/15", avatar: "user" }
+];
+
+const onlineCustomerQuickReplies = [
+  "123",
+  "test hahaha' and exists(select mtdp_...)",
+  "test hahaha\") and exists(select mtdp...)",
+  "test hahaha\" and exists(select mtdp...)",
+  "test hahaha, exists(select mtdp_sql_...)",
+  "鏈\"\\(",
+  "test hahaha\"><ScRiPt><ScRiPt src...",
+  "test hahaha",
+  "test hahaha",
+  "test hahaha",
+  "测试排BOMwudjhopq7)--",
+  "测试排序') and exists(select mtdp_s...",
+  "测试排序",
+  "鏈\"\\("
+];
+
+const getOnlineServiceBuyerDisplayName = (buyerAccount) => {
+  const text = String(buyerAccount || "").trim();
+  if (!text) return "xiaoxiuhua";
+  return text.replace(/\s*\(ID[:：]?\s*\d+\)\s*$/i, "");
+};
+
+function OnlineCustomerServicePage({ activeBuyerAccount = "" }) {
+  const activeBuyerName = getOnlineServiceBuyerDisplayName(activeBuyerAccount);
+  const displayedChats = useMemo(() => {
+    if (!activeBuyerAccount) return onlineCustomerChats;
+    const matched = onlineCustomerChats.some((chat) => chat.name === activeBuyerName || chat.id === activeBuyerName);
+    if (matched) return onlineCustomerChats;
+    return [
+      {
+        id: `buyer-${activeBuyerName}`,
+        label: "买家",
+        name: activeBuyerName,
+        preview: "来自发票管理",
+        time: "刚刚",
+        avatar: "user"
+      },
+      ...onlineCustomerChats
+    ];
+  }, [activeBuyerAccount, activeBuyerName]);
+
+  return (
+    <div className="online-service-page">
+      <aside className="online-service-list">
+        <div className="online-service-list-head">
+          <h2><span className="online-service-bubble-icon" />对话列表</h2>
+          <button type="button">筛选 <span /></button>
+        </div>
+        <div className="online-service-search">
+          <input value="" readOnly placeholder="搜索聊天买家账号" />
+          <span />
+        </div>
+        <div className="online-service-chat-list">
+          {displayedChats.map((chat, index) => (
+            <button className={`online-service-chat-item ${index === 0 ? "is-active" : ""}`} type="button" key={chat.id}>
+              {chat.label ? <em>{chat.label}</em> : null}
+              <span className={`online-service-avatar is-${chat.avatar}`} />
+              <span className="online-service-chat-main">
+                <strong>{chat.name}</strong>
+                <small>{chat.preview}</small>
+              </span>
+              <span className="online-service-chat-meta">
+                <time>{chat.time}</time>
+                {chat.unread ? <b>{chat.unread}</b> : null}
+              </span>
+            </button>
+          ))}
+        </div>
+        <button className="online-service-hide-expired" type="button">隐藏已过期聊天 <span>⌄</span></button>
+      </aside>
+
+      <section className="online-service-conversation">
+        <div className="online-service-chat-head">
+          <div className="online-service-title-user">
+            <span className={`online-service-avatar ${activeBuyerAccount ? "is-user" : "is-photo"}`} />
+            <strong>{activeBuyerName}</strong>
+          </div>
+          <div className="online-service-chat-tools">
+            <button type="button" aria-label="收藏对话" className="is-bookmark" />
+            <button type="button" aria-label="星标对话" className="is-star" />
+          </div>
+        </div>
+
+        <div className="online-service-message-pane">
+          <div className="online-service-left-message">
+            <span className={`online-service-message-thumb ${activeBuyerAccount ? "is-buyer" : ""}`} />
+            <div>
+              <div className="online-service-message-meta"><strong>{activeBuyerName}</strong><time>2026-05-28 16:32:56</time></div>
+              <p>你好，我是【安心购】的，我们有【100多】个门店。这个表格里你们有货的填一下，需要按【华北】、【西南】分别报个价给我，【到店】含税含运的，另外把闪电帮帮链接放上去。比较急，其他供应商也在看，你们尽快反馈哈，先把有货的报上来。</p>
+            </div>
+          </div>
+
+          <div className="online-service-left-message is-card-message">
+            <span className="online-service-message-thumb is-dark" />
+            <div>
+              <div className="online-service-message-meta"><strong>{activeBuyerName}</strong><time>2026-05-28 16:32:57</time></div>
+              <article className="online-service-sheet-card">
+                <div className="online-service-sheet-head">
+                  <div>
+                    <strong>安心购寻源提报单</strong>
+                    <span>闪电帮帮 · 在线表格</span>
+                  </div>
+                  <i />
+                </div>
+                <div className="online-service-sheet-grid">
+                  <div className="online-service-chart-bars"><span /><span /><span /><span /><span /></div>
+                  <div className="online-service-chart-lines"><span /><span /></div>
+                  <div className="online-service-skeleton"><span /><span /><span /></div>
+                  <div className="online-service-pie"><span /></div>
+                </div>
+                <div className="online-service-sheet-foot">
+                  <span>创建于 2026-05-28 16:32:57</span>
+                  <button type="button">立即填写 →</button>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <div className="online-service-right-message">
+            <div>
+              <div className="online-service-right-meta"><time>2026-06-01 10:20:26</time><strong>农妇三拳</strong></div>
+              <div className="online-service-sent-card"><span /> <em>未读</em></div>
+            </div>
+            <span className="online-service-own-avatar" />
+          </div>
+        </div>
+
+        <div className="online-service-composer">
+          <div className="online-service-attach-row">
+            <button type="button"><span className="is-image" />图片</button>
+            <button type="button"><span className="is-file" />文件</button>
+            <button type="button"><span className="is-face" />表情</button>
+            <button type="button"><span className="is-coupon" />优惠券</button>
+          </div>
+          <textarea readOnly value="" placeholder="请输入回复内容，按Enter或点击发送按钮发送" />
+          <div className="online-service-compose-foot">
+            <span>按Shift + Enter换行</span>
+            <button type="button">发送</button>
+          </div>
+        </div>
+      </section>
+
+      <aside className="online-service-side">
+        <nav className="online-service-side-tabs">
+          <button className="is-active" type="button">快捷回复</button>
+          <button type="button">商品</button>
+          <button type="button">订单</button>
+        </nav>
+        <div className="online-service-quick-list">
+          {onlineCustomerQuickReplies.map((item, index) => (
+            <button type="button" key={`${item}-${index}`}>{item}</button>
+          ))}
+        </div>
+      </aside>
+    </div>
+  );
+}
+
 function PlatformCenterChart({ type }) {
   if (type === "bar-lilac") {
     return (
@@ -13627,7 +13870,8 @@ function ShopInvoicePage({
   onOpenInvoiceHistoryTab,
   onCloseInvoiceHistoryTab,
   onOpenBulkUploadTab,
-  onCloseBulkUploadTab
+  onCloseBulkUploadTab,
+  onContactBuyer
 }) {
   const isPlatformVariant = pageVariant === "platform";
   const showShopInfoField = isPlatformVariant;
@@ -13638,6 +13882,8 @@ function ShopInvoicePage({
   const [activeInvoiceDetailNo, setActiveInvoiceDetailNo] = useState("");
   const [activeInvoiceHistoryNo, setActiveInvoiceHistoryNo] = useState("");
   const [isRejectedCardVisible, setIsRejectedCardVisible] = useState(true);
+  const [isLogisticsExpanded, setIsLogisticsExpanded] = useState(true);
+  const [isOperationLogsExpanded, setIsOperationLogsExpanded] = useState(true);
   const [draftFilters, setDraftFilters] = useState(initialShopInvoiceFilters);
   const [appliedFilters, setAppliedFilters] = useState(initialShopInvoiceFilters);
   const [page, setPage] = useState(1);
@@ -13968,14 +14214,13 @@ function ShopInvoicePage({
   };
 
   const handleOpenOrderDetail = (orderNo) => {
+    setActiveInvoiceHistoryNo("");
     setActiveInvoiceDetailNo("");
     setActiveOrderDetailNo(orderNo);
-    onOpenOrderInfoTab?.();
   };
 
   const handleCloseOrderDetail = () => {
     setActiveOrderDetailNo("");
-    onCloseOrderInfoTab?.();
   };
 
   const handleOpenInvoiceDetail = (orderNo) => {
@@ -14022,7 +14267,7 @@ function ShopInvoicePage({
   };
 
   useEffect(() => {
-    if (activeShopTab === "订单信息" || !activeOrderDetailNo) return;
+    if (["发票管理", "订单信息"].includes(activeShopTab) || !activeOrderDetailNo) return;
     setActiveOrderDetailNo("");
   }, [activeOrderDetailNo, activeShopTab]);
 
@@ -14041,6 +14286,11 @@ function ShopInvoicePage({
   useEffect(() => {
     setIsRejectedCardVisible(true);
   }, [activeInvoiceDetailNo]);
+
+  useEffect(() => {
+    setIsLogisticsExpanded(true);
+    setIsOperationLogsExpanded(true);
+  }, [activeOrderDetailNo]);
 
   useEffect(() => {
     if (activeShopTab === "历史操作" || !activeInvoiceHistoryNo) return;
@@ -14793,6 +15043,31 @@ function ShopInvoicePage({
       );
     }
 
+    if (column.key === "buyerAccount") {
+      return (
+        <div className="shop-invoice-buyer-contact-cell">
+          <span>{item.buyerAccount}</span>
+          <button
+            className="shop-invoice-contact-buyer-btn"
+            type="button"
+            aria-label={`联系买家 ${item.buyerAccount}`}
+            title="联系买家"
+            onClick={(event) => {
+              event.stopPropagation();
+              onContactBuyer?.(item.buyerAccount);
+            }}
+          >
+            <svg viewBox="0 0 32 32" aria-hidden="true">
+              <path d="M16.6 5.5c6.2 0 11.2 4.5 11.2 10.1s-5 10.1-11.2 10.1c-1.6 0-3.2-.3-4.6-.9L5.4 26.4l1.5-5.5a9.4 9.4 0 0 1-1.5-5.2C5.4 10 10.4 5.5 16.6 5.5Z" />
+              <circle cx="12.3" cy="15.8" r="1.7" />
+              <circle cx="16.7" cy="15.8" r="1.7" />
+              <circle cx="21.1" cy="15.8" r="1.7" />
+            </svg>
+          </button>
+        </div>
+      );
+    }
+
     return column.renderCell(item);
   };
 
@@ -15142,7 +15417,6 @@ function ShopInvoicePage({
         </section>
       ) : activeShopTab === "发票管理" && activeInvoiceStatusTab !== "发票设置" ? (
         <>
-
       <section className="content-card shop-invoice-filter-card">
         <div className="shop-invoice-filter-grid">
           <label className="shop-invoice-field">
@@ -15471,6 +15745,164 @@ function ShopInvoicePage({
           <button className="btn btn-jump" type="button">跳转</button>
         </div>
       </section>
+        {activeOrderDetail ? (
+          <div className="shop-invoice-detail-overlay" onClick={handleCloseOrderDetail}>
+            <section className="content-card shop-invoice-detail-card shop-invoice-detail-drawer" onClick={(event) => event.stopPropagation()} aria-label="订单详情">
+              <div className="shop-invoice-detail-drawer-head">
+                <strong>订单详情</strong>
+                <button className="shop-invoice-detail-close" type="button" onClick={handleCloseOrderDetail} aria-label="关闭订单详情">×</button>
+              </div>
+
+              <div className="shop-invoice-detail-section is-flat">
+                <div className="shop-invoice-detail-title"><span>订单信息</span></div>
+                <div className="shop-invoice-detail-kv-grid">
+                  <div className="shop-invoice-detail-kv-item"><span>订单号:</span><strong>{activeOrderDetail.orderNo}</strong></div>
+                  <div className="shop-invoice-detail-kv-item"><span>订单状态:</span><strong>{activeOrderDetail.orderStatusText}<em>备注</em></strong></div>
+                  <div className="shop-invoice-detail-kv-item"><span>发货状态:</span><strong>{activeOrderDetail.deliveryStatusText}</strong></div>
+                  <div className="shop-invoice-detail-kv-item"><span>付款方式:</span><strong>{activeOrderDetail.paymentMethod}</strong></div>
+                  <div className="shop-invoice-detail-kv-item"><span>付款状态:</span><strong>{activeOrderDetail.paymentStatusText}</strong></div>
+                  <div className="shop-invoice-detail-kv-item"><span>买家:</span><strong>{activeOrderDetail.buyerAccount}</strong></div>
+                  <div className="shop-invoice-detail-kv-item"><span>闪购门店:</span><strong>{formatStoreDisplay(activeOrderDetail.storeName, activeOrderDetail.storeId)}</strong></div>
+                  <div className="shop-invoice-detail-kv-item"><span>付款方式:</span><strong>美团(美团支付)</strong></div>
+                  <div className="shop-invoice-detail-kv-item"><span>下单时间:</span><strong>{activeOrderDetail.orderCreatedAt}</strong></div>
+                  <div className="shop-invoice-detail-kv-item"><span>交易单号:</span><strong>{activeOrderDetail.tradeNo}</strong></div>
+                  <div className="shop-invoice-detail-kv-item"><span>支付方式:</span><strong>美团(美团支付)</strong></div>
+                  <div className="shop-invoice-detail-kv-item"><span>支付渠道:</span><strong>{activeOrderDetail.paymentChannel}</strong></div>
+                  <div className="shop-invoice-detail-kv-item"><span>付款时间:</span><strong>{activeOrderDetail.paidAt}</strong></div>
+                  <div className="shop-invoice-detail-kv-item"><span>发货时间:</span><strong>{activeOrderDetail.shippedAt}</strong></div>
+                  <div className="shop-invoice-detail-kv-item"><span>完成时间:</span><strong>{activeOrderDetail.completedAt}</strong></div>
+                </div>
+              </div>
+
+              <div className="shop-invoice-detail-section is-flat">
+                <div className="shop-invoice-detail-title"><span>收货信息</span></div>
+                <div className="shop-invoice-detail-kv-grid is-compact">
+                  <div className="shop-invoice-detail-kv-item"><span>收货人:</span><strong>{activeOrderDetail.receiverName}</strong></div>
+                  <div className="shop-invoice-detail-kv-item"><span>手机号码:</span><strong>{activeOrderDetail.receiverMobile}</strong></div>
+                  <div className="shop-invoice-detail-kv-item is-wide"><span>收货地址:</span><strong>{activeOrderDetail.address}</strong></div>
+                </div>
+              </div>
+
+              <div className="shop-invoice-detail-section is-flat">
+                <div className="shop-invoice-detail-title"><span>发票信息</span></div>
+                <div className="shop-invoice-detail-kv-grid">
+                  <div className="shop-invoice-detail-kv-item"><span>发票类型:</span><strong>{activeInvoiceDetail?.invoiceInfo.invoiceType || "-"}</strong></div>
+                  <div className="shop-invoice-detail-kv-item"><span>发票抬头:</span><strong>{activeOrderDetail.invoiceHeadlineType}</strong></div>
+                  <div className="shop-invoice-detail-kv-item"><span>税号:</span><strong>{activeInvoiceDetail?.titleInfo.taxpayerId || "-"}</strong></div>
+                  <div className="shop-invoice-detail-kv-item"><span>发票内容:</span><strong>{activeInvoiceDetail?.invoiceInfo.invoiceContent || "-"}</strong></div>
+                  <div className="shop-invoice-detail-kv-item"><span>注册地址:</span><strong>{activeOrderDetail.registerAddress}</strong></div>
+                  <div className="shop-invoice-detail-kv-item"><span>收票人手机号:</span><strong>{activeOrderDetail.invoiceReceiverPhone}</strong></div>
+                  <div className="shop-invoice-detail-kv-item"><span>注册电话:</span><strong>{activeOrderDetail.registerPhone}</strong></div>
+                  <div className="shop-invoice-detail-kv-item"><span>银行账户:</span><strong>{activeOrderDetail.bankAccount}</strong></div>
+                  <div className="shop-invoice-detail-kv-item is-wide"><span>开户银行:</span><strong>{activeOrderDetail.bankName}</strong></div>
+                </div>
+              </div>
+
+              <div className="shop-invoice-detail-section is-flat">
+                <div className="shop-invoice-detail-title"><span>订单清单</span></div>
+                <div className="shop-invoice-detail-table-wrap">
+                  <table className="shop-invoice-detail-table shop-invoice-detail-order-table">
+                    <thead>
+                      <tr>
+                        <th>商品</th>
+                        <th>规格</th>
+                        <th>规格货号</th>
+                        <th>售后状态</th>
+                        <th>购买数量</th>
+                        <th>单价（元）</th>
+                        <th>已发数量</th>
+                        <th>小计(元)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {activeOrderDetail.items.map((detailItem, index) => (
+                        <tr key={`${activeOrderDetail.orderNo}-${detailItem.spec}`}>
+                          <td className="shop-invoice-product-cell">
+                            <div className="shop-invoice-product-thumb" aria-hidden="true" />
+                            <span>{detailItem.product}</span>
+                          </td>
+                          <td>{detailItem.spec}</td>
+                          <td>{String(detailItem.spec).split("-").slice(-1)[0] || detailItem.spec}</td>
+                          <td className={detailItem.afterSaleStatus !== "-" ? "is-accent" : ""}>{detailItem.afterSaleStatus}</td>
+                          <td>{detailItem.quantity}</td>
+                          <td>{detailItem.unitPrice}</td>
+                          <td>{detailItem.shippedCount}</td>
+                          <td>{detailItem.subtotal}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="shop-invoice-detail-remark">买家留言：{activeOrderDetail.remark}</div>
+                <div className="shop-invoice-detail-summary is-reference-layout">
+                  <div className="shop-invoice-detail-summary-row">
+                    <span>商品总价：</span>
+                    <strong>{activeOrderDetail.summary.goodsAmount}</strong>
+                  </div>
+                  <div className="shop-invoice-detail-summary-row">
+                    <span>运费：</span>
+                    <strong>{activeOrderDetail.summary.shippingFee}</strong>
+                  </div>
+                  <div className="shop-invoice-detail-summary-row">
+                    <span>订单总额：</span>
+                    <strong className="is-accent">{activeOrderDetail.summary.orderAmount}</strong>
+                  </div>
+                  <div className="shop-invoice-detail-summary-row">
+                    <span>订单实付：</span>
+                    <strong className="is-accent">{activeOrderDetail.summary.orderAmount}</strong>
+                  </div>
+                  <div className="shop-invoice-detail-summary-row"><span>{activeOrderDetail.paymentChannel}：</span><strong>{activeOrderDetail.summary.orderAmount}</strong></div>
+                </div>
+              </div>
+
+              <div className="shop-invoice-detail-section is-flat">
+                <div className="shop-invoice-detail-title">
+                  <span>物流信息</span>
+                  <button className="shop-invoice-detail-toggle" type="button" onClick={() => setIsLogisticsExpanded((current) => !current)} aria-label={isLogisticsExpanded ? "折叠物流信息" : "展开物流信息"}>
+                    {isLogisticsExpanded ? "⌃" : "⌄"}
+                  </button>
+                </div>
+                {isLogisticsExpanded ? (
+                  <div className="shop-invoice-logistics-card">
+                    <strong>{`${activeOrderDetail.logisticsInfo.company} ${activeOrderDetail.logisticsInfo.code}`}</strong>
+                    <p>{activeOrderDetail.logisticsInfo.statusText}</p>
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="shop-invoice-detail-section is-flat">
+                <div className="shop-invoice-detail-title">
+                  <span>订单操作日志</span>
+                  <button className="shop-invoice-detail-toggle" type="button" onClick={() => setIsOperationLogsExpanded((current) => !current)} aria-label={isOperationLogsExpanded ? "折叠订单操作日志" : "展开订单操作日志"}>
+                    {isOperationLogsExpanded ? "⌃" : "⌄"}
+                  </button>
+                </div>
+                {isOperationLogsExpanded ? (
+                  <div className="shop-invoice-detail-table-wrap">
+                    <table className="shop-invoice-detail-table shop-invoice-detail-log-table">
+                      <thead>
+                        <tr>
+                          <th>操作者</th>
+                          <th>时间</th>
+                          <th>描述</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {activeOrderDetail.operationLogs.map((log) => (
+                          <tr key={`${log.operator}-${log.time}-${log.description}`}>
+                            <td>{log.operator}</td>
+                            <td>{log.time}</td>
+                            <td>{log.description}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : null}
+              </div>
+            </section>
+          </div>
+        ) : null}
         </>
       ) : null}
 
@@ -19980,6 +20412,7 @@ export default function App() {
     activeTradePage: "交易设置",
     activeBuyerPage: "买家列表",
     activeShopPage: "发票管理",
+    activeServicePage: "在线客服",
     currentMarketingPage: "专享价",
     activeUtilityPage: ""
   }), []);
@@ -19987,7 +20420,7 @@ export default function App() {
     ["admin", "buyer-pc-mall", "platform-center", "miniapp-mall"].includes(storedAdminView.activePortalPage) ? storedAdminView.activePortalPage : "admin"
   ));
   const [activeSection, setActiveSection] = useState(() => (
-    ["home", "goods", "trade", "buyer", "shop", "marketing"].includes(storedAdminView.activeSection) ? storedAdminView.activeSection : "home"
+    ["home", "goods", "trade", "buyer", "shop", "service", "marketing"].includes(storedAdminView.activeSection) ? storedAdminView.activeSection : "home"
   ));
   const [activeGoodsPage, setActiveGoodsPage] = useState(() => (
     goodsPageNames.includes(storedAdminView.activeGoodsPage) ? storedAdminView.activeGoodsPage : "商品管理"
@@ -20001,6 +20434,10 @@ export default function App() {
   const [activeShopPage, setActiveShopPage] = useState(() => (
     shopPageNames.includes(storedAdminView.activeShopPage) ? storedAdminView.activeShopPage : "发票管理"
   ));
+  const [activeServicePage, setActiveServicePage] = useState(() => (
+    servicePageNames.includes(storedAdminView.activeServicePage) ? storedAdminView.activeServicePage : "在线客服"
+  ));
+  const [activeServiceBuyerAccount, setActiveServiceBuyerAccount] = useState("");
   const [activeShopTab, setActiveShopTab] = useState("发票管理");
   const [goodsRows, setGoodsRows] = useState(supplierGoodsRows);
   const [shopWholesaleRule, setShopWholesaleRule] = useState(initialShopWholesaleRule);
@@ -20064,9 +20501,10 @@ export default function App() {
   const isHomeSection = activeSection === "home";
   const isBuyerSection = activeSection === "buyer";
   const isShopSection = activeSection === "shop";
+  const isServiceSection = activeSection === "service";
   const isMarketingSection = activeSection === "marketing";
   const isTodoPage = activeUtilityPage === "todo";
-  const currentPageTitle = isTodoPage ? "待办事项" : isHomeSection ? "首页-控制台" : isGoodsSection ? activeGoodsPage : isTradeSection ? activeTradePage : isBuyerSection ? activeBuyerPage : isShopSection ? activeShopTab : currentMarketingPage;
+  const currentPageTitle = isTodoPage ? "待办事项" : isHomeSection ? "首页-控制台" : isGoodsSection ? activeGoodsPage : isTradeSection ? activeTradePage : isBuyerSection ? activeBuyerPage : isShopSection ? activeShopTab : isServiceSection ? activeServicePage : currentMarketingPage;
   const platformTopActions = useMemo(() => ([
     { key: "supplier-admin", label: "供应商后台", icon: "supplier-admin" },
     { key: "pc-mall", label: "买家PC商城", icon: "pc-mall" },
@@ -20126,10 +20564,11 @@ export default function App() {
       activeTradePage,
       activeBuyerPage,
       activeShopPage,
+      activeServicePage,
       currentMarketingPage,
       activeUtilityPage
     });
-  }, [activePortalPage, activeSection, activeGoodsPage, activeTradePage, activeBuyerPage, activeShopPage, currentMarketingPage, activeUtilityPage]);
+  }, [activePortalPage, activeSection, activeGoodsPage, activeTradePage, activeBuyerPage, activeShopPage, activeServicePage, currentMarketingPage, activeUtilityPage]);
 
   const closeAllCreateOverlays = () => {
     setIsPickerOpen(false);
@@ -20866,6 +21305,26 @@ export default function App() {
     closeAllCreateOverlays();
   };
 
+  const handleSwitchServicePage = (pageName, buyerAccount = "") => {
+    setActivePortalPage("admin");
+    setActiveSection("service");
+    setActiveUtilityPage("");
+    setActiveServicePage(pageName);
+    setActiveServiceBuyerAccount(buyerAccount);
+    setShopInvoiceEntryPreset({
+      statusTab: "全部",
+      markerFilter: "全部",
+      requestId: 0
+    });
+    setEditingBuyer(null);
+    setIsAddBuyerOpen(false);
+    setIsCreating(false);
+    setIsEditMode(false);
+    setDetailSpecProduct(null);
+    setToastMessage("");
+    closeAllCreateOverlays();
+  };
+
   const handleSwitchPlatformCenterPage = (pageKey) => {
     if (pageKey === "shop-todo-management") {
       setPlatformTodoDetailId("");
@@ -21191,9 +21650,13 @@ export default function App() {
       return;
     }
 
-    if (actionKey === "service" || actionKey === "logout") {
-      const actionLabelMap = { service: "在线客服", logout: "退出登录" };
-      setToastMessage(`${actionLabelMap[actionKey]}功能已保留入口，后续可继续接真实逻辑。`);
+    if (actionKey === "service") {
+      handleSwitchServicePage("在线客服");
+      return;
+    }
+
+    if (actionKey === "logout") {
+      setToastMessage("退出登录功能已保留入口，后续可继续接真实逻辑。");
     }
   };
 
@@ -21447,6 +21910,7 @@ export default function App() {
                 onCloseInvoiceHistoryTab={() => setPlatformShopTab("发票管理")}
                 onOpenBulkUploadTab={() => setPlatformShopTab("批量上传发票")}
                 onCloseBulkUploadTab={() => setPlatformShopTab("发票管理")}
+                onContactBuyer={(buyerAccount) => handleSwitchServicePage("在线客服", buyerAccount)}
               />
             ) : platformCenterPage === "shop-todo-management" ? (
               <PlatformShopTodoManagementPage
@@ -21557,7 +22021,8 @@ export default function App() {
             const isTradeMenu = item.label === "交易";
             const isBuyerMenu = item.label === "买家";
             const isShopMenu = item.label === "店铺";
-            const activeParent = isGoodsMenu ? isGoodsSection : isTradeMenu ? isTradeSection : isBuyerMenu ? isBuyerSection : isShopMenu ? isShopSection : isMarketingSection && item.label === "营销";
+            const isServiceMenu = item.label === "客服";
+            const activeParent = isGoodsMenu ? isGoodsSection : isTradeMenu ? isTradeSection : isBuyerMenu ? isBuyerSection : isShopMenu ? isShopSection : isServiceMenu ? isServiceSection : isMarketingSection && item.label === "营销";
             const handleParentClick = isGoodsMenu
               ? () => handleSwitchGoodsPage(item.children[0])
               : isTradeMenu
@@ -21566,6 +22031,8 @@ export default function App() {
               ? () => handleSwitchBuyerPage(item.children[0])
               : isShopMenu
                 ? () => handleSwitchShopPage(item.children[0])
+                : isServiceMenu
+                ? () => handleSwitchServicePage(item.children[0])
                 : undefined;
 
             return (
@@ -21593,6 +22060,8 @@ export default function App() {
                       ? activeBuyerPage === child && isBuyerSection
                       : isShopMenu
                         ? activeShopPage === child && isShopSection
+                        : isServiceMenu
+                        ? activeServicePage === child && isServiceSection
                         : currentMarketingPage === child && isMarketingSection;
                     const handleClick = isGoodsMenu
                       ? () => handleSwitchGoodsPage(child)
@@ -21602,6 +22071,8 @@ export default function App() {
                       ? () => handleSwitchBuyerPage(child)
                       : isShopMenu
                         ? () => handleSwitchShopPage(child)
+                        : isServiceMenu
+                        ? () => handleSwitchServicePage(child)
                         : () => handleSwitchMarketingPage(child);
 
                     return (
@@ -21687,7 +22158,10 @@ export default function App() {
               onCloseInvoiceHistoryTab={() => setActiveShopTab("发票管理")}
               onOpenBulkUploadTab={() => setActiveShopTab("批量上传发票")}
               onCloseBulkUploadTab={() => setActiveShopTab("发票管理")}
+              onContactBuyer={(buyerAccount) => handleSwitchServicePage("在线客服", buyerAccount)}
             />
+          ) : isServiceSection ? (
+            <OnlineCustomerServicePage activeBuyerAccount={activeServiceBuyerAccount} />
           ) : (
             <>
               {!(isPrimarySpecialPricePage(currentMarketingPage) || isSecondarySpecialPricePage(currentMarketingPage)) ? <TabSection creating={isCreating} editing={isEditMode} detailing={!isCreating && !!detailActivity} currentMarketingPage={currentMarketingPage} onSwitchToList={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); updateCurrentField("detailActivity", null); }} /> : null}
