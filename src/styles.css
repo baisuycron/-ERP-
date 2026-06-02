@@ -652,6 +652,38 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .shop-invoice-upload-btn { min-width: 128px; height: 40px; border: 1px dashed #cfd5df; background: #fff; color: #374151; font-size: 14px; }
 .shop-invoice-upload-name { color: #111827; font-size: 13px; line-height: 1.5; }
 .shop-invoice-upload-box p { margin: 0; color: #8b94a3; font-size: 14px; }
+.shop-invoice-multi-upload-section { padding-top: 18px; }
+.shop-invoice-multi-upload-tip { display: flex; align-items: center; gap: 8px; border: 1px solid #bcd5ff; border-radius: 4px; padding: 9px 12px; background: #eef5ff; color: #5b6472; font-size: 13px; line-height: 1.5; }
+.shop-invoice-multi-upload-tip .shop-invoice-batch-tip-icon { width: 16px; height: 16px; background: #2f80ed; font-size: 11px; }
+.shop-invoice-multi-upload-summary { display: grid; grid-template-columns: 176px 1fr; align-items: center; gap: 18px; margin-top: 10px; border: 1px solid #e3e8f0; border-radius: 6px; padding: 10px 14px; background: #fbfcff; }
+.shop-invoice-multi-upload-summary div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.shop-invoice-multi-upload-summary div + div { border-left: 1px solid #e1e6ef; padding-left: 18px; }
+.shop-invoice-multi-upload-summary span { color: #8b94a3; font-size: 13px; }
+.shop-invoice-multi-upload-summary strong { color: #111827; font-size: 18px; font-weight: 700; }
+.shop-invoice-multi-upload-drop { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 12px; margin-top: 10px; border: 1px dashed #cfd8e6; border-radius: 4px; padding: 12px 14px; background: #fcfdff; }
+.shop-invoice-multi-upload-drop.is-error { border-color: #ff4d4f; background: #fff7f7; }
+.shop-invoice-multi-upload-icon { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 4px; background: #f0f4fa; color: #475569; font-size: 20px; }
+.shop-invoice-multi-upload-drop > div { display: flex; align-items: center; min-height: 34px; }
+.shop-invoice-multi-upload-drop strong { display: block; color: #111827; font-size: 14px; font-weight: 700; }
+.shop-invoice-multi-upload-drop p { margin: 0; color: #8b94a3; font-size: 13px; line-height: 1.5; }
+.shop-invoice-multi-upload-add { min-width: 118px; height: 36px; border: 1px solid #bcd1ff; background: #f5f8ff; color: #2962ff; font-size: 14px; }
+.shop-invoice-multi-upload-list { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.shop-invoice-upload-card { border: 1px solid #e0e6ef; border-radius: 4px; background: #fff; overflow: hidden; }
+.shop-invoice-upload-card.has-error { border-color: #ffd0d0; }
+.shop-invoice-upload-card-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 44px; padding: 0 12px; background: #f6f8fb; border-bottom: 1px solid #e8edf4; }
+.shop-invoice-upload-file { display: inline-flex; align-items: center; gap: 8px; min-width: 0; color: #4b5563; font-size: 13px; }
+.shop-invoice-upload-file span { display: inline-flex; align-items: center; justify-content: center; min-height: 26px; padding: 0 8px; border-radius: 3px; background: #eef2f7; color: #374151; white-space: nowrap; }
+.shop-invoice-upload-file strong { min-width: 0; color: #111827; font-size: 14px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shop-invoice-upload-file em { color: #8b94a3; font-style: normal; white-space: nowrap; }
+.shop-invoice-upload-card-actions { display: inline-flex; align-items: center; gap: 14px; flex: none; }
+.shop-invoice-upload-card-actions button { border: none; padding: 0; background: transparent; color: #2962ff; font-size: 13px; white-space: nowrap; }
+.shop-invoice-upload-card-actions button:last-child { color: #5b6472; }
+.shop-invoice-upload-card-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 28px; padding: 14px 14px; }
+.shop-invoice-upload-card-form label { display: grid; grid-template-columns: 116px minmax(0, 1fr); align-items: center; gap: 12px; min-width: 0; }
+.shop-invoice-upload-card-form span { color: #202020; font-size: 14px; text-align: right; white-space: nowrap; }
+.shop-invoice-upload-card-form span i { margin-right: 4px; color: #ff4d4f; font-style: normal; }
+.shop-invoice-upload-card-form input { width: 100%; height: 36px; border: 1px solid #d9e0ea; padding: 0 12px; background: #fff; color: #333; font-size: 14px; }
+.shop-invoice-upload-card-form input.is-error { border-color: #ff4d4f; }
 .shop-invoice-confirm-foot { display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 28px 28px 28px; }
 .buyer-link-btn { border: none; padding: 0; background: transparent; color: #ff6f18; font-size: 14px; text-align: left; }
 .buyer-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
