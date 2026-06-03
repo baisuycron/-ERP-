@@ -16260,7 +16260,14 @@ function ShopInvoicePage({
               </label>
             ) : null}
             {!isPlatformVariant ? <button className="btn btn-reset buyer-export-btn" type="button" onClick={() => onOpenBulkUploadTab?.()}>批量导入发票</button> : null}
-            <button className="btn btn-reset buyer-export-btn" type="button">导出查询结果</button>
+            {isPlatformVariant ? (
+              <button className="btn btn-reset buyer-export-btn" type="button">导出查询结果</button>
+            ) : (
+              <>
+                <button className="btn btn-reset buyer-export-btn" type="button">导出订单明细</button>
+                <button className="btn btn-reset buyer-export-btn" type="button">导出商品明细</button>
+              </>
+            )}
             <div className={`shop-invoice-column-settings ${isColumnSettingOpen ? "is-open" : ""}`}>
               <button className="shop-invoice-column-trigger" ref={columnTriggerRef} type="button" onClick={() => setIsColumnSettingOpen((current) => !current)}>
                 列设置
