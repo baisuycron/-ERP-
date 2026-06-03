@@ -7082,15 +7082,27 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
   border-radius: 12px;
   padding: 14px 12px;
   background: #fff;
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
 }
 
-.miniapp-invoice-more-card div {
+.miniapp-invoice-more-number {
+  flex: 1 1 auto;
   min-width: 0;
+}
+
+.miniapp-invoice-more-amount {
+  flex: 0 0 62px;
+  align-self: stretch;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+  text-align: right;
 }
 
 .miniapp-invoice-more-card span {
@@ -7108,6 +7120,11 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.miniapp-invoice-more-amount strong {
+  margin-top: 0;
+  color: #111827;
 }
 
 .miniapp-invoice-preview-content {

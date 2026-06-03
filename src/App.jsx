@@ -19611,7 +19611,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                                   <button className="miniapp-assistant-contact-link" type="button" onClick={() => handleOpenMiniappServiceChat(item.id)}>联系客服</button>
                                 </div>
                                 <div className="miniapp-batch-field is-amount-inline">
-                                  <span>开票金额(含税)</span>
+                                  <span>开票金额(含税)合计</span>
                                   <strong className="is-accent">{`¥${item.applyAmount.toFixed(2)}`}</strong>
                                 </div>
                                 <div className="miniapp-batch-field is-store">
@@ -20201,9 +20201,12 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                   <section className="miniapp-invoice-more-list">
                     {(activeMiniappInvoiceMoreRecord?.invoiceItems || []).map((item) => (
                       <article className="miniapp-invoice-more-card" key={item.id}>
-                        <div>
+                        <div className="miniapp-invoice-more-number">
                           <span>发票号码</span>
                           <strong>{item.invoiceNo}</strong>
+                        </div>
+                        <div className="miniapp-invoice-more-amount">
+                          <strong>{item.invoiceAmountWithTax}</strong>
                         </div>
                         <button className="miniapp-batch-preview-link" type="button" onClick={() => handleOpenMiniappInvoiceItemPreview(activeMiniappInvoiceMoreRecord.id, item.invoiceNo)}>预览</button>
                       </article>
