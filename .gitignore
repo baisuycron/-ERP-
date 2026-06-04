@@ -4,3 +4,7 @@ dist/
 vite.dev.pid
 vite.out.log
 vite.err.log
+*.png
+*.txt
+outputs/km_invoice_prd_tests/human_20260527_tmp.xlsx
+outputs/km_invoice_prd_tests/ai_version_tmp.xlsx

@@ -1345,10 +1345,28 @@ const platformCenterSidebarItems = [
   { key: "website", label: "网站", icon: "website" },
   { key: "system", label: "系统", icon: "system" },
   { key: "stats", label: "统计", icon: "stats" },
-  { key: "marketing", label: "营销", icon: "marketing" },
+  {
+    key: "marketing",
+    label: "营销",
+    icon: "marketing",
+    children: [
+      { key: "marketing-flash-sale", label: "限时购" }
+    ]
+  },
   { key: "miniapp", label: "小程序", icon: "miniapp" }
 ];
 const platformTradeSettingsTabs = ["交易参数", "发票参数", "售后原因设置"];
+const platformFlashSaleTabs = ["限时购列表", "页面设置", "活动商品分类", "参数设置"];
+const platformFlashSaleRows = [
+  {
+    id: "1217",
+    name: "测试",
+    shop: "诗语家居日用专营店",
+    startTime: "2026-06-04 14:24:07",
+    endTime: "2026-06-26 14:24:07",
+    status: "进行中"
+  }
+];
 const platformTradeSettingsOrderRows = [
   { label: "下单后，超过", value: "50", suffix: "小时未付款，订单关闭", hint: "自动取消订单，订单状态从待付款变为已关闭" },
   { label: "发货后，超过", value: "1", suffix: "天未收货，订单自动完成", hint: "自动确认收货，订单状态从待收货变为已完成" },
@@ -11498,6 +11516,182 @@ function PlatformTradeSettingsPage() {
           <button type="button">提交</button>
         </div>
       </section>
+    </div>
+  );
+}
+
+function PlatformFlashSalePage() {
+  const [activeTab, setActiveTab] = useState(platformFlashSaleTabs[0]);
+  const [draftFilters, setDraftFilters] = useState({
+    status: "",
+    shop: "",
+    startTime: "",
+    endTime: "",
+    activityName: "",
+    activityId: "",
+    productId: "",
+    specId: ""
+  });
+  const [appliedFilters, setAppliedFilters] = useState(draftFilters);
+  const [pageInput, setPageInput] = useState("");
+
+  const handleDraftFilterChange = (field, value) => {
+    setDraftFilters((current) => ({ ...current, [field]: value }));
+  };
+
+  const handleReset = () => {
+    const nextFilters = {
+      status: "",
+      shop: "",
+      startTime: "",
+      endTime: "",
+      activityName: "",
+      activityId: "",
+      productId: "",
+      specId: ""
+    };
+    setDraftFilters(nextFilters);
+    setAppliedFilters(nextFilters);
+    setPageInput("");
+  };
+
+  const filteredRows = useMemo(() => platformFlashSaleRows.filter((item) => {
+    if (appliedFilters.status && item.status !== appliedFilters.status) return false;
+    if (appliedFilters.shop.trim() && !item.shop.includes(appliedFilters.shop.trim())) return false;
+    if (appliedFilters.startTime.trim() && item.startTime < appliedFilters.startTime.trim()) return false;
+    if (appliedFilters.endTime.trim() && item.endTime > appliedFilters.endTime.trim()) return false;
+    if (appliedFilters.activityName.trim() && !item.name.includes(appliedFilters.activityName.trim())) return false;
+    if (appliedFilters.activityId.trim() && !item.id.includes(appliedFilters.activityId.trim())) return false;
+    return true;
+  }), [appliedFilters]);
+
+  return (
+    <div className="platform-flash-sale-page">
+      <section className="content-card platform-flash-sale-tabs-card">
+        <div className="platform-flash-sale-tabs">
+          {platformFlashSaleTabs.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={`platform-flash-sale-tab ${activeTab === tab ? "is-active" : ""}`}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {activeTab === "限时购列表" ? (
+        <>
+          <section className="content-card platform-flash-sale-filter-card">
+            <div className="platform-flash-sale-filter-grid">
+              <label className="platform-flash-sale-field">
+                <span>状态</span>
+                <select value={draftFilters.status} onChange={(event) => handleDraftFilterChange("status", event.target.value)}>
+                  <option value="">请选择</option>
+                  <option value="未开始">未开始</option>
+                  <option value="进行中">进行中</option>
+                  <option value="已结束">已结束</option>
+                </select>
+              </label>
+              <label className="platform-flash-sale-field">
+                <span>店铺</span>
+                <input value={draftFilters.shop} onChange={(event) => handleDraftFilterChange("shop", event.target.value)} />
+              </label>
+              <label className="platform-flash-sale-field platform-flash-sale-time-field">
+                <span>活动时间</span>
+                <div className="platform-flash-sale-time-range">
+                  <input placeholder="开始时间" value={draftFilters.startTime} onChange={(event) => handleDraftFilterChange("startTime", event.target.value)} />
+                  <em>-</em>
+                  <input placeholder="结束时间" value={draftFilters.endTime} onChange={(event) => handleDraftFilterChange("endTime", event.target.value)} />
+                </div>
+              </label>
+              <label className="platform-flash-sale-field">
+                <span>活动名称</span>
+                <input value={draftFilters.activityName} onChange={(event) => handleDraftFilterChange("activityName", event.target.value)} />
+              </label>
+              <label className="platform-flash-sale-field">
+                <span>活动ID</span>
+                <input value={draftFilters.activityId} onChange={(event) => handleDraftFilterChange("activityId", event.target.value)} />
+              </label>
+              <label className="platform-flash-sale-field">
+                <span>商品ID</span>
+                <input value={draftFilters.productId} onChange={(event) => handleDraftFilterChange("productId", event.target.value)} />
+              </label>
+              <label className="platform-flash-sale-field">
+                <span>规格ID</span>
+                <input value={draftFilters.specId} onChange={(event) => handleDraftFilterChange("specId", event.target.value)} />
+              </label>
+              <div className="platform-flash-sale-filter-actions">
+                <button className="btn btn-reset" type="button" onClick={handleReset}>重置</button>
+                <button className="btn btn-dark" type="button" onClick={() => setAppliedFilters(draftFilters)}>查询</button>
+              </div>
+            </div>
+          </section>
+
+          <section className="content-card platform-flash-sale-table-card">
+            <div className="platform-flash-sale-table-toolbar">
+              <button className="btn btn-reset buyer-export-btn" type="button">导出查询结果</button>
+            </div>
+            <div className="platform-flash-sale-table-wrap">
+              <table className="platform-flash-sale-table">
+                <thead>
+                  <tr>
+                    <th>活动ID</th>
+                    <th>活动名称</th>
+                    <th>店铺</th>
+                    <th>开始时间 <span className="platform-flash-sale-sort">◆</span></th>
+                    <th>结束时间 <span className="platform-flash-sale-sort">◆</span></th>
+                    <th>状态</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRows.length ? filteredRows.map((item) => (
+                    <tr key={item.id}>
+                      <td>{item.id}</td>
+                      <td>{item.name}</td>
+                      <td>{item.shop}</td>
+                      <td>{item.startTime}</td>
+                      <td>{item.endTime}</td>
+                      <td>{item.status}</td>
+                      <td>
+                        <div className="platform-flash-sale-actions">
+                          <button type="button">前端显示</button>
+                          <button type="button">查看</button>
+                        </div>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td className="platform-flash-sale-empty" colSpan={7}>暂无数据</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="platform-flash-sale-pagination">
+              <span>共 {filteredRows.length} 条</span>
+              <select defaultValue="20">
+                <option value="20">20 条/页</option>
+                <option value="50">50 条/页</option>
+              </select>
+              <button type="button" disabled>‹</button>
+              <button className="is-active" type="button">1</button>
+              <button type="button" disabled>›</button>
+              <span>到第</span>
+              <input value={pageInput} placeholder="请输入" onChange={(event) => setPageInput(event.target.value.replace(/[^\d]/g, ""))} />
+              <span>页</span>
+              <button type="button">跳转</button>
+            </div>
+          </section>
+        </>
+      ) : (
+        <section className="content-card platform-flash-sale-placeholder">
+          <span>{activeTab}</span>
+        </section>
+      )}
     </div>
   );
 }
@@ -22585,6 +22779,8 @@ export default function App() {
       ? "交易设置"
       : platformCenterPage === "shop-todo-management"
         ? "待办管理"
+      : platformCenterPage === "marketing-flash-sale"
+        ? "限时购"
       : platformCenterPage === "shop-invoice-management"
         ? platformShopTab
         : "控制台";
@@ -22642,7 +22838,24 @@ export default function App() {
       closable: false,
       onClick: () => handleSwitchPlatformCenterPage("shop-todo-management"),
       onClose: undefined
-    }] : null;
+    }] : platformCenterPage === "marketing-flash-sale" ? [
+      {
+        key: "platform-marketing-center",
+        label: "营销中心",
+        isCurrent: false,
+        closable: true,
+        onClick: () => handleSwitchPlatformCenterPage("marketing-flash-sale"),
+        onClose: () => handleSwitchPlatformCenterPage("home")
+      },
+      {
+        key: "platform-marketing-flash-sale",
+        label: "限时购",
+        isCurrent: true,
+        closable: true,
+        onClick: () => handleSwitchPlatformCenterPage("marketing-flash-sale"),
+        onClose: () => handleSwitchPlatformCenterPage("home")
+      }
+    ] : null;
 
     return (
       <div className="admin-shell platform-shell">
@@ -22743,6 +22956,8 @@ export default function App() {
                 activeDetailItem={activePlatformTodoDetail}
                 onCloseDetail={() => setPlatformTodoDetailId("")}
               />
+            ) : platformCenterPage === "marketing-flash-sale" ? (
+              <PlatformFlashSalePage />
             ) : <PlatformCenterPage />}
           </main>
         </section>
