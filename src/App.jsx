@@ -57,6 +57,8 @@ const shopInvoiceAfterSaleStatusTooltip = `售后中：订单下任一SKU的售�
 部分退款：订单下发起了售后的SKU都退款成功的；【如果是整单都退款成功的，发票管理页面就直接不展示了，这个逻辑现在已有】
 
 售后关闭：订单下发起了售后的SKU为供应商拒绝、平台驳回、买家取消`;
+const shopInvoiceSeparateInvoiceTooltip = `选择是：本订单需单独开具一张发票；
+选择否：本订单可与其他订单合并开具发票，也可单独开具一张发票；由店铺实际处理。`;
 const shopInvoicePaymentMethodOptions = ["全部", "先货后款", "先款后货"];
 const shopInvoiceAfterSaleInProgressStatuses = ["待供应商审核", "待买家寄货", "待供应商收货", "待平台确认", "退款中", "售后审核中"];
 const shopInvoiceAfterSaleClosedStatuses = ["供应商拒绝", "平台驳回", "买家取消"];
@@ -1362,6 +1364,8 @@ const platformFlashSaleRows = [
     id: "1217",
     name: "测试",
     shop: "诗语家居日用专营店",
+    buyerGroup: "北京分组",
+    buyerId: "2083059433",
     startTime: "2026-06-04 14:24:07",
     endTime: "2026-06-26 14:24:07",
     status: "进行中"
@@ -1592,10 +1596,10 @@ const seedActivitiesByPage = {
   专享价: createSpecialPriceSeedActivities(),
   专享价2: createSpecialPriceSeedActivities(),
   限时购1: [
-    { id: "1111", name: "双11限时购1活动", goodsCount: 12, startTime: "2026-11-01 00:00:00", endTime: "2026-11-11 23:59:59", status: "未开始", actions: ["查看", "编辑", "提前结束"] },
-    { id: "0001", name: "国庆节限时购1活动", goodsCount: 2, startTime: "2026-10-01 00:00:00", endTime: "2026-10-08 23:59:59", status: "未开始", actions: ["查看", "编辑", "提前结束"] },
-    { id: "0011", name: "普通限时购1活动", goodsCount: 30, startTime: "2026-03-01 00:00:00", endTime: "2026-04-20 23:59:59", status: "进行中", actions: ["查看", "编辑", "提前结束", "复制链接"] },
-    { id: "0012", name: "元旦节限时购1活动", goodsCount: 6, startTime: "2026-01-01 00:00:00", endTime: "2026-01-01 23:59:59", status: "已结束", actions: ["查看"] }
+    { id: "1111", name: "双11限时购1活动", buyerGroup: "北京分组", buyerId: "2083059433", goodsCount: 12, startTime: "2026-11-01 00:00:00", endTime: "2026-11-11 23:59:59", status: "未开始", actions: ["查看", "编辑", "提前结束"] },
+    { id: "0001", name: "国庆节限时购1活动", buyerGroup: "黑龙江分组", buyerId: "2084008012", goodsCount: 2, startTime: "2026-10-01 00:00:00", endTime: "2026-10-08 23:59:59", status: "未开始", actions: ["查看", "编辑", "提前结束"] },
+    { id: "0011", name: "普通限时购1活动", buyerGroup: "四川分组", buyerId: "2080403003", goodsCount: 30, startTime: "2026-03-01 00:00:00", endTime: "2026-04-20 23:59:59", status: "进行中", actions: ["查看", "编辑", "提前结束", "复制链接"] },
+    { id: "0012", name: "元旦节限时购1活动", buyerGroup: "北京分组", buyerId: "2080025606", goodsCount: 6, startTime: "2026-01-01 00:00:00", endTime: "2026-01-01 23:59:59", status: "已结束", actions: ["查看"] }
   ],
   限时购: [
     { id: "2101", name: "春季限时购活动", goodsCount: 8, startTime: "2026-04-01 00:00:00", endTime: "2026-04-30 23:59:59", status: "进行中", actions: ["查看", "编辑", "提前结束", "复制链接"] },
@@ -3344,7 +3348,9 @@ const BuyerPcMallInvoiceTitleSearchSelect = memo(function BuyerPcMallInvoiceTitl
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [keyword, setKeyword] = useState("");
+  const [menuPosition, setMenuPosition] = useState(null);
   const rootRef = useRef(null);
+  const triggerRef = useRef(null);
   const selectedOption = options.find((option) => option.id === value) || null;
   const normalizedKeyword = keyword.trim().toLowerCase();
   const visibleOptions = useMemo(() => {
@@ -3366,8 +3372,44 @@ const BuyerPcMallInvoiceTitleSearchSelect = memo(function BuyerPcMallInvoiceTitl
   useEffect(() => {
     if (!isOpen) {
       setKeyword("");
+      setMenuPosition(null);
     }
   }, [isOpen]);
+
+  const updateMenuPosition = useCallback(() => {
+    if (!triggerRef.current) return;
+
+    const rect = triggerRef.current.getBoundingClientRect();
+    const viewportPadding = 12;
+    const menuGap = 8;
+    const preferredMaxHeight = 240;
+    const spaceBelow = window.innerHeight - rect.bottom - viewportPadding;
+    const spaceAbove = rect.top - viewportPadding;
+    const shouldOpenAbove = spaceBelow < 160 && spaceAbove > spaceBelow;
+    const availableHeight = Math.max(
+      120,
+      Math.min(preferredMaxHeight, (shouldOpenAbove ? spaceAbove : spaceBelow) - menuGap)
+    );
+
+    setMenuPosition({
+      left: Math.max(viewportPadding, rect.left),
+      top: shouldOpenAbove ? Math.max(viewportPadding, rect.top - menuGap - availableHeight) : rect.bottom + menuGap,
+      width: rect.width,
+      maxHeight: availableHeight
+    });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    updateMenuPosition();
+
+    window.addEventListener("resize", updateMenuPosition);
+    window.addEventListener("scroll", updateMenuPosition, true);
+    return () => {
+      window.removeEventListener("resize", updateMenuPosition);
+      window.removeEventListener("scroll", updateMenuPosition, true);
+    };
+  }, [isOpen, updateMenuPosition, visibleOptions.length]);
 
   useEffect(() => {
     const handlePointerDown = (event) => {
@@ -3388,7 +3430,7 @@ const BuyerPcMallInvoiceTitleSearchSelect = memo(function BuyerPcMallInvoiceTitl
 
   return (
     <div className={`pc-mall-search-select pc-mall-invoice-title-search-select${isOpen ? " is-open" : ""}${hasError ? " is-error" : ""}`} ref={rootRef}>
-      <div className="pc-mall-search-select-trigger">
+      <div className="pc-mall-search-select-trigger" ref={triggerRef}>
         <div className="pc-mall-search-select-input-wrap" onClick={() => setIsOpen(true)} role="presentation">
           {selectedOption ? (
             <span className="pc-mall-invoice-title-search-select-value">{selectedOption.title}</span>
@@ -3406,7 +3448,15 @@ const BuyerPcMallInvoiceTitleSearchSelect = memo(function BuyerPcMallInvoiceTitl
         <i aria-hidden="true" />
       </div>
       {isOpen ? (
-        <div className="pc-mall-search-select-menu pc-mall-invoice-title-search-select-menu">
+        <div
+          className="pc-mall-search-select-menu pc-mall-invoice-title-search-select-menu is-fixed"
+          style={menuPosition ? {
+            left: `${menuPosition.left}px`,
+            top: `${menuPosition.top}px`,
+            width: `${menuPosition.width}px`,
+            maxHeight: `${menuPosition.maxHeight}px`
+          } : undefined}
+        >
           {visibleOptions.length > 0 ? visibleOptions.map((option) => (
             <label className="pc-mall-search-select-option pc-mall-invoice-title-search-select-option" key={option.id}>
               <input type="radio" checked={value === option.id} onChange={() => handleSelect(option.id)} />
@@ -3454,6 +3504,48 @@ function getBuyerPcMallSupportedInvoiceTypes(shopName, storeName) {
 function getBuyerPcMallSupportedInvoiceTypeText(shopName, storeName) {
   const supportedTypes = getBuyerPcMallSupportedInvoiceTypes(shopName, storeName);
   return supportedTypes.length > 0 ? `可开：${supportedTypes.join("、")}` : "可开：-";
+}
+
+function getBuyerPcMallMatchedInvoiceTitleRow(item, invoiceTitleRows = []) {
+  if (!item || !Array.isArray(invoiceTitleRows)) return null;
+  return invoiceTitleRows.find((titleItem) => (
+    (item.invoiceTitleId && titleItem.id === item.invoiceTitleId)
+    || (!item.invoiceTitleId && item.invoiceTitle && titleItem.title === item.invoiceTitle)
+  )) || null;
+}
+
+function getBuyerPcMallTitleSupportedInvoiceTypesForOrder(item, invoiceTitleRows = []) {
+  const matchedTitle = getBuyerPcMallMatchedInvoiceTitleRow(item, invoiceTitleRows);
+  if (matchedTitle) return getBuyerPcMallSupportedInvoiceTypesFromRow(matchedTitle);
+  if (!item?.invoiceTitleId && !item?.invoiceTitle) return [];
+  return normalizeBuyerPcMallSupportedInvoiceTypes(item?.titleType || "企业", item?.invoiceTypes || item?.invoiceType || "");
+}
+
+function getBuyerPcMallOrderInvoiceTypeOptions(item, invoiceTitleRows = []) {
+  const titleSupportedTypes = getBuyerPcMallTitleSupportedInvoiceTypesForOrder(item, invoiceTitleRows);
+  const shopSupportedTypes = getBuyerPcMallSupportedInvoiceTypes(item?.shop, item?.store);
+  if (shopSupportedTypes.length === 0) return titleSupportedTypes;
+
+  const matchedTypes = titleSupportedTypes.filter((invoiceType) => shopSupportedTypes.includes(invoiceType));
+  return matchedTypes.length > 0 ? matchedTypes : titleSupportedTypes;
+}
+
+function resolveBuyerPcMallOrderInvoiceType(item, invoiceTitleRows = []) {
+  const invoiceTypeOptions = getBuyerPcMallOrderInvoiceTypeOptions(item, invoiceTitleRows);
+  if (invoiceTypeOptions.length === 0) return "";
+  if (invoiceTypeOptions.length > 1) {
+    return invoiceTypeOptions.includes(item?.invoiceType) ? item.invoiceType : "";
+  }
+  return invoiceTypeOptions.includes(item?.invoiceType)
+    ? item.invoiceType
+    : (invoiceTypeOptions[0] || item?.invoiceType || buyerPcMallNormalInvoiceType);
+}
+
+function normalizeBuyerPcMallOrderInvoiceType(item, invoiceTitleRows = []) {
+  return {
+    ...item,
+    invoiceType: resolveBuyerPcMallOrderInvoiceType(item, invoiceTitleRows)
+  };
 }
 
 function getInvoiceTypeMismatchMessage(supportedInvoiceTypes) {
@@ -4533,6 +4625,7 @@ function createBuyerPcMallBatchOrderInvoiceFields(titleRow) {
       invoiceTitleId: "",
       invoiceTitle: "",
       invoiceType: buyerPcMallBatchInvoiceForm.invoiceType,
+      invoiceTypes: buyerPcMallBatchInvoiceForm.invoiceTypes || [buyerPcMallBatchInvoiceForm.invoiceType],
       titleType: buyerPcMallBatchInvoiceForm.titleType,
       taxpayerId: "",
       registeredAddress: "",
@@ -4548,7 +4641,8 @@ function createBuyerPcMallBatchOrderInvoiceFields(titleRow) {
   return {
     invoiceTitleId: titleRow.id,
     invoiceTitle: titleRow.title || "",
-    invoiceType: getBuyerPcMallPrimaryInvoiceType(supportedInvoiceTypes),
+    invoiceType: supportedInvoiceTypes.length > 1 ? "" : getBuyerPcMallPrimaryInvoiceType(supportedInvoiceTypes),
+    invoiceTypes: supportedInvoiceTypes,
     titleType: titleRow.titleType || buyerPcMallBatchInvoiceForm.titleType,
     taxpayerId: titleRow.taxpayerId || "",
     registeredAddress: titleRow.registeredAddress || "",
@@ -4675,6 +4769,7 @@ function createBuyerPcMallBatchItemFromAppliedRow(row, invoiceTitleRows = []) {
       invoiceTitleId: "",
       invoiceTitle: row.invoiceTitle || "",
       invoiceType: row.invoiceType || buyerPcMallBatchInvoiceForm.invoiceType,
+      invoiceTypes: row.invoiceTypes || row.invoiceType || buyerPcMallBatchInvoiceForm.invoiceType,
       titleType: row.titleType || buyerPcMallBatchInvoiceForm.titleType,
       taxpayerId: row.taxpayerId && row.taxpayerId !== "-" ? row.taxpayerId : "",
       registeredAddress: row.registeredAddress && row.registeredAddress !== "-" ? row.registeredAddress : "",
@@ -4685,14 +4780,14 @@ function createBuyerPcMallBatchItemFromAppliedRow(row, invoiceTitleRows = []) {
       receiverEmail: row.receiverEmail && row.receiverEmail !== "-" ? row.receiverEmail : ""
     };
 
-  return {
+  return normalizeBuyerPcMallOrderInvoiceType({
     ...row,
     ...invoiceFields,
     price: row.amount,
     time: row.appliedAt,
     buyerAccount: "nfsq369（ID:13641）",
     needInvoice: normalizeShopInvoiceSelectionValue(row.singleInvoice)
-  };
+  }, invoiceTitleRows);
 }
 
 const normalizeBuyerPcMallComparableText = (value) => {
@@ -4745,7 +4840,7 @@ const marketingPageConfigs = {
   限时购1: {
     createLabel: "新增限时购",
     defaultCategory: "常规活动",
-    initialFilters: { ...emptyFilters }
+    initialFilters: { ...emptyFilters, buyerGroup: "", buyerId: "" }
   },
   限时购: {
     createLabel: "新增限时购",
@@ -4753,12 +4848,35 @@ const marketingPageConfigs = {
     initialFilters: { ...emptyFilters }
   }
 };
-const initialCreateForm = { activityName: "", category: "", startTime: "", endTime: "", productKeyword: "", productId: "", onlyUnpricedProducts: false };
+const initialCreateForm = { activityName: "", category: "", startTime: "", endTime: "", participantBuyerType: "all", participantBuyerGroup: "", productKeyword: "", productId: "", onlyUnpricedProducts: false };
 const initialPickerFilters = { category: "", productName: "", productId: "" };
 const cloneProducts = (products) => JSON.parse(JSON.stringify(products));
 const isPrimarySpecialPricePage = (pageName) => pageName === "专享价";
 const isSecondarySpecialPricePage = (pageName) => pageName === "专享价2";
+const isFlashSaleOnePage = (pageName) => pageName === "限时购1";
 const isAnySpecialPricePage = (pageName) => isPrimarySpecialPricePage(pageName) || isSecondarySpecialPricePage(pageName);
+function getActivityBuyerScope(activity) {
+  const buyerGroup = activity?.participantBuyerGroup || activity?.buyerGroup || "";
+  const participantType = activity?.participantBuyerType || (buyerGroup ? "group" : "all");
+  return {
+    isGroup: participantType === "group",
+    buyerGroup
+  };
+}
+
+function BuyerScopeReadonly({ activity, className = "" }) {
+  const { isGroup, buyerGroup } = getActivityBuyerScope(activity);
+
+  return (
+    <span className={`buyer-scope-readonly ${className}`}>
+      <span className="buyer-scope-readonly-select">
+        <strong>{isGroup ? buyerGroup : "全部买家"}</strong>
+        <i />
+      </span>
+      {isGroup ? <button type="button">查看</button> : null}
+    </span>
+  );
+}
 const getActiveSpecs = (product) => product.specs.filter((spec) => spec.status === "active");
 const hasUnifiedFlashPrice = (product) => String(product.flashPrice || "").trim() !== "";
 const hasUnifiedTotalLimit = (product) => String(product.totalLimit || "").trim() !== "";
@@ -6762,6 +6880,12 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
 
       const supportedInvoiceTypes = getBuyerPcMallSupportedInvoiceTypes(item.shop, item.store);
       const selectedInvoiceType = item.invoiceType || "";
+      const invoiceTypeOptions = getBuyerPcMallOrderInvoiceTypeOptions(item, invoiceTitleRows);
+      if (invoiceTypeOptions.length > 1 && !selectedInvoiceType) {
+        result[item.orderNo] = "请选择发票类型";
+        return result;
+      }
+
       if (supportedInvoiceTypes.length > 0 && selectedInvoiceType && !supportedInvoiceTypes.includes(selectedInvoiceType)) {
         result[item.orderNo] = getInvoiceTypeMismatchMessage(supportedInvoiceTypes);
         return result;
@@ -6770,7 +6894,7 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
       result[item.orderNo] = "";
       return result;
     }, {})
-  ), [orderItems]);
+  ), [invoiceTitleRows, orderItems]);
   const errorOrderItems = useMemo(() => (
     submitAttempted
       ? orderItems.filter((item) => orderValidationByOrderNo[item.orderNo])
@@ -6830,10 +6954,10 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
         const nextTitleFields = isBuyerPcMallHiddenStoreRow(item)
           ? createBuyerPcMallHiddenStoreOrderInvoiceFields(matchedTitle)
           : createBuyerPcMallBatchOrderInvoiceFields(matchedTitle);
-        return {
+        return normalizeBuyerPcMallOrderInvoiceType({
           ...item,
           ...nextTitleFields
-        };
+        }, invoiceTitleRows);
       }
 
       return {
@@ -6859,6 +6983,23 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
   };
 
   const handleHideInvoiceTitleTooltip = () => {
+    setInvoiceTitleTooltip(null);
+  };
+
+  const handleShowSeparateInvoiceTooltip = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const preferredLeft = rect.left + (rect.width / 2);
+
+    setInvoiceTitleTooltip({
+      content: shopInvoiceSeparateInvoiceTooltip,
+      preferredLeft,
+      left: preferredLeft,
+      top: rect.bottom + 8,
+      className: "pc-mall-separate-invoice-fixed-tooltip"
+    });
+  };
+
+  const handleHideSeparateInvoiceTooltip = () => {
     setInvoiceTitleTooltip(null);
   };
 
@@ -7347,15 +7488,36 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                           <th>申请开票金额</th>
                           <th>闪购门店</th>
                           {hideInvoiceAndReceiverSections ? <th>发票抬头</th> : null}
+                          {hideInvoiceAndReceiverSections ? <th>发票类型</th> : null}
                           {hideInvoiceAndReceiverSections ? <th>收票信息</th> : null}
                           {enableBatchTitleReplace ? <th>发票内容</th> : null}
-                          {showSeparateInvoiceColumn && (!hideInvoiceAndReceiverSections || enableBatchTitleReplace || editableSeparateInvoiceColumn) ? <th>需要单独开票</th> : null}
+                          {showSeparateInvoiceColumn && (!hideInvoiceAndReceiverSections || enableBatchTitleReplace || editableSeparateInvoiceColumn) ? (
+                            <th>
+                              <span className="pc-mall-header-with-tip">
+                                <span>需要单独开票</span>
+                                <span
+                                  className="shop-invoice-summary-tip pc-mall-header-tip pc-mall-separate-invoice-tip"
+                                  onMouseEnter={handleShowSeparateInvoiceTooltip}
+                                  onMouseLeave={handleHideSeparateInvoiceTooltip}
+                                >
+                                  <img className="shop-invoice-summary-tip-icon" src={questionHeaderIcon} alt="" aria-hidden="true" />
+                                </span>
+                              </span>
+                            </th>
+                          ) : null}
                           {allowToggleOrder ? <th>单开发票</th> : null}
                           {allowRemoveOrder ? <th>操作</th> : null}
                         </tr>
                       </thead>
                       <tbody>
-                        {group.items.map((item) => (
+                        {group.items.map((item) => {
+                          const invoiceTypeOptions = getBuyerPcMallOrderInvoiceTypeOptions(item, invoiceTitleRows);
+                          const resolvedInvoiceType = resolveBuyerPcMallOrderInvoiceType(item, invoiceTitleRows);
+                          const shouldSelectInvoiceType = invoiceTypeOptions.length > 1;
+                          const orderValidationMessage = orderValidationByOrderNo[item.orderNo] || "";
+                          const isInvoiceTypeRequiredError = orderValidationMessage === "请选择发票类型";
+
+                          return (
                           <tr key={item.orderNo}>
                             <td>
                               <div className="pc-mall-batch-order-cell">
@@ -7410,12 +7572,39 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                                       </button>
                                     </span>
                                   </div>
-                                  {showOrderFilterTabs && submitAttempted && orderValidationByOrderNo[item.orderNo] ? (
+                                  {showOrderFilterTabs && submitAttempted && orderValidationMessage && !isInvoiceTypeRequiredError ? (
                                     <div className="pc-mall-batch-order-error">
-                                      <span className="pc-mall-batch-order-error-text">{orderValidationByOrderNo[item.orderNo]}</span>
-                                      {orderValidationByOrderNo[item.orderNo].startsWith("该店铺仅支持") ? (
+                                      <span className="pc-mall-batch-order-error-text">{orderValidationMessage}</span>
+                                      {orderValidationMessage.startsWith("该店铺仅支持") ? (
                                         <button className="pc-mall-batch-title-adjust-btn" type="button" onClick={() => onAdjustInvoiceTitle?.(item)}>去调整</button>
                                       ) : null}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              </td>
+                            ) : null}
+                            {hideInvoiceAndReceiverSections ? (
+                              <td>
+                                <div className="pc-mall-batch-invoice-type-cell">
+                                  {invoiceTypeOptions.length === 0 ? (
+                                    <span>-</span>
+                                  ) : shouldSelectInvoiceType ? (
+                                    <div className="pc-mall-batch-table-select-wrap">
+                                      <div className="pc-mall-batch-select-wrap">
+                                        <select className={submitAttempted && isInvoiceTypeRequiredError ? "is-error" : ""} value={resolvedInvoiceType} onChange={(event) => handleChangeOrderItem(item.orderNo, "invoiceType", event.target.value)}>
+                                          <option value="">请选择</option>
+                                          {invoiceTypeOptions.map((invoiceType) => (
+                                            <option key={`${item.orderNo}-${invoiceType}`} value={invoiceType}>{invoiceType}</option>
+                                          ))}
+                                        </select>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <span className={`pc-mall-invoice-tag is-${getBuyerPcMallInvoiceTypeTone(resolvedInvoiceType)}`}>{resolvedInvoiceType}</span>
+                                  )}
+                                  {showOrderFilterTabs && submitAttempted && isInvoiceTypeRequiredError ? (
+                                    <div className="pc-mall-batch-order-error pc-mall-batch-invoice-type-error">
+                                      <span className="pc-mall-batch-order-error-text">{orderValidationMessage}</span>
                                     </div>
                                   ) : null}
                                 </div>
@@ -7462,7 +7651,8 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                             ) : null}
                             {allowRemoveOrder ? <td><button className="pc-mall-inline-remove" type="button" onClick={() => onRemoveOrder(item.orderNo)}>移除</button></td> : null}
                           </tr>
-                        ))}
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -7503,7 +7693,7 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
         {invoiceTitleTooltip ? (
           <div
             ref={invoiceTitleTooltipRef}
-            className="shop-invoice-fixed-tooltip pc-mall-title-fixed-tooltip"
+            className={`shop-invoice-fixed-tooltip pc-mall-title-fixed-tooltip${invoiceTitleTooltip.className ? ` ${invoiceTitleTooltip.className}` : ""}`}
             style={{
               left: `${invoiceTitleTooltip.left}px`,
               top: `${invoiceTitleTooltip.top}px`,
@@ -8656,14 +8846,14 @@ function BuyerPcMallPage({ onPortalActionClick }) {
       return;
     }
     const batchRows = selectedRows
-      .map((item) => ({
+      .map((item) => normalizeBuyerPcMallOrderInvoiceType({
         ...item,
         ...(isBuyerPcMallHiddenStoreRow(item)
           ? createBuyerPcMallHiddenStoreOrderInvoiceFields()
           : createBuyerPcMallBatchOrderInvoiceFields(defaultTitleRow)),
         needInvoice: mode === "separate",
         buyerAccount: "zhuda123"
-      }));
+      }, invoiceTitleRows));
 
     setBatchInvoiceMode(mode);
     setBatchInvoiceOrderItems(batchRows);
@@ -8958,14 +9148,14 @@ function BuyerPcMallPage({ onPortalActionClick }) {
       return;
     }
 
-    setSingleInvoiceOrder({
+    setSingleInvoiceOrder(normalizeBuyerPcMallOrderInvoiceType({
       ...matchedOrder,
       ...(isBuyerPcMallHiddenStoreRow(matchedOrder)
         ? createBuyerPcMallHiddenStoreOrderInvoiceFields()
         : createBuyerPcMallBatchOrderInvoiceFields(defaultTitleRow)),
       needInvoice: "否",
       buyerAccount: "zhuda123"
-    });
+    }, invoiceTitleRows));
   };
   const handleCloseSingleInvoiceModal = () => {
     setSingleInvoiceOrder(null);
@@ -11520,8 +11710,69 @@ function PlatformTradeSettingsPage() {
   );
 }
 
+function PlatformFlashSaleDetailPage({ activity, onBack }) {
+  const rows = (detailActivityConfigs.限时购1?.["1111"]?.rows || []).map((row) => ({
+    ...row,
+    selectedSpecCount: row.specs.length,
+    specSummary: `共 ${row.specs.length} 个 规格`
+  }));
+
+  return (
+    <section className="content-card platform-flash-sale-detail-card">
+      <div className="platform-flash-sale-detail-header">
+        <h3>限时购详情</h3>
+        <button className="btn btn-reset" type="button" onClick={onBack}>返回列表</button>
+      </div>
+      <div className="platform-flash-sale-detail-summary">
+        <div className="platform-flash-sale-detail-line"><span>活动名称:</span><strong>{activity.name}</strong></div>
+        <div className="platform-flash-sale-detail-line"><span>店铺:</span><strong>{activity.shop}</strong></div>
+        <div className="platform-flash-sale-detail-line"><span>开始时间:</span><strong>{activity.startTime}</strong></div>
+        <div className="platform-flash-sale-detail-line"><span>结束时间:</span><strong>{activity.endTime}</strong></div>
+        <div className="platform-flash-sale-detail-line platform-flash-sale-detail-buyer-line"><span>参与活动买家:</span><BuyerScopeReadonly activity={activity} /></div>
+      </div>
+
+      <div className="platform-flash-sale-detail-goods-label">商品详情:</div>
+      <div className="platform-flash-sale-detail-table-wrap">
+        <table className="goods-table platform-flash-sale-detail-table">
+          <thead>
+            <tr>
+              <th>商品</th>
+              <th>商城价</th>
+              <th>限时价</th>
+              <th>总限购数量</th>
+              <th>活动总库存</th>
+              <th>规格数量</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((item) => (
+              <tr key={item.id}>
+                <td>
+                  <div className="product-cell">
+                    <div className="product-image">{item.image}</div>
+                    <div className="product-meta">
+                      <div className="product-name">{item.name}</div>
+                      <div className="product-id">商品ID: {item.id}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>{item.marketPrice}</td>
+                <td>按规格维度生效</td>
+                <td>{item.totalLimit}</td>
+                <td>{item.activityStock}</td>
+                <td>{item.specSummary}，已选 {item.selectedSpecCount} 个</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
 function PlatformFlashSalePage() {
   const [activeTab, setActiveTab] = useState(platformFlashSaleTabs[0]);
+  const [activeDetail, setActiveDetail] = useState(null);
   const [draftFilters, setDraftFilters] = useState({
     status: "",
     shop: "",
@@ -11530,7 +11781,8 @@ function PlatformFlashSalePage() {
     activityName: "",
     activityId: "",
     productId: "",
-    specId: ""
+    specId: "",
+    buyerId: ""
   });
   const [appliedFilters, setAppliedFilters] = useState(draftFilters);
   const [pageInput, setPageInput] = useState("");
@@ -11548,7 +11800,8 @@ function PlatformFlashSalePage() {
       activityName: "",
       activityId: "",
       productId: "",
-      specId: ""
+      specId: "",
+      buyerId: ""
     };
     setDraftFilters(nextFilters);
     setAppliedFilters(nextFilters);
@@ -11562,6 +11815,7 @@ function PlatformFlashSalePage() {
     if (appliedFilters.endTime.trim() && item.endTime > appliedFilters.endTime.trim()) return false;
     if (appliedFilters.activityName.trim() && !item.name.includes(appliedFilters.activityName.trim())) return false;
     if (appliedFilters.activityId.trim() && !item.id.includes(appliedFilters.activityId.trim())) return false;
+    if (appliedFilters.buyerId.trim() && !String(item.buyerId || "").includes(appliedFilters.buyerId.trim())) return false;
     return true;
   }), [appliedFilters]);
 
@@ -11574,7 +11828,10 @@ function PlatformFlashSalePage() {
               key={tab}
               type="button"
               className={`platform-flash-sale-tab ${activeTab === tab ? "is-active" : ""}`}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => {
+                setActiveTab(tab);
+                setActiveDetail(null);
+              }}
             >
               {tab}
             </button>
@@ -11583,6 +11840,9 @@ function PlatformFlashSalePage() {
       </section>
 
       {activeTab === "限时购列表" ? (
+        activeDetail ? (
+          <PlatformFlashSaleDetailPage activity={activeDetail} onBack={() => setActiveDetail(null)} />
+        ) : (
         <>
           <section className="content-card platform-flash-sale-filter-card">
             <div className="platform-flash-sale-filter-grid">
@@ -11623,6 +11883,10 @@ function PlatformFlashSalePage() {
                 <span>规格ID</span>
                 <input value={draftFilters.specId} onChange={(event) => handleDraftFilterChange("specId", event.target.value)} />
               </label>
+              <label className="platform-flash-sale-field">
+                <span>买家ID</span>
+                <input inputMode="numeric" value={draftFilters.buyerId} onChange={(event) => handleDraftFilterChange("buyerId", event.target.value.replace(/\D/g, ""))} />
+              </label>
               <div className="platform-flash-sale-filter-actions">
                 <button className="btn btn-reset" type="button" onClick={handleReset}>重置</button>
                 <button className="btn btn-dark" type="button" onClick={() => setAppliedFilters(draftFilters)}>查询</button>
@@ -11641,6 +11905,7 @@ function PlatformFlashSalePage() {
                     <th>活动ID</th>
                     <th>活动名称</th>
                     <th>店铺</th>
+                    <th>买家分组</th>
                     <th>开始时间 <span className="platform-flash-sale-sort">◆</span></th>
                     <th>结束时间 <span className="platform-flash-sale-sort">◆</span></th>
                     <th>状态</th>
@@ -11653,19 +11918,20 @@ function PlatformFlashSalePage() {
                       <td>{item.id}</td>
                       <td>{item.name}</td>
                       <td>{item.shop}</td>
+                      <td><span className="platform-flash-sale-buyer-group-cell">{item.buyerGroup}</span></td>
                       <td>{item.startTime}</td>
                       <td>{item.endTime}</td>
                       <td>{item.status}</td>
                       <td>
                         <div className="platform-flash-sale-actions">
                           <button type="button">前端显示</button>
-                          <button type="button">查看</button>
+                          <button type="button" onClick={() => setActiveDetail(item)}>查看</button>
                         </div>
                       </td>
                     </tr>
                   )) : (
                     <tr>
-                      <td className="platform-flash-sale-empty" colSpan={7}>暂无数据</td>
+                      <td className="platform-flash-sale-empty" colSpan={8}>暂无数据</td>
                     </tr>
                   )}
                 </tbody>
@@ -11687,6 +11953,7 @@ function PlatformFlashSalePage() {
             </div>
           </section>
         </>
+        )
       ) : (
         <section className="content-card platform-flash-sale-placeholder">
           <span>{activeTab}</span>
@@ -12644,12 +12911,15 @@ function ListPage({ pageName, filters, setFilters, page, setPage, pageSize, setP
     return <SpecialPrice2ListPage filters={filters} setFilters={setFilters} page={page} setPage={setPage} pageSize={pageSize} setPageSize={setPageSize} onCreate={onCreate} onAction={onAction} activities={activities} />;
   }
 
+  const showFlashSaleOneBuyerFields = isFlashSaleOnePage(pageName);
   const filteredActivities = useMemo(() => activities.filter((item) => {
     if (filters.status !== "全部" && item.status !== filters.status) return false;
     if (filters.activityId && !item.id.includes(filters.activityId.trim())) return false;
     if (filters.activityName && !item.name.includes(filters.activityName.trim())) return false;
+    if (showFlashSaleOneBuyerFields && filters.buyerGroup && item.buyerGroup !== filters.buyerGroup) return false;
+    if (showFlashSaleOneBuyerFields && filters.buyerId && !String(item.buyerId || "").includes(filters.buyerId.trim())) return false;
     return true;
-  }), [activities, filters]);
+  }), [activities, filters, showFlashSaleOneBuyerFields]);
 
   const pageCount = Math.max(1, Math.ceil(filteredActivities.length / pageSize));
   const currentPage = Math.min(page, pageCount);
@@ -12658,23 +12928,34 @@ function ListPage({ pageName, filters, setFilters, page, setPage, pageSize, setP
   return (
     <>
       <section className="content-card filter-card">
-        <div className="filter-grid">
+        <div className={`filter-grid ${showFlashSaleOneBuyerFields ? "filter-grid-flash-sale-one" : ""}`}>
           <label className="filter-field field-status"><span>状态</span><select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}>{statuses.map((status) => <option key={status} value={status}>{status === "全部" ? "请选择" : status}</option>)}</select></label>
           <label className="filter-field field-date"><span>活动时间</span><input placeholder="开始时间        -        结束时间" value={filters.dateRange} onChange={(e) => setFilters({ ...filters, dateRange: e.target.value })} /></label>
           <label className="filter-field"><span>活动名称</span><input value={filters.activityName} onChange={(e) => setFilters({ ...filters, activityName: e.target.value })} /></label>
           <label className="filter-field"><span>活动ID</span><input value={filters.activityId} onChange={(e) => setFilters({ ...filters, activityId: e.target.value })} /></label>
           <label className="filter-field"><span>商品ID</span><input value={filters.productId} onChange={(e) => setFilters({ ...filters, productId: e.target.value })} /></label>
           <label className="filter-field"><span>规格ID</span><input value={filters.specId} onChange={(e) => setFilters({ ...filters, specId: e.target.value })} /></label>
-          <div className="filter-actions"><button className="btn btn-reset" type="button" onClick={() => setFilters(emptyFilters)}>重置</button><button className="btn btn-search" type="button">查询</button></div>
+          {showFlashSaleOneBuyerFields ? (
+            <>
+              <label className="filter-field"><span>买家分组</span><select value={filters.buyerGroup || ""} onChange={(e) => setFilters({ ...filters, buyerGroup: e.target.value })}><option value="">请选择</option>{buyerGroups.map((group) => <option key={group.id} value={group.name}>{group.name}</option>)}</select></label>
+              <label className="filter-field"><span>买家ID</span><input inputMode="numeric" pattern="[0-9]*" value={filters.buyerId || ""} onChange={(e) => setFilters({ ...filters, buyerId: e.target.value.replace(/\D/g, "") })} /></label>
+            </>
+          ) : null}
+          <div
+            className={`filter-actions ${showFlashSaleOneBuyerFields ? "flash-sale-one-filter-actions" : ""}`}
+            style={showFlashSaleOneBuyerFields ? { gridColumn: 4, gridRow: 3, width: "max-content", justifySelf: "end", justifyContent: "flex-start", alignSelf: "start" } : undefined}
+          >
+            <button className="btn btn-reset" type="button" onClick={() => setFilters(marketingPageConfigs[pageName]?.initialFilters || emptyFilters)}>重置</button><button className="btn btn-search" type="button">查询</button>
+          </div>
         </div>
       </section>
 
       <section className="content-card table-card">
         <div className="table-toolbar"><button className="btn btn-create" type="button" onClick={onCreate}>{marketingPageConfigs[pageName]?.createLabel || "新增活动"}</button></div>
         <div className="table-shell">
-          <table className="data-table">
-            <thead><tr><th>活动ID</th><th>活动名称</th><th>活动商品数</th><th>开始时间</th><th>结束时间</th><th>状态</th><th>操作</th></tr></thead>
-            <tbody>{rows.map((item) => <tr key={item.id}><td>{item.id}</td><td>{item.name}</td><td>{item.goodsCount}</td><td>{item.startTime}</td><td>{item.endTime}</td><td className={`status-cell status-${item.status}`}>{item.status}</td><td><div className="action-links">{item.actions.map((action) => <button key={action} type="button" onClick={() => onAction(action, item)}>{action}</button>)}</div></td></tr>)}</tbody>
+          <table className={`data-table ${showFlashSaleOneBuyerFields ? "flash-sale-one-data-table" : ""}`}>
+            <thead><tr><th>活动ID</th><th>活动名称</th>{showFlashSaleOneBuyerFields ? <th>买家分组</th> : null}<th>活动商品数</th><th>开始时间</th><th>结束时间</th><th>状态</th><th>操作</th></tr></thead>
+            <tbody>{rows.map((item) => <tr key={item.id}><td>{item.id}</td><td>{item.name}</td>{showFlashSaleOneBuyerFields ? <td><span className="flash-sale-one-buyer-group-cell">{item.buyerGroup}</span></td> : null}<td>{item.goodsCount}</td><td>{item.startTime}</td><td>{item.endTime}</td><td className={`status-cell status-${item.status}`}>{item.status}</td><td><div className="action-links">{item.actions.map((action) => <button key={action} type="button" onClick={() => onAction(action, item)}>{action}</button>)}</div></td></tr>)}</tbody>
           </table>
         </div>
         <div className="pagination-bar"><span>共 {filteredActivities.length} 条</span><select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}><option value={20}>20 条/页</option><option value={50}>50 条/页</option><option value={100}>100 条/页</option></select><button className="page-btn" type="button" disabled>‹</button><button className="page-btn is-current" type="button">{currentPage}</button><button className="page-btn" type="button" disabled={currentPage >= pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}>›</button><span>到第</span><input className="page-input" placeholder="请输入" /><span>页</span><button className="btn btn-jump" type="button">跳转</button></div>
@@ -12760,6 +13041,7 @@ function DetailPage({ detailActivity, page, setPage, pageSize, setPageSize, onSh
         <div className="detail-line"><span>活动分类:</span><strong>{detailActivity.category}</strong></div>
         <div className="detail-line"><span>开始时间:</span><strong>{detailActivity.startTime}</strong></div>
         <div className="detail-line"><span>结束时间:</span><strong>{detailActivity.endTime}</strong></div>
+        <div className="detail-line detail-buyer-scope-line"><span>参与活动买家:</span><BuyerScopeReadonly activity={detailActivity} /></div>
       </div>
 
       <div className="detail-goods-label">商品详情:</div>
@@ -17106,6 +17388,7 @@ function ShopInvoicePage({
 
 function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, selectedProducts, selectedGoodsIds, productFieldEditModesByProduct, productFieldErrorsByProduct, onToggleProductFieldEditMode, onToggleGoodsSelection, onRemoveProduct, onBatchRemoveProducts, onBack, onOpenPicker, onOpenSpecPicker, onShowSpecDetail, onTerminateProduct, onUpdateProductFlashPrice, onUpdateProductLimit, onUpdateProductActivityStock, onSave, modalOpen }) {
   const isSpecialPricePage = isAnySpecialPricePage(pageName);
+  const showFlashSaleOneBuyerScope = isFlashSaleOnePage(pageName);
   const filteredProducts = useMemo(() => selectedProducts.filter((product) => {
     const productKeyword = form.productKeyword.trim();
     const productId = form.productId.trim();
@@ -17261,6 +17544,28 @@ function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, 
           <label className="create-field"><span><em>*</em> 活动分类:</span><div className="create-input-wrap"><select value={form.category} onChange={(e) => onFormChange("category", e.target.value)}><option value="">请选择活动分类</option>{activityCategories.map((item) => <option key={item} value={item}>{item}</option>)}</select></div></label>
           <label className="create-field"><span><em>*</em> 开始时间:</span><div className={`create-input-wrap with-icon ${isEditMode ? "is-disabled" : ""}`}><input placeholder="请选择开始时间" value={form.startTime} onChange={(e) => onFormChange("startTime", e.target.value)} disabled={isEditMode} /><i>◴</i></div></label>
           <label className="create-field"><span><em>*</em> 结束时间:</span><div className="create-input-wrap with-icon"><input placeholder="请选择结束时间" value={form.endTime} onChange={(e) => onFormChange("endTime", e.target.value)} /><i>◴</i></div></label>
+          {showFlashSaleOneBuyerScope ? (
+            <div className="create-field create-buyer-scope-field">
+              <span><em>*</em> 参与活动买家:</span>
+              <div className="create-buyer-scope-control">
+                <div className="create-buyer-scope-radios">
+                  <label className="create-radio"><input type="radio" name="participant-buyer-type" value="all" checked={(form.participantBuyerType || "all") === "all"} onChange={() => onFormChange("participantBuyerType", "all")} /><i />全部买家</label>
+                  <label className="create-radio"><input type="radio" name="participant-buyer-type" value="group" checked={form.participantBuyerType === "group"} onChange={() => onFormChange("participantBuyerType", "group")} /><i />指定买家分组</label>
+                </div>
+                {form.participantBuyerType === "group" ? (
+                  <div className="create-buyer-group-row">
+                    <div className="create-input-wrap create-buyer-group-select">
+                      <select value={form.participantBuyerGroup || ""} onChange={(e) => onFormChange("participantBuyerGroup", e.target.value)}>
+                        <option value="">请选择买家分组</option>
+                        {buyerGroups.map((item) => <option key={item.id} value={item.name}>{item.name}</option>)}
+                      </select>
+                    </div>
+                    <button className={`create-buyer-group-view ${form.participantBuyerGroup ? "is-active" : ""}`} type="button">查看</button>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
           <div className="create-field"><span><em>*</em> 活动商品:</span><div className="create-actions-row"><button className="btn btn-create picker-btn" type="button" onClick={onOpenPicker} disabled={isEditMode}>+ 选择商品</button></div></div>
         </div>
 
@@ -21639,7 +21944,11 @@ export default function App() {
   const handleFormChange = (field, value) => {
     updateCurrentMarketingState((current) => ({
       ...current,
-      createForm: { ...current.createForm, [field]: value }
+      createForm: {
+        ...current.createForm,
+        [field]: value,
+        ...(field === "participantBuyerType" && value === "all" ? { participantBuyerGroup: "" } : {})
+      }
     }));
   };
 
@@ -22107,6 +22416,11 @@ export default function App() {
     let hasMissingFlashPrice = false;
     let hasMissingTotalLimit = false;
     let hasMissingActivityStock = false;
+
+    if (isFlashSaleOnePage(currentMarketingPage) && createForm.participantBuyerType === "group" && !createForm.participantBuyerGroup) {
+      setToastMessage("请选择买家分组");
+      return;
+    }
 
     selectedProducts.forEach((product) => {
       const productFieldEditModes = productFieldEditModesByProduct?.[product.id] || initialProductFieldEditModes;
