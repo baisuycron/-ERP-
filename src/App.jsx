@@ -1599,7 +1599,7 @@ const seedActivitiesByPage = {
     { id: "1111", name: "双11限时购1活动", buyerGroup: "北京分组", buyerId: "2083059433", goodsCount: 12, startTime: "2026-11-01 00:00:00", endTime: "2026-11-11 23:59:59", status: "未开始", actions: ["查看", "编辑", "提前结束"] },
     { id: "0001", name: "国庆节限时购1活动", buyerGroup: "黑龙江分组", buyerId: "2084008012", goodsCount: 2, startTime: "2026-10-01 00:00:00", endTime: "2026-10-08 23:59:59", status: "未开始", actions: ["查看", "编辑", "提前结束"] },
     { id: "0011", name: "普通限时购1活动", buyerGroup: "四川分组", buyerId: "2080403003", goodsCount: 30, startTime: "2026-03-01 00:00:00", endTime: "2026-04-20 23:59:59", status: "进行中", actions: ["查看", "编辑", "提前结束", "复制链接"] },
-    { id: "0012", name: "元旦节限时购1活动", buyerGroup: "北京分组", buyerId: "2080025606", goodsCount: 6, startTime: "2026-01-01 00:00:00", endTime: "2026-01-01 23:59:59", status: "已结束", actions: ["查看"] }
+    { id: "0012", name: "元旦节限时购1活动", participantBuyerType: "all", buyerGroup: "全部买家", buyerId: "2080025606", goodsCount: 6, startTime: "2026-01-01 00:00:00", endTime: "2026-01-01 23:59:59", status: "已结束", actions: ["查看"] }
   ],
   限时购: [
     { id: "2101", name: "春季限时购活动", goodsCount: 8, startTime: "2026-04-01 00:00:00", endTime: "2026-04-30 23:59:59", status: "进行中", actions: ["查看", "编辑", "提前结束", "复制链接"] },
@@ -4869,11 +4869,17 @@ function BuyerScopeReadonly({ activity, className = "" }) {
 
   return (
     <span className={`buyer-scope-readonly ${className}`}>
-      <span className="buyer-scope-readonly-select">
-        <strong>{isGroup ? buyerGroup : "全部买家"}</strong>
-        <i />
-      </span>
-      {isGroup ? <button type="button">查看</button> : null}
+      {isGroup ? (
+        <>
+          <span className="buyer-scope-readonly-select">
+            <strong>{buyerGroup}</strong>
+            <i />
+          </span>
+          <button type="button">查看</button>
+        </>
+      ) : (
+        <strong className="buyer-scope-readonly-text">全部买家</strong>
+      )}
     </span>
   );
 }
@@ -11918,7 +11924,7 @@ function PlatformFlashSalePage() {
                       <td>{item.id}</td>
                       <td>{item.name}</td>
                       <td>{item.shop}</td>
-                      <td><span className="platform-flash-sale-buyer-group-cell">{item.buyerGroup}</span></td>
+                      <td><span className={`platform-flash-sale-buyer-group-cell ${item.buyerGroup === "全部买家" ? "is-all-buyers" : ""}`}>{item.buyerGroup}</span></td>
                       <td>{item.startTime}</td>
                       <td>{item.endTime}</td>
                       <td>{item.status}</td>
@@ -12955,7 +12961,7 @@ function ListPage({ pageName, filters, setFilters, page, setPage, pageSize, setP
         <div className="table-shell">
           <table className={`data-table ${showFlashSaleOneBuyerFields ? "flash-sale-one-data-table" : ""}`}>
             <thead><tr><th>活动ID</th><th>活动名称</th>{showFlashSaleOneBuyerFields ? <th>买家分组</th> : null}<th>活动商品数</th><th>开始时间</th><th>结束时间</th><th>状态</th><th>操作</th></tr></thead>
-            <tbody>{rows.map((item) => <tr key={item.id}><td>{item.id}</td><td>{item.name}</td>{showFlashSaleOneBuyerFields ? <td><span className="flash-sale-one-buyer-group-cell">{item.buyerGroup}</span></td> : null}<td>{item.goodsCount}</td><td>{item.startTime}</td><td>{item.endTime}</td><td className={`status-cell status-${item.status}`}>{item.status}</td><td><div className="action-links">{item.actions.map((action) => <button key={action} type="button" onClick={() => onAction(action, item)}>{action}</button>)}</div></td></tr>)}</tbody>
+            <tbody>{rows.map((item) => <tr key={item.id}><td>{item.id}</td><td>{item.name}</td>{showFlashSaleOneBuyerFields ? <td><span className={`flash-sale-one-buyer-group-cell ${item.buyerGroup === "全部买家" ? "is-all-buyers" : ""}`}>{item.buyerGroup}</span></td> : null}<td>{item.goodsCount}</td><td>{item.startTime}</td><td>{item.endTime}</td><td className={`status-cell status-${item.status}`}>{item.status}</td><td><div className="action-links">{item.actions.map((action) => <button key={action} type="button" onClick={() => onAction(action, item)}>{action}</button>)}</div></td></tr>)}</tbody>
           </table>
         </div>
         <div className="pagination-bar"><span>共 {filteredActivities.length} 条</span><select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}><option value={20}>20 条/页</option><option value={50}>50 条/页</option><option value={100}>100 条/页</option></select><button className="page-btn" type="button" disabled>‹</button><button className="page-btn is-current" type="button">{currentPage}</button><button className="page-btn" type="button" disabled={currentPage >= pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}>›</button><span>到第</span><input className="page-input" placeholder="请输入" /><span>页</span><button className="btn btn-jump" type="button">跳转</button></div>

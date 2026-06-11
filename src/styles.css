@@ -159,6 +159,7 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .platform-flash-sale-table th:nth-child(7), .platform-flash-sale-table td:nth-child(7) { width: 150px; }
 .platform-flash-sale-table th:nth-child(8), .platform-flash-sale-table td:nth-child(8) { width: 250px; }
 .platform-flash-sale-buyer-group-cell { color: #ff7a00; text-decoration: underline; text-decoration-color: #ff7a00; text-underline-offset: 4px; cursor: pointer; }
+.platform-flash-sale-buyer-group-cell.is-all-buyers { color: #202020; text-decoration: none; cursor: default; }
 .platform-flash-sale-sort { color: #c8ced8; font-size: 10px; margin-left: 6px; }
 .platform-flash-sale-actions { display: flex; align-items: center; gap: 12px; }
 .platform-flash-sale-actions button { border: none; padding: 0; background: transparent; color: #ff6f18; font-size: 14px; }
@@ -3103,6 +3104,7 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .flash-sale-one-data-table th:nth-child(7) { width: 110px; }
 .flash-sale-one-data-table th:nth-child(8) { width: 170px; }
 .flash-sale-one-buyer-group-cell { color: #ff7a00; text-decoration: underline; text-decoration-color: #ff7a00; text-underline-offset: 4px; cursor: pointer; }
+.flash-sale-one-buyer-group-cell.is-all-buyers { color: #202020; text-decoration: none; cursor: default; }
 .special-data-table th:nth-child(1) { width: 118px; }
 .special-data-table th:nth-child(2) { width: 280px; }
 .special-data-table th:nth-child(3) { width: 220px; }
@@ -3135,6 +3137,7 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .detail-line strong { display: inline-flex; align-items: center; font-weight: 600; color: #444; }
 .detail-buyer-scope-line > span { width: auto; margin-left: 0; }
 .buyer-scope-readonly { display: inline-flex; align-items: center; gap: 18px; min-height: 44px; white-space: nowrap; }
+.buyer-scope-readonly-text { color: #202020; font-weight: 600; }
 .buyer-scope-readonly-select { position: relative; display: inline-flex; align-items: center; flex: none; width: 280px; height: 44px; border: 1px solid #e5e7eb; background: #f0f0f0; padding: 0 44px 0 14px; color: #c2c6cf; box-sizing: border-box; }
 .buyer-scope-readonly-select strong { min-width: 0; overflow: hidden; color: #c2c6cf; font-weight: 400; white-space: nowrap; text-overflow: ellipsis; }
 .buyer-scope-readonly-select i { position: absolute; top: 50%; right: 18px; width: 9px; height: 9px; border-right: 1.5px solid #c2c6cf; border-bottom: 1.5px solid #c2c6cf; transform: translateY(-70%) rotate(45deg); }
