@@ -210,6 +210,8 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .platform-invoice-field > span { width: 92px; color: #202020; font-size: 14px; text-align: right; white-space: nowrap; }
 .platform-invoice-field input,
 .platform-invoice-select-wrap select { width: 100%; height: 36px; border: 1px solid #e1e5ec; background: #fff; padding: 0 12px; color: #333; font-size: 14px; }
+.platform-invoice-field .pc-mall-date-field { flex: 1; min-width: 0; }
+.platform-invoice-field .pc-mall-date-trigger { height: 36px; border-radius: 0; }
 .platform-invoice-select-wrap { position: relative; flex: 1; min-width: 0; }
 .platform-invoice-select-wrap::after { content: ""; position: absolute; top: 50%; right: 14px; width: 8px; height: 8px; border-right: 1.5px solid #c1c7d2; border-bottom: 1.5px solid #c1c7d2; transform: translateY(-70%) rotate(45deg); pointer-events: none; }
 .platform-invoice-select-wrap select { appearance: none; padding-right: 34px; }
@@ -2117,7 +2119,8 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .pc-mall-export-record-body {
   margin: 0 24px;
   border: 1px solid #edf1f5;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   max-height: 490px;
 }
 .pc-mall-export-record-table {
@@ -2148,6 +2151,37 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
   background: transparent;
   color: #1677ff;
   font-size: 14px;
+}
+.pc-mall-export-record-reason {
+  position: relative;
+}
+.pc-mall-export-record-floating-tooltip {
+  position: fixed;
+  z-index: 10000;
+  width: max-content;
+  max-width: 300px;
+  padding: 8px 10px;
+  border-radius: 4px;
+  background: #1f2937;
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: left;
+  white-space: normal;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+.pc-mall-export-record-floating-tooltip::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -5px;
+  width: 10px;
+  height: 10px;
+  background: #1f2937;
+  transform: translateX(-50%) rotate(45deg);
 }
 .pc-mall-export-record-status {
   display: flex;

@@ -43,6 +43,7 @@ const initialShopInvoiceFilters = {
   paidAtRange: { startDate: "", endDate: "" },
   appliedAtRange: { startDate: "", endDate: "" },
   invoicedAtRange: { startDate: "", endDate: "" },
+  invoiceUploadedAtRange: { startDate: "", endDate: "" },
   invoiceNo: "",
   invoiceTitle: "",
   taxpayerId: "",
@@ -88,7 +89,8 @@ const initialMiniappInvoicedFilters = {
   downloadStatus: "全部",
   separateInvoiceRequired: "全部"
 };
-const shopInvoiceRollingSampleTimeoutAt = formatShopInvoiceDateTime(Date.now() + 15 * 24 * 60 * 60 * 1000);
+const shopInvoiceTodayDeadlineAt = formatShopInvoiceDate(Date.now());
+const shopInvoiceRollingSampleTimeoutAt = formatShopInvoiceDate(Date.now() + 15 * 24 * 60 * 60 * 1000);
 
 const normalizeShopInvoiceMode = (value) => {
   if (value === "单独开票" || value === "是") return "是";
@@ -714,18 +716,46 @@ function formatShopInvoiceDateTime(value) {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
+function formatShopInvoiceDate(value) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function parseShopInvoiceDateStart(value) {
+  if (value instanceof Date || typeof value === "number") {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return Number.NaN;
+    date.setHours(0, 0, 0, 0);
+    return date.getTime();
+  }
+
+  const normalizedValue = String(value || "").trim();
+  if (!normalizedValue || normalizedValue === "-") return Number.NaN;
+
+  const parsedDate = new Date(normalizedValue.replace(/-/g, "/"));
+  if (Number.isNaN(parsedDate.getTime())) return Number.NaN;
+
+  parsedDate.setHours(0, 0, 0, 0);
+  return parsedDate.getTime();
+}
+
 function getShopInvoiceTimeoutTime(row, overdueDays = 5) {
   if (!row) return Number.NaN;
 
   const explicitTimeoutAt = String(row.invoiceTimeoutAt || row.approachingTimeoutAt || "").trim();
   if (explicitTimeoutAt && explicitTimeoutAt !== "-") {
-    return Date.parse(explicitTimeoutAt.replace(/-/g, "/"));
+    return parseShopInvoiceDateStart(explicitTimeoutAt);
   }
 
   const normalizedValue = String(row.appliedAt || "").trim();
   if (!normalizedValue || normalizedValue === "-") return Number.NaN;
 
-  const parsedTime = Date.parse(normalizedValue.replace(/-/g, "/"));
+  const parsedTime = parseShopInvoiceDateStart(normalizedValue);
   if (Number.isNaN(parsedTime)) return Number.NaN;
 
   return parsedTime + overdueDays * 24 * 60 * 60 * 1000;
@@ -737,7 +767,7 @@ function isShopInvoiceApplicationOverdue(row, overdueDays = 5) {
   const timeoutTime = getShopInvoiceTimeoutTime(row, overdueDays);
   if (Number.isNaN(timeoutTime)) return false;
 
-  return Date.now() >= timeoutTime;
+  return parseShopInvoiceDateStart(Date.now()) > timeoutTime;
 }
 
 function isShopInvoiceApplicationApproachingOverdue(row, overdueDays = 5, warningDays = 1) {
@@ -746,9 +776,9 @@ function isShopInvoiceApplicationApproachingOverdue(row, overdueDays = 5, warnin
   const timeoutTime = getShopInvoiceTimeoutTime(row, overdueDays);
   if (Number.isNaN(timeoutTime)) return false;
 
-  const diff = timeoutTime - Date.now();
+  const diff = timeoutTime - parseShopInvoiceDateStart(Date.now());
   const warningWindow = warningDays * 24 * 60 * 60 * 1000;
-  return diff > 0 && diff <= warningWindow;
+  return diff >= 0 && diff <= warningWindow;
 }
 
 function getShopInvoiceApproachingTimeoutAt(row, overdueDays = 5) {
@@ -757,16 +787,18 @@ function getShopInvoiceApproachingTimeoutAt(row, overdueDays = 5) {
   const timeoutTime = getShopInvoiceTimeoutTime(row, overdueDays);
   if (Number.isNaN(timeoutTime)) return "";
 
-  return formatShopInvoiceDateTime(timeoutTime);
+  return formatShopInvoiceDate(timeoutTime);
 }
 
-function formatShopInvoiceCountdownDuration(durationMs) {
-  const totalSeconds = Math.max(0, Math.floor(Math.abs(durationMs) / 1000));
-  const days = Math.floor(totalSeconds / (24 * 60 * 60));
-  const hours = Math.floor((totalSeconds % (24 * 60 * 60)) / (60 * 60));
-  const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
-  const seconds = totalSeconds % 60;
-  return `${days}天${hours}小时${minutes}分${seconds}秒`;
+function formatShopInvoiceDeadlineDate(value) {
+  const deadlineTime = parseShopInvoiceDateStart(value);
+  if (Number.isNaN(deadlineTime)) return "-";
+  return formatShopInvoiceDate(deadlineTime);
+}
+
+function getShopInvoiceDeadlineDateText(row) {
+  if (!row || row.orderStatus !== "已完成" || row.invoiceStatus !== "待开票") return "-";
+  return formatShopInvoiceDeadlineDate(row.invoiceTimeoutAt);
 }
 
 function getShopInvoiceRemainingTimeoutText(row, now = Date.now()) {
@@ -775,11 +807,13 @@ function getShopInvoiceRemainingTimeoutText(row, now = Date.now()) {
   const timeoutAt = getShopInvoiceApproachingTimeoutAt(row);
   if (!timeoutAt) return "-";
 
-  const timeoutTime = Date.parse(timeoutAt.replace(/-/g, "/"));
+  const timeoutTime = parseShopInvoiceDateStart(timeoutAt);
   if (Number.isNaN(timeoutTime)) return "-";
 
-  const diff = timeoutTime - now;
-  return `${diff >= 0 ? "剩余" : "超时"}${formatShopInvoiceCountdownDuration(diff)}`;
+  const diffDays = Math.round((timeoutTime - parseShopInvoiceDateStart(now)) / (24 * 60 * 60 * 1000));
+  if (diffDays > 0) return `剩余${diffDays}天`;
+  if (diffDays === 0) return "今日截止";
+  return `已超时${Math.abs(diffDays)}天`;
 }
 
 function hasShopInvoiceApproachingBadge(row) {
@@ -789,13 +823,13 @@ function hasShopInvoiceApproachingBadge(row) {
 function getShopInvoiceApproachingTooltip(row) {
   const timeoutAt = getShopInvoiceApproachingTimeoutAt(row);
   if (!timeoutAt) return "";
-  return `该开票申请即将于${timeoutAt}超时`;
+  return `该开票申请开票截止日期为${timeoutAt}`;
 }
 
 function getShopInvoiceOverdueTooltip(row) {
   const timeoutAt = getShopInvoiceApproachingTimeoutAt(row);
   if (!timeoutAt) return "";
-  return `该开票申请已于${timeoutAt}超时`;
+  return `该开票申请已超过开票截止日期${timeoutAt}`;
 }
 
 function isShopInvoiceApplicationModified(row) {
@@ -1850,7 +1884,7 @@ const buyerPcMallExportRecordRows = [
   { id: "export-008", type: "商品列表导出", exportedAt: "2026-05-11 02:42:45", operator: "NFSQ369", status: "执行成功" }
 ];
 const buyerPcMallImportTaskRows = [
-  { id: "import-001", type: "批量导入发票", exportedAt: "2026-05-18 17:50:06", operator: "NFSQ369", status: "全部失败", actionLabel: "下载失败数据" },
+  { id: "import-001", type: "批量导入发票", exportedAt: "2026-05-18 17:50:06", operator: "NFSQ369", status: "全部失败", actionLabel: "查看原因", failReason: "ZIP包内只允许存在一个XLSX文件" },
   { id: "import-002", type: "商品列表导入", exportedAt: "2026-05-16 03:43:10", operator: "NFSQ369", status: "全部成功", actionLabel: "" },
   { id: "import-003", type: "商品列表导入", exportedAt: "2026-05-16 03:43:10", operator: "NFSQ369", status: "部分失败", actionLabel: "下载失败数据" },
   { id: "import-004", type: "商品列表导入", exportedAt: "2026-05-16 03:43:10", operator: "NFSQ369", status: "全部成功", actionLabel: "" },
@@ -2105,7 +2139,7 @@ const shopInvoiceManagementRows = [
     paidAt: "2026-05-20 10:15:25",
     appliedAt: "2026-05-20 10:25:25",
     modifiedAt: "2026-05-20 10:25:25",
-    invoiceTimeoutAt: shopInvoiceRollingSampleTimeoutAt,
+    invoiceTimeoutAt: shopInvoiceTodayDeadlineAt,
     applicationStatus: "待开票",
     invoicedAt: "-",
     invoiceNo: "-",
@@ -2992,8 +3026,8 @@ const normalizedShopInvoiceManagementRows = shopInvoiceManagementRows.map((row) 
 const shopInvoiceColumnDefinitions = [
   { key: "select", label: "", width: 44, alwaysVisible: true, frozen: true, renderHeader: () => <input type="checkbox" />, renderCell: () => <input type="checkbox" /> },
   { key: "orderNo", label: "订单号", width: 220, visible: true, frozen: true, renderCell: (item) => <button className="buyer-link-btn" type="button">{item.orderNo}</button> },
-  { key: "invoiceTimeoutAt", label: "开票超时时间", width: 180, visible: true, renderCell: (item) => item.invoiceTimeoutAt || "-" },
-  { key: "remainingTimeoutDays", label: "剩余超时天数", width: 190, visible: true, renderCell: (item) => getShopInvoiceRemainingTimeoutText(item) },
+  { key: "invoiceTimeoutAt", label: "开票截止日期", width: 180, visible: true, renderCell: (item) => getShopInvoiceDeadlineDateText(item) },
+  { key: "remainingTimeoutDays", label: "距截止剩余天数", width: 190, visible: true, renderCell: (item) => getShopInvoiceRemainingTimeoutText(item) },
   {
     key: "shopInfo",
     label: "店铺信息",
@@ -3042,7 +3076,6 @@ const shopInvoiceColumnDefinitions = [
   { key: "invoicedAt", label: "开票时间", width: 180, visible: true, headerClassName: "shop-invoice-col-invoiced-at", cellClassName: "shop-invoice-col-invoiced-at", renderCell: (item) => item.invoicedAt },
   { key: "invoiceNo", label: "发票号码", width: 180, visible: true, renderCell: (item) => item.invoiceNo },
   { key: "invoiceUploadedAt", label: "发票上传时间", width: 180, visible: true, renderCell: (item) => item.invoiceUploadedAt || "-" },
-  { key: "invoiceModifiedAt", label: "发票修改时间", width: 180, visible: true, renderCell: (item) => item.invoiceModifiedAt || "-" },
   { key: "invoiceMethod", label: "开票方式", width: 120, visible: true, renderCell: (item) => item.invoiceMethod },
   { key: "invoiceStatus", label: "开票状态", width: 110, visible: true, renderCell: (item) => <span className={`shop-invoice-status-tag is-${item.invoiceStatusTone || "default"}`}>{item.invoiceStatus}</span> },
   { key: "afterSaleExpired", label: "是否过售后期", width: 130, visible: true, renderCell: (item) => item.afterSaleExpired },
@@ -5953,9 +5986,49 @@ function BuyerPcMallProductDetailModal({ row, onClose }) {
 
 function PcMallExportRecordModal({ rows, onClose }) {
   const [activeTab, setActiveTab] = useState("export");
+  const [importTooltip, setImportTooltip] = useState(null);
   const isExportTab = activeTab === "export";
   const currentRows = isExportTab ? rows : buyerPcMallImportTaskRows;
   const totalCount = isExportTab ? 1176 : 210;
+  const handleImportTabChange = (nextTab) => {
+    setImportTooltip(null);
+    setActiveTab(nextTab);
+  };
+  const handleShowImportTooltip = (event, item) => {
+    if (!item.failReason) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const tooltipWidth = 300;
+    const safeGap = 12;
+    setImportTooltip({
+      text: item.failReason,
+      left: Math.min(window.innerWidth - tooltipWidth / 2 - safeGap, Math.max(tooltipWidth / 2 + safeGap, rect.left + rect.width / 2)),
+      top: rect.bottom + 10
+    });
+  };
+  const handleHideImportTooltip = () => {
+    setImportTooltip(null);
+  };
+  const renderImportTaskAction = (item) => {
+    if (item.status === "全部失败" && item.failReason) {
+      return (
+        <button
+          className="pc-mall-export-record-link pc-mall-export-record-reason"
+          type="button"
+          aria-label={`查看原因：${item.failReason}`}
+          onMouseEnter={(event) => handleShowImportTooltip(event, item)}
+          onMouseLeave={handleHideImportTooltip}
+          onFocus={(event) => handleShowImportTooltip(event, item)}
+          onBlur={handleHideImportTooltip}
+        >
+          {item.actionLabel || "查看原因"}
+        </button>
+      );
+    }
+    if (item.actionLabel) {
+      return <button className="pc-mall-export-record-link" type="button">{item.actionLabel}</button>;
+    }
+    return <span className="pc-mall-export-record-muted" />;
+  };
 
   return (
     <div className="modal-overlay pc-mall-export-record-overlay" onClick={onClose} role="presentation">
@@ -5970,7 +6043,7 @@ function PcMallExportRecordModal({ rows, onClose }) {
             type="button"
             role="tab"
             aria-selected={isExportTab}
-            onClick={() => setActiveTab("export")}
+            onClick={() => handleImportTabChange("export")}
           >
             导出/下载任务
           </button>
@@ -5979,12 +6052,21 @@ function PcMallExportRecordModal({ rows, onClose }) {
             type="button"
             role="tab"
             aria-selected={!isExportTab}
-            onClick={() => setActiveTab("import")}
+            onClick={() => handleImportTabChange("import")}
           >
             导入任务
           </button>
         </div>
-        <div className="pc-mall-export-record-body">
+        {importTooltip ? (
+          <div
+            className="pc-mall-export-record-floating-tooltip"
+            style={{ left: `${importTooltip.left}px`, top: `${importTooltip.top}px` }}
+            role="tooltip"
+          >
+            {importTooltip.text}
+          </div>
+        ) : null}
+        <div className="pc-mall-export-record-body" onScroll={handleHideImportTooltip}>
           <table className="pc-mall-export-record-table">
             <thead>
               <tr>
@@ -6010,10 +6092,8 @@ function PcMallExportRecordModal({ rows, onClose }) {
                   <td>
                     {isExportTab ? (
                       <button className="pc-mall-export-record-link" type="button">点击下载</button>
-                    ) : item.actionLabel ? (
-                      <button className="pc-mall-export-record-link" type="button">{item.actionLabel}</button>
                     ) : (
-                      <span className="pc-mall-export-record-muted" />
+                      renderImportTaskAction(item)
                     )}
                   </td>
                 </tr>
@@ -12360,6 +12440,15 @@ function PlatformInvoiceManagementPage() {
   }, [rows]);
 
   const filteredRows = useMemo(() => rows.filter((item) => {
+    const matchDateRange = (dateTime, range) => {
+      if (!range.startDate && !range.endDate) return true;
+      const dateValue = String(dateTime || "").slice(0, 10);
+      if (!dateValue || dateValue === "-") return false;
+      if (range.startDate && dateValue < range.startDate) return false;
+      if (range.endDate && dateValue > range.endDate) return false;
+      return true;
+    };
+
     if (activeTab !== "全部" && item.invoiceStatus !== activeTab) return false;
     if (appliedFilters.orderNo.trim() && !String(item.orderNo || "").includes(appliedFilters.orderNo.trim())) return false;
     if (appliedFilters.invoiceTitle.trim() && !String(item.invoiceTitle || "").toLowerCase().includes(appliedFilters.invoiceTitle.trim().toLowerCase())) return false;
@@ -12367,6 +12456,7 @@ function PlatformInvoiceManagementPage() {
     if (appliedFilters.store.trim() && !`${item.shop || ""} ${item.store || ""}`.toLowerCase().includes(appliedFilters.store.trim().toLowerCase())) return false;
     if (appliedFilters.invoiceBatch.trim() && !String(item.invoiceBatch || "").toLowerCase().includes(appliedFilters.invoiceBatch.trim().toLowerCase())) return false;
     if (appliedFilters.invoiceStatus !== "全部" && item.invoiceStatus !== appliedFilters.invoiceStatus) return false;
+    if (!matchDateRange(item.invoiceUploadedAt, appliedFilters.invoiceUploadedAtRange)) return false;
     return true;
   }), [activeTab, appliedFilters, rows]);
 
@@ -12701,6 +12791,10 @@ function PlatformInvoiceManagementPage() {
               <label className="platform-invoice-field">
                 <span>开票批次</span>
                 <input value={draftFilters.invoiceBatch} onChange={(event) => handleDraftFilterChange("invoiceBatch", event.target.value)} placeholder="请输入开票批次" />
+              </label>
+              <label className="platform-invoice-field">
+                <span>发票上传时间</span>
+                <PcMallDateRangeField placeholder="开始日期 ～ 结束日期" value={draftFilters.invoiceUploadedAtRange} onChange={(value) => handleDraftFilterChange("invoiceUploadedAtRange", value)} />
               </label>
               <label className="platform-invoice-field">
                 <span>开票状态</span>
@@ -15012,6 +15106,7 @@ function ShopInvoicePage({
     if (!matchDateRange(item.paidAt, appliedFilters.paidAtRange)) return false;
     if (!matchDateRange(item.appliedAt, appliedFilters.appliedAtRange)) return false;
     if (!matchDateRange(item.invoicedAt, appliedFilters.invoicedAtRange)) return false;
+    if (!matchDateRange(item.invoiceUploadedAt, appliedFilters.invoiceUploadedAtRange)) return false;
 
     return true;
   }), [activeInvoiceStatusTab, appliedFilters, markerFilter, shopInvoiceRows, showShopInfoField]);
@@ -16649,6 +16744,10 @@ function ShopInvoicePage({
           <label className="shop-invoice-field">
             <span>开票时间</span>
             <PcMallDateRangeField placeholder="开始日期 ～ 结束日期" value={draftFilters.invoicedAtRange} onChange={(value) => handleDraftFilterChange("invoicedAtRange", value)} />
+          </label>
+          <label className="shop-invoice-field">
+            <span>发票上传时间</span>
+            <PcMallDateRangeField placeholder="开始日期 ～ 结束日期" value={draftFilters.invoiceUploadedAtRange} onChange={(value) => handleDraftFilterChange("invoiceUploadedAtRange", value)} />
           </label>
           <label className="shop-invoice-field">
             <span>发票号码</span>
