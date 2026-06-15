@@ -6582,6 +6582,15 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
   cursor: pointer;
 }
 
+.miniapp-invoice-type-option-card {
+  border: 1px solid transparent;
+}
+
+.miniapp-invoice-type-option-card.is-selected {
+  border: 1px solid #fb923c;
+  background: #fff7ed;
+}
+
 .miniapp-title-card-head {
   display: flex;
   align-items: flex-start;
@@ -6604,6 +6613,14 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
   flex: none;
   color: #b5bbc8;
   font-size: 14px;
+}
+
+.miniapp-invoice-type-selected-mark {
+  flex: none;
+  color: #f97316;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .miniapp-title-tags {

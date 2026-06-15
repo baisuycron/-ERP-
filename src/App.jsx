@@ -17943,7 +17943,9 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   const [selectedMiniappBatchEditRowIds, setSelectedMiniappBatchEditRowIds] = useState([]);
   const [expandedMiniappBatchRowIds, setExpandedMiniappBatchRowIds] = useState([]);
   const [miniappBatchTitleSelections, setMiniappBatchTitleSelections] = useState({});
+  const [miniappBatchInvoiceTypeSelections, setMiniappBatchInvoiceTypeSelections] = useState({});
   const [miniappBatchTitlePickerOrderId, setMiniappBatchTitlePickerOrderId] = useState("");
+  const [miniappBatchInvoiceTypePickerOrderId, setMiniappBatchInvoiceTypePickerOrderId] = useState("");
   const [miniappInvoiceOrderDetailNo, setMiniappInvoiceOrderDetailNo] = useState("");
   const [miniappServiceOrderId, setMiniappServiceOrderId] = useState("");
   const [miniappBatchSuccessToast, setMiniappBatchSuccessToast] = useState("");
@@ -18042,14 +18044,16 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
     {
       id: "zd-special",
       title: "zd增值税专用发票抬头",
-      tags: ["企业", "电子增值税专用发票"],
+      tags: ["企业", "电子增值税专用发票", "电子普通发票"],
       taxNo: "91310000MA1K3N8X5L"
     }
   ];
   const miniappInvoiceTitleMetaByTitle = miniappInvoiceTitleItems.reduce((result, item) => {
+    const invoiceTypes = item.tags.filter((tag) => tag === "电子普通发票" || tag === "电子增值税专用发票");
     result[item.title] = {
       taxNo: item.taxNo || "",
-      invoiceType: item.tags.find((tag) => tag === "电子普通发票" || tag === "电子增值税专用发票") || ""
+      invoiceType: invoiceTypes[0] || "",
+      invoiceTypes
     };
     return result;
   }, {});
@@ -18438,6 +18442,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   const isInvoiceEditView = isMineTab && miniappView === "invoice-edit";
   const isInvoiceTitleManagementView = isMineTab && miniappView === "invoice-titles";
   const isInvoiceTitleCreateView = isMineTab && miniappView === "invoice-title-create";
+  const isMiniappBatchInvoiceTypePickerView = isMineTab && miniappView === "invoice-batch-invoice-type-picker";
   const isMiniappInvoiceOrderDisabled = useCallback((item) => {
     if (!item) return true;
     if (item.disabled) return true;
@@ -18988,10 +18993,19 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   const miniappBatchValidationByOrderId = useMemo(() => (
     miniappBatchInvoiceRows.reduce((result, row) => {
       const selectedTitle = miniappBatchTitleSelections[row.id];
-      const selectedInvoiceType = selectedTitle ? (miniappInvoiceTitleMetaByTitle[selectedTitle]?.invoiceType || "") : "";
+      const selectedTitleMeta = miniappInvoiceTitleMetaByTitle[selectedTitle] || {};
+      const titleInvoiceTypes = selectedTitleMeta.invoiceTypes || (selectedTitleMeta.invoiceType ? [selectedTitleMeta.invoiceType] : []);
+      const selectedInvoiceType = titleInvoiceTypes.length > 1
+        ? (miniappBatchInvoiceTypeSelections[row.id] || "")
+        : (titleInvoiceTypes[0] || "");
       const supportedInvoiceType = row.supportedInvoiceType || "";
       if (!selectedTitle) {
         result[row.id] = "发票抬头不能为空";
+        return result;
+      }
+
+      if (titleInvoiceTypes.length > 1 && !selectedInvoiceType) {
+        result[row.id] = "请选择发票类型";
         return result;
       }
 
@@ -19013,7 +19027,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       result[row.id] = getInvoiceTypeMismatchMessage(supportedInvoiceType);
       return result;
     }, {})
-  ), [miniappBatchInvoiceRows, miniappBatchTitleSelections, miniappInvoiceTitleMetaByTitle]);
+  ), [miniappBatchInvoiceRows, miniappBatchInvoiceTypeSelections, miniappBatchTitleSelections, miniappInvoiceTitleMetaByTitle]);
   const miniappBatchValidationMessages = useMemo(() => (
     Object.values(miniappBatchValidationByOrderId).filter(Boolean)
   ), [miniappBatchValidationByOrderId]);
@@ -19025,6 +19039,13 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   const displayedMiniappBatchInvoiceRows = useMemo(() => (
     miniappBatchOrderTab === "error" ? miniappBatchErrorRows : miniappBatchInvoiceRows
   ), [miniappBatchErrorRows, miniappBatchInvoiceRows, miniappBatchOrderTab]);
+  const activeMiniappBatchInvoiceTypePickerRow = miniappBatchInvoiceRows.find((row) => row.id === miniappBatchInvoiceTypePickerOrderId) || null;
+  const activeMiniappBatchInvoiceTypePickerTitle = activeMiniappBatchInvoiceTypePickerRow
+    ? (miniappBatchTitleSelections[activeMiniappBatchInvoiceTypePickerRow.id] || activeMiniappBatchInvoiceTypePickerRow.defaultTitleValue || "")
+    : "";
+  const activeMiniappBatchInvoiceTypeOptions = activeMiniappBatchInvoiceTypePickerTitle
+    ? (miniappInvoiceTitleMetaByTitle[activeMiniappBatchInvoiceTypePickerTitle]?.invoiceTypes || [])
+    : [];
   const isMiniappBatchPageAllSelected = displayedMiniappBatchInvoiceRows.length > 0
     && displayedMiniappBatchInvoiceRows.every((row) => selectedMiniappBatchEditRowIds.includes(row.id));
   const isMiniappBatchPageAllExpanded = displayedMiniappBatchInvoiceRows.length > 0
@@ -19401,6 +19422,10 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
     setMiniappBatchTitlePickerOrderId(orderId);
     setMiniappView("invoice-titles");
   };
+  const handleOpenMiniappBatchInvoiceTypePicker = (orderId) => {
+    setMiniappBatchInvoiceTypePickerOrderId(orderId);
+    setMiniappView("invoice-batch-invoice-type-picker");
+  };
   const handleOpenMiniappServiceChat = (orderId) => {
     setMiniappServiceOrderId(orderId);
     setMiniappView("invoice-service-chat");
@@ -19414,12 +19439,35 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   const handleSelectMiniappBatchTitle = (title) => {
     if (!miniappBatchTitlePickerOrderId) return;
     setMiniappBatchTitleSelections((current) => ({ ...current, [miniappBatchTitlePickerOrderId]: title }));
+    const invoiceTypes = miniappInvoiceTitleMetaByTitle[title]?.invoiceTypes || [];
+    setMiniappBatchInvoiceTypeSelections((current) => {
+      const next = { ...current };
+      if (invoiceTypes.length > 1) {
+        next[miniappBatchTitlePickerOrderId] = invoiceTypes.includes(current[miniappBatchTitlePickerOrderId]) ? current[miniappBatchTitlePickerOrderId] : "";
+      } else {
+        delete next[miniappBatchTitlePickerOrderId];
+      }
+      return next;
+    });
     setMiniappBatchTitlePickerOrderId("");
+    setMiniappView("invoice-batch-apply");
+  };
+
+  const handleSelectMiniappBatchInvoiceType = (invoiceType) => {
+    if (!miniappBatchInvoiceTypePickerOrderId) return;
+    setMiniappBatchInvoiceTypeSelections((current) => ({ ...current, [miniappBatchInvoiceTypePickerOrderId]: invoiceType }));
+    setMiniappBatchInvoiceTypePickerOrderId("");
     setMiniappView("invoice-batch-apply");
   };
 
   const handleRemoveMiniappBatchRow = (orderId) => {
     setSelectedMiniappInvoiceOrderIds((current) => current.filter((item) => item !== orderId));
+    setMiniappBatchInvoiceTypeSelections((current) => {
+      if (!current[orderId]) return current;
+      const next = { ...current };
+      delete next[orderId];
+      return next;
+    });
   };
 
   const handleToggleMiniappBatchEditRow = (orderId) => {
@@ -19468,6 +19516,13 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   const handleRemoveMiniappBatchSelectedRows = () => {
     if (selectedMiniappBatchEditRowIds.length <= 0) return;
     setSelectedMiniappInvoiceOrderIds((current) => current.filter((id) => !selectedMiniappBatchEditRowIds.includes(id)));
+    setMiniappBatchInvoiceTypeSelections((current) => {
+      const next = { ...current };
+      selectedMiniappBatchEditRowIds.forEach((id) => {
+        delete next[id];
+      });
+      return next;
+    });
     setSelectedMiniappBatchEditRowIds([]);
     setMiniappBatchSubmitAttempted(false);
     setMiniappBatchErrorToast("");
@@ -19491,11 +19546,11 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
         <div className="miniapp-phone">
           <div className={`miniapp-phone-inner${isWholesaleDetailView && isFeaturedWholesaleFlashDetail ? " is-flash-detail" : ""}`}>
             <div className="miniapp-statusbar">
-              <span>{isInvoiceAssistantView ? "17:30:57" : isInvoiceAppliedModifyView ? "17:30:57" : isInvoiceServiceChatView ? "17:31:18" : isInvoiceTitleCreateView ? "09:39:54" : isInvoiceTitleManagementView ? "09:44:04" : isInvoiceEditView ? "16:31" : isInvoiceDetailView ? "16:29" : isOrderListView ? "00:07:15" : isMineTab ? "00:03:58" : "00:02:06"}</span>
+              <span>{isInvoiceAssistantView ? "17:30:57" : isInvoiceAppliedModifyView ? "17:30:57" : isInvoiceServiceChatView ? "17:31:18" : isInvoiceTitleCreateView ? "09:39:54" : isInvoiceTitleManagementView || isMiniappBatchInvoiceTypePickerView ? "09:44:04" : isInvoiceEditView ? "16:31" : isInvoiceDetailView ? "16:29" : isOrderListView ? "00:07:15" : isMineTab ? "00:03:58" : "00:02:06"}</span>
               <div className="miniapp-status-icons">
                 <span>5G</span>
                 <span>▂▄▆█</span>
-                <span>{isInvoiceAssistantView ? "96" : isInvoiceAppliedModifyView ? "96" : isInvoiceServiceChatView ? "97" : isInvoiceTitleCreateView ? "62" : isInvoiceTitleManagementView ? "61" : isInvoiceEditView ? "83" : isInvoiceDetailView ? "84" : isMineTab ? "100" : "98"}</span>
+                <span>{isInvoiceAssistantView ? "96" : isInvoiceAppliedModifyView ? "96" : isInvoiceServiceChatView ? "97" : isInvoiceTitleCreateView ? "62" : isInvoiceTitleManagementView || isMiniappBatchInvoiceTypePickerView ? "61" : isInvoiceEditView ? "83" : isInvoiceDetailView ? "84" : isMineTab ? "100" : "98"}</span>
               </div>
             </div>
 
@@ -19598,6 +19653,12 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                       const isExpanded = expandedMiniappBatchRowIds.includes(row.id);
                       const selectedTitle = miniappBatchTitleSelections[row.id] || "";
                       const selectedTitleMeta = miniappInvoiceTitleMetaByTitle[selectedTitle] || {};
+                      const selectedTitleInvoiceTypes = selectedTitleMeta.invoiceTypes || (selectedTitleMeta.invoiceType ? [selectedTitleMeta.invoiceType] : []);
+                      const shouldManuallySelectInvoiceType = selectedTitleInvoiceTypes.length > 1;
+                      const selectedBatchInvoiceType = miniappBatchInvoiceTypeSelections[row.id] || "";
+                      const displayedBatchInvoiceType = shouldManuallySelectInvoiceType
+                        ? (selectedBatchInvoiceType || "请选择发票类型")
+                        : (selectedTitle ? (selectedTitleMeta.invoiceType || "-") : (row.invoiceType || "-"));
                       const shouldShowAfterSaleField = row.afterSaleAmount > 0 || (row.afterSaleStatus && row.afterSaleStatus !== "-");
                       return (
                         <section className={`miniapp-batch-edit-row ${isMiniappBatchEditMode ? "is-editing" : ""}`} key={row.id}>
@@ -19640,9 +19701,12 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                                   <button className="miniapp-batch-picker-btn" type="button" onClick={() => handleOpenMiniappBatchTitlePicker(row.id)}>选择</button>
                                 ) : null}
                               </div>
-                              <div className="miniapp-batch-field is-store">
-                                <span>抬头关联发票类型</span>
-                                <strong>{selectedTitle ? (selectedTitleMeta.invoiceType || "-") : (row.invoiceType || "-")}</strong>
+                              <div className="miniapp-batch-field is-title-select">
+                                <span>发票类型</span>
+                                <strong>{displayedBatchInvoiceType}</strong>
+                                {shouldManuallySelectInvoiceType ? (
+                                  <button className="miniapp-batch-picker-btn" type="button" onClick={() => handleOpenMiniappBatchInvoiceTypePicker(row.id)}>选择</button>
+                                ) : null}
                               </div>
                             </div>
                             {isExpanded ? (
@@ -19742,6 +19806,53 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                     )}
                   </div>
                 ) : null}
+              </div>
+            ) : isMiniappBatchInvoiceTypePickerView ? (
+              <div className="miniapp-title-page miniapp-invoice-type-picker-page">
+                <header className="miniapp-order-header miniapp-title-header">
+                  <button className="miniapp-order-back" type="button" onClick={() => {
+                    setMiniappBatchInvoiceTypePickerOrderId("");
+                    setMiniappView("invoice-batch-apply");
+                  }} aria-label="返回">
+                    <span />
+                  </button>
+                  <div className="miniapp-order-title">选择发票类型</div>
+                  <div className="miniapp-order-header-actions">
+                    <span>•••</span>
+                    <button type="button" aria-label="返回买家PC商城" onClick={() => onBackToPcMall?.()}>◎</button>
+                  </div>
+                </header>
+
+                <main className="miniapp-title-content">
+                  {activeMiniappBatchInvoiceTypeOptions.length === 0 ? (
+                    <div className="miniapp-batch-empty-state">当前暂无可选发票类型</div>
+                  ) : activeMiniappBatchInvoiceTypeOptions.map((item) => {
+                    const isSelected = miniappBatchInvoiceTypeSelections[miniappBatchInvoiceTypePickerOrderId] === item;
+                    return (
+                      <section
+                        className={`miniapp-title-card miniapp-invoice-type-option-card is-selectable ${isSelected ? "is-selected" : ""}`}
+                        key={item}
+                        onClick={() => handleSelectMiniappBatchInvoiceType(item)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            handleSelectMiniappBatchInvoiceType(item);
+                          }
+                        }}
+                      >
+                        <div className="miniapp-title-card-head">
+                          <h3>{item}</h3>
+                          {isSelected ? <span className="miniapp-invoice-type-selected-mark">✓</span> : null}
+                        </div>
+                        <div className="miniapp-title-tags">
+                          <span className={item.includes("专用") ? "is-special" : ""}>可申请</span>
+                        </div>
+                      </section>
+                    );
+                  })}
+                </main>
               </div>
             ) : isInvoiceAppliedModifyView ? (
               <div className="miniapp-applied-modify-page">
