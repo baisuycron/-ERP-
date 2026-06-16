@@ -90,6 +90,7 @@ const initialMiniappInvoicedFilters = {
   separateInvoiceRequired: "全部"
 };
 const shopInvoiceTodayDeadlineAt = formatShopInvoiceDate(Date.now());
+const shopInvoiceTomorrowDeadlineAt = formatShopInvoiceDate(Date.now() + 24 * 60 * 60 * 1000);
 const shopInvoiceRollingSampleTimeoutAt = formatShopInvoiceDate(Date.now() + 15 * 24 * 60 * 60 * 1000);
 
 const normalizeShopInvoiceMode = (value) => {
@@ -810,10 +811,26 @@ function getShopInvoiceRemainingTimeoutText(row, now = Date.now()) {
   const timeoutTime = parseShopInvoiceDateStart(timeoutAt);
   if (Number.isNaN(timeoutTime)) return "-";
 
-  const diffDays = Math.round((timeoutTime - parseShopInvoiceDateStart(now)) / (24 * 60 * 60 * 1000));
-  if (diffDays > 0) return `剩余${diffDays}天`;
-  if (diffDays === 0) return "今日截止";
-  return `已超时${Math.abs(diffDays)}天`;
+  const currentTime = parseShopInvoiceDateStart(now);
+  const dayMs = 24 * 60 * 60 * 1000;
+  const remainingDays = Math.round((timeoutTime - currentTime) / dayMs);
+  if (remainingDays === 1) return "明日超时";
+  if (remainingDays > 1) return `剩余${remainingDays}天`;
+
+  return "已超时";
+}
+
+function renderShopInvoiceTimeoutDateCell(row, now = Date.now()) {
+  const deadlineText = getShopInvoiceDeadlineDateText(row);
+  if (deadlineText === "-") return "-";
+
+  const remainingText = getShopInvoiceRemainingTimeoutText(row, now);
+  return (
+    <div className="shop-invoice-timeout-cell">
+      <span>{deadlineText}</span>
+      {remainingText !== "-" ? <span className="shop-invoice-timeout-remaining">{remainingText}</span> : null}
+    </div>
+  );
 }
 
 function hasShopInvoiceApproachingBadge(row) {
@@ -823,13 +840,13 @@ function hasShopInvoiceApproachingBadge(row) {
 function getShopInvoiceApproachingTooltip(row) {
   const timeoutAt = getShopInvoiceApproachingTimeoutAt(row);
   if (!timeoutAt) return "";
-  return `该开票申请开票截止日期为${timeoutAt}`;
+  return `该开票申请开票超时日期为${timeoutAt}`;
 }
 
 function getShopInvoiceOverdueTooltip(row) {
   const timeoutAt = getShopInvoiceApproachingTimeoutAt(row);
   if (!timeoutAt) return "";
-  return `该开票申请已超过开票截止日期${timeoutAt}`;
+  return `该开票申请已超过开票超时日期${timeoutAt}`;
 }
 
 function isShopInvoiceApplicationModified(row) {
@@ -2151,6 +2168,37 @@ const shopInvoiceManagementRows = [
     actions: ["发票详情", "确认开票", "驳回"]
   },
   {
+    orderNo: "2026052016152502",
+    invoiceType: "电子普通发票",
+    originalInvoiceType: "电子普通发票",
+    invoiceTitle: "明日超时样本商贸有限公司",
+    originalInvoiceTitle: "明日超时样本商贸有限公司",
+    taxpayerId: "91310000MA5WEEK0T1",
+    orderStatus: "已完成",
+    orderAmount: "¥990.00",
+    afterSaleStatus: "-",
+    afterSaleAmount: "¥0.00",
+    amount: "¥990.00",
+    shouldInvoiceAmount: "¥990.00",
+    invoiceAmountWithTax: "¥990.00",
+    buyerAccount: "tomorrow-timeout-sample (ID:25012)",
+    paymentMethod: "先货后款",
+    store: "明日超时闪购店\n(ID:2252512)",
+    paidAt: "2026-05-20 16:15:25",
+    appliedAt: "2026-05-20 16:25:25",
+    modifiedAt: "2026-05-20 16:25:25",
+    invoiceTimeoutAt: shopInvoiceTomorrowDeadlineAt,
+    applicationStatus: "待开票",
+    invoicedAt: "-",
+    invoiceNo: "-",
+    invoiceMethod: "系统",
+    invoiceStatus: "待开票",
+    invoiceStatusTone: "warning",
+    afterSaleStatusDetail: "-",
+    afterSaleExpired: "否",
+    actions: ["发票详情", "确认开票", "驳回"]
+  },
+  {
     orderNo: "2026052111162602",
     invoiceType: "电子普通发票",
     originalInvoiceType: "电子普通发票",
@@ -3026,8 +3074,7 @@ const normalizedShopInvoiceManagementRows = shopInvoiceManagementRows.map((row) 
 const shopInvoiceColumnDefinitions = [
   { key: "select", label: "", width: 44, alwaysVisible: true, frozen: true, renderHeader: () => <input type="checkbox" />, renderCell: () => <input type="checkbox" /> },
   { key: "orderNo", label: "订单号", width: 220, visible: true, frozen: true, renderCell: (item) => <button className="buyer-link-btn" type="button">{item.orderNo}</button> },
-  { key: "invoiceTimeoutAt", label: "开票截止日期", width: 180, visible: true, renderCell: (item) => getShopInvoiceDeadlineDateText(item) },
-  { key: "remainingTimeoutDays", label: "距截止剩余天数", width: 190, visible: true, renderCell: (item) => getShopInvoiceRemainingTimeoutText(item) },
+  { key: "invoiceTimeoutAt", label: "开票超时日期", width: 180, visible: true, renderCell: (item) => renderShopInvoiceTimeoutDateCell(item) },
   {
     key: "shopInfo",
     label: "店铺信息",
@@ -16177,8 +16224,8 @@ function ShopInvoicePage({
   };
 
   const renderInvoiceTableCell = (item, column) => {
-    if (column.key === "remainingTimeoutDays") {
-      return getShopInvoiceRemainingTimeoutText(item, invoiceCountdownNow);
+    if (column.key === "invoiceTimeoutAt") {
+      return renderShopInvoiceTimeoutDateCell(item, invoiceCountdownNow);
     }
 
     if (column.key === "select") {

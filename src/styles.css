@@ -619,6 +619,8 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .shop-invoice-col-amount-tax { white-space: nowrap; word-break: keep-all; }
 .shop-invoice-col-invoiced-at { white-space: nowrap; word-break: keep-all; }
 .shop-invoice-amount { color: #212121; }
+.shop-invoice-timeout-cell { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; line-height: 1.35; }
+.shop-invoice-timeout-remaining { color: #6b7280; font-size: 13px; }
 .shop-invoice-store-cell { line-height: 1.5; }
 .shop-invoice-order-cell { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
 .shop-invoice-order-badges { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; white-space: nowrap; }
