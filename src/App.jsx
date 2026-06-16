@@ -817,7 +817,7 @@ function getShopInvoiceRemainingTimeoutText(row, now = Date.now()) {
   if (remainingDays === 1) return "明日超时";
   if (remainingDays > 1) return `剩余${remainingDays}天`;
 
-  return "已超时";
+  return "";
 }
 
 function renderShopInvoiceTimeoutDateCell(row, now = Date.now()) {
@@ -828,7 +828,7 @@ function renderShopInvoiceTimeoutDateCell(row, now = Date.now()) {
   return (
     <div className="shop-invoice-timeout-cell">
       <span>{deadlineText}</span>
-      {remainingText !== "-" ? <span className="shop-invoice-timeout-remaining">{remainingText}</span> : null}
+      {remainingText && remainingText !== "-" ? <span className="shop-invoice-timeout-remaining">{remainingText}</span> : null}
     </div>
   );
 }
