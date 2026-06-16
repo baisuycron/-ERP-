@@ -3211,6 +3211,8 @@ const buyerPcMallStoreMetaMap = buyerPcMallStoreSearchOptions.reduce((result, op
 }, {});
 const buyerPcMallBatchInvoiceForm = {
   invoiceType: "电子普通发票",
+  invoiceTypes: ["电子普通发票"],
+  defaultBillingType: "",
   titleType: "企业",
   titleName: "",
   taxpayerId: "",
@@ -3227,6 +3229,14 @@ const buyerPcMallBatchInvoiceForm = {
 const buyerPcMallNormalInvoiceType = "电子普通发票";
 const buyerPcMallSpecialInvoiceType = "电子增值税专用发票";
 const buyerPcMallInvoiceTypeOptions = [buyerPcMallNormalInvoiceType, buyerPcMallSpecialInvoiceType];
+const buyerPcMallInvoiceTypeValueByBillingType = {
+  normal: buyerPcMallNormalInvoiceType,
+  special: buyerPcMallSpecialInvoiceType
+};
+const buyerPcMallBillingTypeByInvoiceType = {
+  [buyerPcMallNormalInvoiceType]: "normal",
+  [buyerPcMallSpecialInvoiceType]: "special"
+};
 const buyerPcMallDefaultReceiverPhone = "13800138000";
 const buyerPcMallDefaultReceiverEmail = "nfsq369@shandianbangbang.com";
 const initialBatchInvoiceFieldErrors = {
@@ -3255,6 +3265,7 @@ const initialBuyerPcMallInvoiceTitleForm = {
   id: "",
   invoiceType: buyerPcMallNormalInvoiceType,
   invoiceTypes: [buyerPcMallNormalInvoiceType],
+  defaultBillingType: "",
   titleType: "企业",
   storeName: "",
   titleName: "",
@@ -3268,6 +3279,8 @@ const initialBuyerPcMallInvoiceTitleForm = {
   isDefault: false
 };
 const initialBuyerPcMallInvoiceTitleFieldErrors = {
+  invoiceTypes: false,
+  defaultBillingType: false,
   titleName: false,
   taxpayerId: false,
   registeredAddress: false,
@@ -3277,6 +3290,12 @@ const initialBuyerPcMallInvoiceTitleFieldErrors = {
   receiverPhone: false,
   receiverEmail: false
 };
+const initialMiniappInvoiceTitleCreateForm = {
+  ...initialBuyerPcMallInvoiceTitleForm,
+  receiverPhone: "",
+  receiverEmail: ""
+};
+const initialMiniappInvoiceTitleCreateErrors = initialBuyerPcMallInvoiceTitleFieldErrors;
 const initialShopInvoiceConfirmForm = {
   invoiceNo: "",
   invoiceAmountWithTax: "",
@@ -3601,24 +3620,46 @@ function getBuyerPcMallTitleSupportedInvoiceTypesForOrder(item, invoiceTitleRows
   return normalizeBuyerPcMallSupportedInvoiceTypes(item?.titleType || "企业", item?.invoiceTypes || item?.invoiceType || "");
 }
 
+function getBuyerPcMallTitleDefaultBillingTypeForOrder(item, invoiceTitleRows = []) {
+  const matchedTitle = getBuyerPcMallMatchedInvoiceTitleRow(item, invoiceTitleRows);
+  const supportedInvoiceTypes = matchedTitle
+    ? getBuyerPcMallSupportedInvoiceTypesFromRow(matchedTitle)
+    : getBuyerPcMallTitleSupportedInvoiceTypesForOrder(item, invoiceTitleRows);
+  return normalizeBuyerPcMallDefaultBillingType(
+    matchedTitle?.defaultBillingType ?? item?.defaultBillingType ?? "",
+    supportedInvoiceTypes
+  );
+}
+
 function getBuyerPcMallOrderInvoiceTypeOptions(item, invoiceTitleRows = []) {
   const titleSupportedTypes = getBuyerPcMallTitleSupportedInvoiceTypesForOrder(item, invoiceTitleRows);
   const shopSupportedTypes = getBuyerPcMallSupportedInvoiceTypes(item?.shop, item?.store);
   if (shopSupportedTypes.length === 0) return titleSupportedTypes;
 
   const matchedTypes = titleSupportedTypes.filter((invoiceType) => shopSupportedTypes.includes(invoiceType));
-  return matchedTypes.length > 0 ? matchedTypes : titleSupportedTypes;
+  return matchedTypes;
 }
 
 function resolveBuyerPcMallOrderInvoiceType(item, invoiceTitleRows = []) {
   const invoiceTypeOptions = getBuyerPcMallOrderInvoiceTypeOptions(item, invoiceTitleRows);
   if (invoiceTypeOptions.length === 0) return "";
   if (invoiceTypeOptions.length > 1) {
-    return invoiceTypeOptions.includes(item?.invoiceType) ? item.invoiceType : "";
+    const defaultBillingType = getBuyerPcMallTitleDefaultBillingTypeForOrder(item, invoiceTitleRows);
+    const defaultInvoiceType = getBuyerPcMallInvoiceTypeFromBillingType(defaultBillingType);
+    return invoiceTypeOptions.includes(defaultInvoiceType) ? defaultInvoiceType : "";
   }
   return invoiceTypeOptions.includes(item?.invoiceType)
     ? item.invoiceType
     : (invoiceTypeOptions[0] || item?.invoiceType || buyerPcMallNormalInvoiceType);
+}
+
+function getBuyerPcMallOrderInvoiceTypeValidationMessage(item, invoiceTitleRows = []) {
+  const invoiceTypeOptions = getBuyerPcMallOrderInvoiceTypeOptions(item, invoiceTitleRows);
+  if (invoiceTypeOptions.length === 0) return "请更换符合店铺开票能力的发票抬头";
+  if (invoiceTypeOptions.length > 1 && !resolveBuyerPcMallOrderInvoiceType(item, invoiceTitleRows)) {
+    return "请先维护默认开票类型";
+  }
+  return "";
 }
 
 function normalizeBuyerPcMallOrderInvoiceType(item, invoiceTitleRows = []) {
@@ -4630,6 +4671,23 @@ function normalizeBuyerPcMallSupportedInvoiceTypes(titleType = "企业", invoice
   return normalized.length > 0 ? normalized : [buyerPcMallNormalInvoiceType];
 }
 
+function getBuyerPcMallInvoiceTypeFromBillingType(defaultBillingType = "") {
+  return buyerPcMallInvoiceTypeValueByBillingType[String(defaultBillingType || "").trim()] || "";
+}
+
+function getBuyerPcMallBillingTypeFromInvoiceType(invoiceType = "") {
+  return buyerPcMallBillingTypeByInvoiceType[String(invoiceType || "").trim()] || "";
+}
+
+function normalizeBuyerPcMallDefaultBillingType(defaultBillingType = "", supportedInvoiceTypes = []) {
+  const text = String(defaultBillingType || "").trim();
+  const billingType = buyerPcMallInvoiceTypeValueByBillingType[text]
+    ? text
+    : getBuyerPcMallBillingTypeFromInvoiceType(text);
+  const invoiceType = getBuyerPcMallInvoiceTypeFromBillingType(billingType);
+  return invoiceType && supportedInvoiceTypes.includes(invoiceType) ? billingType : "";
+}
+
 function getBuyerPcMallSupportedInvoiceTypesFromRow(row) {
   return normalizeBuyerPcMallSupportedInvoiceTypes(row?.titleType || "企业", row?.invoiceTypes || row?.invoiceType || "");
 }
@@ -4652,6 +4710,8 @@ function createBuyerPcMallAppliedInvoiceRow(order, form, appliedAt = formatBuyer
     orderNo: order.orderNo,
     invoiceTitle: form.titleName,
     invoiceType: form.invoiceType,
+    invoiceTypes: form.invoiceTypes || [form.invoiceType],
+    defaultBillingType: form.defaultBillingType || "",
     invoiceTypeTone: form.invoiceType.includes("专用") ? "blue" : "purple",
     amount: order.amount || order.price || "¥0.00",
     appliedAt,
@@ -4685,6 +4745,8 @@ function createBuyerPcMallBatchInvoiceFormFromTitleRow(row) {
   return {
     ...buyerPcMallBatchInvoiceForm,
     invoiceType: getBuyerPcMallPrimaryInvoiceType(supportedInvoiceTypes),
+    invoiceTypes: supportedInvoiceTypes,
+    defaultBillingType: normalizeBuyerPcMallDefaultBillingType(row.defaultBillingType, supportedInvoiceTypes),
     titleType: row.titleType || buyerPcMallBatchInvoiceForm.titleType,
     titleName: row.title || "",
     taxpayerId: row.taxpayerId || "",
@@ -4706,6 +4768,7 @@ function createBuyerPcMallBatchOrderInvoiceFields(titleRow) {
       invoiceTitle: "",
       invoiceType: buyerPcMallBatchInvoiceForm.invoiceType,
       invoiceTypes: buyerPcMallBatchInvoiceForm.invoiceTypes || [buyerPcMallBatchInvoiceForm.invoiceType],
+      defaultBillingType: buyerPcMallBatchInvoiceForm.defaultBillingType || "",
       titleType: buyerPcMallBatchInvoiceForm.titleType,
       taxpayerId: "",
       registeredAddress: "",
@@ -4723,6 +4786,7 @@ function createBuyerPcMallBatchOrderInvoiceFields(titleRow) {
     invoiceTitle: titleRow.title || "",
     invoiceType: supportedInvoiceTypes.length > 1 ? "" : getBuyerPcMallPrimaryInvoiceType(supportedInvoiceTypes),
     invoiceTypes: supportedInvoiceTypes,
+    defaultBillingType: normalizeBuyerPcMallDefaultBillingType(titleRow.defaultBillingType, supportedInvoiceTypes),
     titleType: titleRow.titleType || buyerPcMallBatchInvoiceForm.titleType,
     taxpayerId: titleRow.taxpayerId || "",
     registeredAddress: titleRow.registeredAddress || "",
@@ -4753,10 +4817,14 @@ function createBuyerPcMallInvoiceTitleFormFromRow(row) {
   if (!row) return initialBuyerPcMallInvoiceTitleForm;
 
   const supportedInvoiceTypes = getBuyerPcMallSupportedInvoiceTypesFromRow(row);
+  const defaultBillingType = supportedInvoiceTypes.length === 2
+    ? normalizeBuyerPcMallDefaultBillingType(row.defaultBillingType, supportedInvoiceTypes)
+    : "";
   return {
     id: row.id || "",
     invoiceType: getBuyerPcMallPrimaryInvoiceType(supportedInvoiceTypes),
     invoiceTypes: supportedInvoiceTypes,
+    defaultBillingType,
     titleType: row.titleType || initialBuyerPcMallInvoiceTitleForm.titleType,
     storeName: getBuyerPcMallInvoiceTitlePrimaryStore(row) || "",
     titleName: row.title || "",
@@ -4782,6 +4850,11 @@ function getBuyerPcMallInvoiceTitleTooltip(titleRow) {
     `抬头类型：${titleRow.titleType || "-"}`,
     `发票抬头：${titleRow.title || "-"}`
   ];
+
+  const defaultBillingType = normalizeBuyerPcMallDefaultBillingType(titleRow.defaultBillingType, supportedInvoiceTypes);
+  if (supportedInvoiceTypes.length === 2 && defaultBillingType) {
+    lines.push(`默认开票类型：${getBuyerPcMallInvoiceTypeFromBillingType(defaultBillingType)}`);
+  }
 
   if (titleRow.titleType !== "个人") {
     lines.push(`纳税人识别号：${titleRow.taxpayerId || "-"}`);
@@ -6604,7 +6677,10 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
       ...initialForm,
       titleType: nextTitleType,
       invoiceType: getBuyerPcMallPrimaryInvoiceType(invoiceTypes),
-      invoiceTypes
+      invoiceTypes,
+      defaultBillingType: invoiceTypes.length === 2
+        ? normalizeBuyerPcMallDefaultBillingType(initialForm.defaultBillingType, invoiceTypes)
+        : ""
     });
     setErrors(initialBuyerPcMallInvoiceTitleFieldErrors);
   }, [initialForm]);
@@ -6612,6 +6688,7 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
   const isEnterpriseTitle = form.titleType === "企业";
   const supportedInvoiceTypes = normalizeBuyerPcMallSupportedInvoiceTypes(form.titleType, form.invoiceTypes || form.invoiceType);
   const supportsSpecialInvoice = supportedInvoiceTypes.includes(buyerPcMallSpecialInvoiceType);
+  const shouldShowDefaultBillingType = isEnterpriseTitle && supportedInvoiceTypes.length === 2;
   const titleNameLabel = isEnterpriseTitle ? "企业抬头名称" : "个人姓名";
   const titleNamePlaceholder = isEnterpriseTitle ? "请输入企业抬头名称" : "请输入个人姓名";
   const modalTitle = form.id ? "编辑发票抬头" : "新增发票抬头";
@@ -6625,6 +6702,9 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
           titleType: value,
           invoiceType: getBuyerPcMallPrimaryInvoiceType(nextInvoiceTypes),
           invoiceTypes: nextInvoiceTypes,
+          defaultBillingType: nextInvoiceTypes.length === 2
+            ? normalizeBuyerPcMallDefaultBillingType(current.defaultBillingType, nextInvoiceTypes)
+            : "",
           taxpayerId: value === "个人" ? "" : current.taxpayerId,
           registeredAddress: value === "个人" ? "" : current.registeredAddress,
           phone: value === "个人" ? "" : current.phone,
@@ -6639,6 +6719,7 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
           ...current,
           invoiceType: getBuyerPcMallPrimaryInvoiceType(nextInvoiceTypes),
           invoiceTypes: nextInvoiceTypes,
+          defaultBillingType: "",
           registeredAddress: nextInvoiceTypes.includes(buyerPcMallSpecialInvoiceType) ? current.registeredAddress : "",
           phone: nextInvoiceTypes.includes(buyerPcMallSpecialInvoiceType) ? current.phone : "",
           bank: nextInvoiceTypes.includes(buyerPcMallSpecialInvoiceType) ? current.bank : "",
@@ -6662,6 +6743,8 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
     if (field === "titleType" || field === "invoiceTypes") {
       setErrors((current) => ({
         ...current,
+        invoiceTypes: false,
+        defaultBillingType: false,
         taxpayerId: field === "titleType" ? false : current.taxpayerId,
         registeredAddress: false,
         phone: false,
@@ -6682,12 +6765,18 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
     const receiverPhone = form.receiverPhone.trim();
     const receiverEmail = form.receiverEmail.trim();
     const requiresTaxpayerId = form.titleType === "企业";
+    const requiresDefaultBillingType = requiresTaxpayerId && nextInvoiceTypes.length === 2;
+    const defaultBillingType = requiresDefaultBillingType
+      ? normalizeBuyerPcMallDefaultBillingType(form.defaultBillingType, nextInvoiceTypes)
+      : "";
     if (requiresTaxpayerId && nextInvoiceTypes.length === 0) {
       onNotice("企业抬头至少勾选一种发票类型");
       return;
     }
     const requiresSpecialInvoiceFields = requiresTaxpayerId && nextInvoiceTypes.includes(buyerPcMallSpecialInvoiceType);
     const nextErrors = {
+      invoiceTypes: requiresTaxpayerId && nextInvoiceTypes.length === 0,
+      defaultBillingType: requiresDefaultBillingType && !defaultBillingType,
       titleName: !titleName,
       taxpayerId: requiresTaxpayerId && !taxpayerId,
       registeredAddress: requiresSpecialInvoiceFields && !registeredAddress,
@@ -6698,9 +6787,13 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
       receiverEmail: false
     };
 
-    if (nextErrors.titleName || nextErrors.taxpayerId || nextErrors.registeredAddress || nextErrors.phone || nextErrors.bank || nextErrors.bankAccount) {
+    if (nextErrors.invoiceTypes || nextErrors.defaultBillingType || nextErrors.titleName || nextErrors.taxpayerId || nextErrors.registeredAddress || nextErrors.phone || nextErrors.bank || nextErrors.bankAccount) {
       setErrors(nextErrors);
-      if (nextErrors.titleName) {
+      if (nextErrors.invoiceTypes) {
+        onNotice("企业抬头至少勾选一种发票类型");
+      } else if (nextErrors.defaultBillingType) {
+        onNotice("请选择默认开票类型");
+      } else if (nextErrors.titleName) {
         onNotice("抬头名称为空，请检查");
       } else if (nextErrors.taxpayerId) {
         onNotice("纳税人识别号为空，请检查");
@@ -6720,6 +6813,7 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
       ...form,
       invoiceType: getBuyerPcMallPrimaryInvoiceType(nextInvoiceTypes),
       invoiceTypes: nextInvoiceTypes,
+      defaultBillingType,
       titleName,
       taxpayerId: requiresTaxpayerId ? taxpayerId : "",
       registeredAddress: requiresSpecialInvoiceFields ? registeredAddress : "",
@@ -6779,16 +6873,31 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
                       <span>{option}</span>
                     </label>
                   );
-                })}
+              })}
             </div>
           </div>
-          {isEnterpriseTitle ? (
-            <div className="pc-mall-title-modal-tip-row">
-              <span />
-              <p className="pc-mall-title-modal-tip">
-                如选择多种发票类型，则提交开票申请时，系统将根据店铺支持的类型自动匹配；若店铺仅支持电子普通发票，将按电子普通发票信息提交开票申请。
-              </p>
-            </div>
+          {shouldShowDefaultBillingType ? (
+            <>
+              <label className="pc-mall-title-modal-row">
+                <span>默认开票类型 <em>*</em></span>
+                <div className="pc-mall-title-modal-select-wrap">
+                  <select
+                    className={`${errors.defaultBillingType ? "is-error" : ""} ${form.defaultBillingType ? "" : "is-placeholder"}`}
+                    value={form.defaultBillingType || ""}
+                    onChange={(event) => handleChange("defaultBillingType", event.target.value)}
+                  >
+                    <option value="">请选择</option>
+                    {supportedInvoiceTypes.map((invoiceType) => (
+                      <option key={`default-billing-${invoiceType}`} value={getBuyerPcMallBillingTypeFromInvoiceType(invoiceType)}>{invoiceType}</option>
+                    ))}
+                  </select>
+                </div>
+              </label>
+              <div className="pc-mall-title-modal-tip-row">
+                <span />
+                <p className="pc-mall-title-modal-tip">当店铺同时支持多种发票类型时，系统将按默认开票类型提交开票申请。</p>
+              </div>
+            </>
           ) : null}
 
           <label className="pc-mall-title-modal-row">
@@ -7011,16 +7120,16 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
         return result;
       }
 
-      const supportedInvoiceTypes = getBuyerPcMallSupportedInvoiceTypes(item.shop, item.store);
       const selectedInvoiceType = item.invoiceType || "";
       const invoiceTypeOptions = getBuyerPcMallOrderInvoiceTypeOptions(item, invoiceTitleRows);
-      if (invoiceTypeOptions.length > 1 && !selectedInvoiceType) {
-        result[item.orderNo] = "请选择发票类型";
+      const invoiceTypeValidationMessage = getBuyerPcMallOrderInvoiceTypeValidationMessage(item, invoiceTitleRows);
+      if (invoiceTypeValidationMessage) {
+        result[item.orderNo] = invoiceTypeValidationMessage;
         return result;
       }
 
-      if (supportedInvoiceTypes.length > 0 && selectedInvoiceType && !supportedInvoiceTypes.includes(selectedInvoiceType)) {
-        result[item.orderNo] = getInvoiceTypeMismatchMessage(supportedInvoiceTypes);
+      if (selectedInvoiceType && !invoiceTypeOptions.includes(selectedInvoiceType)) {
+        result[item.orderNo] = getInvoiceTypeMismatchMessage(getBuyerPcMallSupportedInvoiceTypes(item.shop, item.store));
         return result;
       }
 
@@ -7278,9 +7387,14 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
         return;
       }
 
+      const normalizedOrderItems = orderItems.map((item) => ({
+        ...item,
+        invoiceType: resolveBuyerPcMallOrderInvoiceType(item, invoiceTitleRows)
+      }));
+
       onSubmit({
         ...form,
-        orderItems,
+        orderItems: normalizedOrderItems,
         remark: form.remark.trim()
       });
       return;
@@ -7646,9 +7760,8 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                         {group.items.map((item) => {
                           const invoiceTypeOptions = getBuyerPcMallOrderInvoiceTypeOptions(item, invoiceTitleRows);
                           const resolvedInvoiceType = resolveBuyerPcMallOrderInvoiceType(item, invoiceTitleRows);
-                          const shouldSelectInvoiceType = invoiceTypeOptions.length > 1;
                           const orderValidationMessage = orderValidationByOrderNo[item.orderNo] || "";
-                          const isInvoiceTypeRequiredError = orderValidationMessage === "请选择发票类型";
+                          const isDefaultBillingTypeError = orderValidationMessage === "请先维护默认开票类型";
 
                           return (
                           <tr key={item.orderNo}>
@@ -7705,10 +7818,10 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                                       </button>
                                     </span>
                                   </div>
-                                  {showOrderFilterTabs && submitAttempted && orderValidationMessage && !isInvoiceTypeRequiredError ? (
+                                  {showOrderFilterTabs && submitAttempted && orderValidationMessage && !isDefaultBillingTypeError ? (
                                     <div className="pc-mall-batch-order-error">
                                       <span className="pc-mall-batch-order-error-text">{orderValidationMessage}</span>
-                                      {orderValidationMessage.startsWith("该店铺仅支持") ? (
+                                      {orderValidationMessage.startsWith("该店铺仅支持") || orderValidationMessage === "请更换符合店铺开票能力的发票抬头" ? (
                                         <button className="pc-mall-batch-title-adjust-btn" type="button" onClick={() => onAdjustInvoiceTitle?.(item)}>去调整</button>
                                       ) : null}
                                     </div>
@@ -7719,23 +7832,12 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                             {hideInvoiceAndReceiverSections ? (
                               <td>
                                 <div className="pc-mall-batch-invoice-type-cell">
-                                  {invoiceTypeOptions.length === 0 ? (
+                                  {invoiceTypeOptions.length === 0 || !resolvedInvoiceType ? (
                                     <span>-</span>
-                                  ) : shouldSelectInvoiceType ? (
-                                    <div className="pc-mall-batch-table-select-wrap">
-                                      <div className="pc-mall-batch-select-wrap">
-                                        <select className={submitAttempted && isInvoiceTypeRequiredError ? "is-error" : ""} value={resolvedInvoiceType} onChange={(event) => handleChangeOrderItem(item.orderNo, "invoiceType", event.target.value)}>
-                                          <option value="">请选择</option>
-                                          {invoiceTypeOptions.map((invoiceType) => (
-                                            <option key={`${item.orderNo}-${invoiceType}`} value={invoiceType}>{invoiceType}</option>
-                                          ))}
-                                        </select>
-                                      </div>
-                                    </div>
                                   ) : (
                                     <span className={`pc-mall-invoice-tag is-${getBuyerPcMallInvoiceTypeTone(resolvedInvoiceType)}`}>{resolvedInvoiceType}</span>
                                   )}
-                                  {showOrderFilterTabs && submitAttempted && isInvoiceTypeRequiredError ? (
+                                  {showOrderFilterTabs && submitAttempted && isDefaultBillingTypeError ? (
                                     <div className="pc-mall-batch-order-error pc-mall-batch-invoice-type-error">
                                       <span className="pc-mall-batch-order-error-text">{orderValidationMessage}</span>
                                     </div>
@@ -9201,6 +9303,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
       title: form.titleName,
       invoiceType: getBuyerPcMallPrimaryInvoiceType(supportedInvoiceTypes),
       invoiceTypes: supportedInvoiceTypes,
+      defaultBillingType: form.defaultBillingType || "",
       invoiceTypeTone: getBuyerPcMallInvoiceTypeTone(getBuyerPcMallPrimaryInvoiceType(supportedInvoiceTypes)),
       titleType: form.titleType,
       taxpayerId: form.taxpayerId,
@@ -17993,6 +18096,9 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   const [miniappBatchInvoiceTypeSelections, setMiniappBatchInvoiceTypeSelections] = useState({});
   const [miniappBatchTitlePickerOrderId, setMiniappBatchTitlePickerOrderId] = useState("");
   const [miniappBatchInvoiceTypePickerOrderId, setMiniappBatchInvoiceTypePickerOrderId] = useState("");
+  const [miniappCreatedInvoiceTitleItems, setMiniappCreatedInvoiceTitleItems] = useState([]);
+  const [miniappInvoiceTitleCreateForm, setMiniappInvoiceTitleCreateForm] = useState(initialMiniappInvoiceTitleCreateForm);
+  const [miniappInvoiceTitleCreateErrors, setMiniappInvoiceTitleCreateErrors] = useState(initialMiniappInvoiceTitleCreateErrors);
   const [miniappInvoiceOrderDetailNo, setMiniappInvoiceOrderDetailNo] = useState("");
   const [miniappServiceOrderId, setMiniappServiceOrderId] = useState("");
   const [miniappBatchSuccessToast, setMiniappBatchSuccessToast] = useState("");
@@ -18051,7 +18157,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
     { key: "refund", label: "退款/售后", badge: 16, icon: "refund" }
   ];
   const mineServiceItems = ["我的评论", "我的消息", "我的收货地址", "发票管理", "账号管理", "平台客服", "举报信息", "身份认证"];
-  const miniappInvoiceTitleItems = [
+  const miniappBaseInvoiceTitleItems = [
     {
       id: "default",
       title: "美团",
@@ -18095,11 +18201,18 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       taxNo: "91310000MA1K3N8X5L"
     }
   ];
+  const hasCreatedDefaultInvoiceTitle = miniappCreatedInvoiceTitleItems.some((item) => item.isDefault);
+  const miniappInvoiceTitleItems = [
+    ...miniappBaseInvoiceTitleItems.map((item) => (
+      hasCreatedDefaultInvoiceTitle ? { ...item, isDefault: false } : item
+    )),
+    ...miniappCreatedInvoiceTitleItems
+  ];
   const miniappInvoiceTitleMetaByTitle = miniappInvoiceTitleItems.reduce((result, item) => {
     const invoiceTypes = item.tags.filter((tag) => tag === "电子普通发票" || tag === "电子增值税专用发票");
     result[item.title] = {
       taxNo: item.taxNo || "",
-      invoiceType: invoiceTypes[0] || "",
+      invoiceType: getBuyerPcMallInvoiceTypeFromBillingType(item.defaultBillingType) || invoiceTypes[0] || "",
       invoiceTypes
     };
     return result;
@@ -18490,6 +18603,13 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   const isInvoiceTitleManagementView = isMineTab && miniappView === "invoice-titles";
   const isInvoiceTitleCreateView = isMineTab && miniappView === "invoice-title-create";
   const isMiniappBatchInvoiceTypePickerView = isMineTab && miniappView === "invoice-batch-invoice-type-picker";
+  const miniappInvoiceTitleCreateSupportedTypes = normalizeBuyerPcMallSupportedInvoiceTypes(
+    miniappInvoiceTitleCreateForm.titleType,
+    miniappInvoiceTitleCreateForm.invoiceTypes || miniappInvoiceTitleCreateForm.invoiceType
+  );
+  const isMiniappInvoiceTitleCreateEnterprise = miniappInvoiceTitleCreateForm.titleType === "企业";
+  const miniappInvoiceTitleCreateSupportsSpecial = miniappInvoiceTitleCreateSupportedTypes.includes(buyerPcMallSpecialInvoiceType);
+  const shouldShowMiniappDefaultBillingType = isMiniappInvoiceTitleCreateEnterprise && miniappInvoiceTitleCreateSupportedTypes.length === 2;
   const isMiniappInvoiceOrderDisabled = useCallback((item) => {
     if (!item) return true;
     if (item.disabled) return true;
@@ -19446,6 +19566,161 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       : miniappAppliedModifyPickerField === "separateInvoiceRequired"
         ? ["是", "否"]
         : [];
+
+  const resetMiniappInvoiceTitleCreateForm = () => {
+    setMiniappInvoiceTitleCreateForm(initialMiniappInvoiceTitleCreateForm);
+    setMiniappInvoiceTitleCreateErrors(initialMiniappInvoiceTitleCreateErrors);
+  };
+
+  const handleOpenMiniappInvoiceTitleCreate = () => {
+    resetMiniappInvoiceTitleCreateForm();
+    setMiniappView("invoice-title-create");
+  };
+
+  const handleChangeMiniappInvoiceTitleCreate = (field, value) => {
+    setMiniappInvoiceTitleCreateForm((current) => {
+      if (field === "titleType") {
+        const nextInvoiceTypes = normalizeBuyerPcMallSupportedInvoiceTypes(value, current.invoiceTypes || current.invoiceType);
+        return {
+          ...current,
+          titleType: value,
+          invoiceType: getBuyerPcMallPrimaryInvoiceType(nextInvoiceTypes),
+          invoiceTypes: nextInvoiceTypes,
+          defaultBillingType: nextInvoiceTypes.length === 2
+            ? normalizeBuyerPcMallDefaultBillingType(current.defaultBillingType, nextInvoiceTypes)
+            : "",
+          taxpayerId: value === "个人" ? "" : current.taxpayerId,
+          registeredAddress: value === "个人" ? "" : current.registeredAddress,
+          phone: value === "个人" ? "" : current.phone,
+          bank: value === "个人" ? "" : current.bank,
+          bankAccount: value === "个人" ? "" : current.bankAccount
+        };
+      }
+
+      if (field === "invoiceTypes") {
+        const nextInvoiceTypes = normalizeBuyerPcMallSupportedInvoiceTypes(current.titleType, value);
+        return {
+          ...current,
+          invoiceType: getBuyerPcMallPrimaryInvoiceType(nextInvoiceTypes),
+          invoiceTypes: nextInvoiceTypes,
+          defaultBillingType: nextInvoiceTypes.length === 2
+            ? normalizeBuyerPcMallDefaultBillingType(current.defaultBillingType, nextInvoiceTypes)
+            : "",
+          registeredAddress: nextInvoiceTypes.includes(buyerPcMallSpecialInvoiceType) ? current.registeredAddress : "",
+          phone: nextInvoiceTypes.includes(buyerPcMallSpecialInvoiceType) ? current.phone : "",
+          bank: nextInvoiceTypes.includes(buyerPcMallSpecialInvoiceType) ? current.bank : "",
+          bankAccount: nextInvoiceTypes.includes(buyerPcMallSpecialInvoiceType) ? current.bankAccount : ""
+        };
+      }
+
+      return {
+        ...current,
+        [field]: value
+      };
+    });
+
+    if (field in initialMiniappInvoiceTitleCreateErrors) {
+      setMiniappInvoiceTitleCreateErrors((current) => ({
+        ...current,
+        [field]: false
+      }));
+    }
+
+    if (field === "titleType" || field === "invoiceTypes") {
+      setMiniappInvoiceTitleCreateErrors((current) => ({
+        ...current,
+        invoiceTypes: false,
+        defaultBillingType: false,
+        taxpayerId: field === "titleType" ? false : current.taxpayerId,
+        registeredAddress: false,
+        phone: false,
+        bank: false,
+        bankAccount: false
+      }));
+    }
+  };
+
+  const handleSaveMiniappInvoiceTitleCreate = () => {
+    const form = miniappInvoiceTitleCreateForm;
+    const nextInvoiceTypes = normalizeBuyerPcMallSupportedInvoiceTypes(form.titleType, form.invoiceTypes || form.invoiceType);
+    const titleName = form.titleName.trim();
+    const taxpayerId = form.taxpayerId.trim();
+    const registeredAddress = form.registeredAddress.trim();
+    const phone = form.phone.trim();
+    const bank = form.bank.trim();
+    const bankAccount = form.bankAccount.trim();
+    const receiverPhone = form.receiverPhone.trim();
+    const receiverEmail = form.receiverEmail.trim();
+    const requiresTaxpayerId = form.titleType === "企业";
+    const requiresDefaultBillingType = requiresTaxpayerId && nextInvoiceTypes.length === 2;
+    const defaultBillingType = requiresDefaultBillingType
+      ? normalizeBuyerPcMallDefaultBillingType(form.defaultBillingType, nextInvoiceTypes)
+      : "";
+    if (requiresTaxpayerId && nextInvoiceTypes.length === 0) {
+      setMiniappInvoicePreviewNotice("企业抬头至少勾选一种发票类型");
+      return;
+    }
+    const requiresSpecialInvoiceFields = requiresTaxpayerId && nextInvoiceTypes.includes(buyerPcMallSpecialInvoiceType);
+    const nextErrors = {
+      invoiceTypes: requiresTaxpayerId && nextInvoiceTypes.length === 0,
+      defaultBillingType: requiresDefaultBillingType && !defaultBillingType,
+      titleName: !titleName,
+      taxpayerId: requiresTaxpayerId && !taxpayerId,
+      registeredAddress: requiresSpecialInvoiceFields && !registeredAddress,
+      phone: requiresSpecialInvoiceFields && !phone,
+      bank: requiresSpecialInvoiceFields && !bank,
+      bankAccount: requiresSpecialInvoiceFields && !bankAccount,
+      receiverPhone: false,
+      receiverEmail: false
+    };
+
+    if (nextErrors.invoiceTypes || nextErrors.defaultBillingType || nextErrors.titleName || nextErrors.taxpayerId || nextErrors.registeredAddress || nextErrors.phone || nextErrors.bank || nextErrors.bankAccount) {
+      setMiniappInvoiceTitleCreateErrors(nextErrors);
+      if (nextErrors.invoiceTypes) {
+        setMiniappInvoicePreviewNotice("企业抬头至少勾选一种发票类型");
+      } else if (nextErrors.defaultBillingType) {
+        setMiniappInvoicePreviewNotice("请选择默认开票类型");
+      } else if (nextErrors.titleName) {
+        setMiniappInvoicePreviewNotice("抬头名称为空，请检查");
+      } else if (nextErrors.taxpayerId) {
+        setMiniappInvoicePreviewNotice("纳税人识别号为空，请检查");
+      } else if (nextErrors.registeredAddress) {
+        setMiniappInvoicePreviewNotice("注册地址为空，请检查");
+      } else if (nextErrors.phone) {
+        setMiniappInvoicePreviewNotice("注册电话为空，请检查");
+      } else if (nextErrors.bank) {
+        setMiniappInvoicePreviewNotice("开户银行为空，请检查");
+      } else {
+        setMiniappInvoicePreviewNotice("开户银行账号为空，请检查");
+      }
+      return;
+    }
+
+    const savedItem = {
+      id: `created-${Date.now()}`,
+      title: titleName,
+      isDefault: Boolean(form.isDefault),
+      tags: [form.titleType, ...nextInvoiceTypes],
+      taxNo: requiresTaxpayerId ? taxpayerId : "",
+      store: form.storeName || "",
+      storeHint: form.storeName ? "" : "",
+      defaultBillingType,
+      registeredAddress: requiresSpecialInvoiceFields ? registeredAddress : "",
+      phone: requiresSpecialInvoiceFields ? phone : "",
+      bank: requiresSpecialInvoiceFields ? bank : "",
+      bankAccount: requiresSpecialInvoiceFields ? bankAccount : "",
+      receiverPhone,
+      receiverEmail,
+      detailToggle: requiresSpecialInvoiceFields ? "查看更多信息" : ""
+    };
+    setMiniappCreatedInvoiceTitleItems((current) => [
+      ...current.map((item) => (savedItem.isDefault ? { ...item, isDefault: false } : item)),
+      savedItem
+    ]);
+    setMiniappInvoicePreviewNotice("发票抬头保存成功");
+    resetMiniappInvoiceTitleCreateForm();
+    setMiniappView("invoice-titles");
+  };
 
   const handleTabSwitch = (key) => {
     setActiveTab(key);
@@ -20816,54 +21091,176 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                 <main className="miniapp-title-form-content">
                   <section className="miniapp-title-form-card">
                     <div className="miniapp-title-form-group">
-                      <div className="miniapp-title-form-label is-required">发票类型</div>
+                      <div className="miniapp-title-form-label is-required">抬头类型</div>
                       <div className="miniapp-title-segmented">
-                        {invoiceTypeOptions.map((item, index) => (
-                          <button className={`miniapp-title-segmented-item ${index === 0 ? "is-active" : ""}`} key={item} type="button">{item}</button>
+                        {titleTypeOptions.map((item) => (
+                          <button
+                            className={`miniapp-title-segmented-item ${miniappInvoiceTitleCreateForm.titleType === item ? "is-active" : ""}`}
+                            key={item}
+                            type="button"
+                            onClick={() => handleChangeMiniappInvoiceTitleCreate("titleType", item)}
+                          >
+                            {item}
+                          </button>
                         ))}
                       </div>
                     </div>
 
                     <div className="miniapp-title-form-group">
-                      <div className="miniapp-title-form-label is-required">抬头类型</div>
+                      <div className="miniapp-title-form-label is-required">发票类型</div>
                       <div className="miniapp-title-segmented">
-                        {titleTypeOptions.map((item, index) => (
-                          <button className={`miniapp-title-segmented-item ${index === 1 ? "is-active" : ""}`} key={item} type="button">{item}</button>
-                        ))}
+                        {invoiceTypeOptions
+                          .filter((item) => item !== buyerPcMallSpecialInvoiceType || isMiniappInvoiceTitleCreateEnterprise)
+                          .map((item) => {
+                            const checked = miniappInvoiceTitleCreateSupportedTypes.includes(item);
+                            const disabled = !isMiniappInvoiceTitleCreateEnterprise && item === buyerPcMallNormalInvoiceType;
+                            return (
+                              <button
+                                className={`miniapp-title-segmented-item ${checked ? "is-active" : ""} ${disabled ? "is-disabled" : ""}`}
+                                key={item}
+                                type="button"
+                                aria-pressed={checked}
+                                onClick={() => {
+                                  if (disabled) return;
+                                  const nextTypes = checked
+                                    ? miniappInvoiceTitleCreateSupportedTypes.filter((option) => option !== item)
+                                    : [...miniappInvoiceTitleCreateSupportedTypes, item];
+                                  if (isMiniappInvoiceTitleCreateEnterprise && nextTypes.length === 0) {
+                                    setMiniappInvoicePreviewNotice("企业抬头至少勾选一种发票类型");
+                                    return;
+                                  }
+                                  handleChangeMiniappInvoiceTitleCreate("invoiceTypes", nextTypes);
+                                }}
+                              >
+                                {item}
+                              </button>
+                            );
+                          })}
                       </div>
                     </div>
 
-                    <div className="miniapp-title-form-row">
+                    {shouldShowMiniappDefaultBillingType ? (
+                      <label className={`miniapp-title-form-row is-select ${miniappInvoiceTitleCreateErrors.defaultBillingType ? "is-error" : ""}`}>
+                        <span className="is-required">默认开票类型</span>
+                        <select
+                          className={miniappInvoiceTitleCreateForm.defaultBillingType ? "" : "is-placeholder"}
+                          value={miniappInvoiceTitleCreateForm.defaultBillingType}
+                          onChange={(event) => handleChangeMiniappInvoiceTitleCreate("defaultBillingType", event.target.value)}
+                        >
+                          <option value="">请选择</option>
+                          {miniappInvoiceTitleCreateSupportedTypes.map((invoiceType) => (
+                            <option key={`miniapp-default-billing-${invoiceType}`} value={getBuyerPcMallBillingTypeFromInvoiceType(invoiceType)}>{invoiceType}</option>
+                          ))}
+                        </select>
+                      </label>
+                    ) : null}
+
+                    {shouldShowMiniappDefaultBillingType ? (
+                      <p className="miniapp-title-form-tip">当店铺同时支持多种发票类型时，系统将按默认开票类型提交开票申请。</p>
+                    ) : null}
+
+                    <label className="miniapp-title-form-row is-select">
                       <span>闪购门店</span>
-                      <strong>请选择闪购门店 多选 <em>〉</em></strong>
-                    </div>
+                      <select
+                        className={miniappInvoiceTitleCreateForm.storeName ? "" : "is-placeholder"}
+                        value={miniappInvoiceTitleCreateForm.storeName}
+                        onChange={(event) => handleChangeMiniappInvoiceTitleCreate("storeName", event.target.value)}
+                      >
+                        <option value="">请选择闪购门店</option>
+                        {buyerPcMallStoreOptions.map((item) => <option key={item} value={item}>{item}</option>)}
+                      </select>
+                    </label>
 
-                    <div className="miniapp-title-form-row is-input">
+                    <label className={`miniapp-title-form-row is-input ${miniappInvoiceTitleCreateErrors.titleName ? "is-error" : ""}`}>
                       <span className="is-required">抬头名称</span>
-                      <strong>请输入企业或个人的合法名称</strong>
-                    </div>
+                      <input
+                        placeholder={isMiniappInvoiceTitleCreateEnterprise ? "请输入企业抬头名称" : "请输入个人姓名"}
+                        value={miniappInvoiceTitleCreateForm.titleName}
+                        onChange={(event) => handleChangeMiniappInvoiceTitleCreate("titleName", event.target.value)}
+                      />
+                    </label>
 
-                    <div className="miniapp-title-form-row is-input">
-                      <span className="is-required">纳税人识别号</span>
-                      <strong>请输入合法的纳税人识别号</strong>
-                    </div>
+                    {isMiniappInvoiceTitleCreateEnterprise ? (
+                      <label className={`miniapp-title-form-row is-input ${miniappInvoiceTitleCreateErrors.taxpayerId ? "is-error" : ""}`}>
+                        <span className="is-required">纳税人识别号</span>
+                        <input
+                          placeholder="请输入合法的纳税人识别号"
+                          value={miniappInvoiceTitleCreateForm.taxpayerId}
+                          onChange={(event) => handleChangeMiniappInvoiceTitleCreate("taxpayerId", event.target.value)}
+                        />
+                      </label>
+                    ) : null}
 
-                    <div className="miniapp-title-form-row is-input">
+                    {isMiniappInvoiceTitleCreateEnterprise && miniappInvoiceTitleCreateSupportsSpecial ? (
+                      <>
+                        <label className={`miniapp-title-form-row is-input ${miniappInvoiceTitleCreateErrors.registeredAddress ? "is-error" : ""}`}>
+                          <span className="is-required">注册地址</span>
+                          <input
+                            placeholder="请输入注册地址"
+                            value={miniappInvoiceTitleCreateForm.registeredAddress}
+                            onChange={(event) => handleChangeMiniappInvoiceTitleCreate("registeredAddress", event.target.value)}
+                          />
+                        </label>
+
+                        <label className={`miniapp-title-form-row is-input ${miniappInvoiceTitleCreateErrors.phone ? "is-error" : ""}`}>
+                          <span className="is-required">注册电话</span>
+                          <input
+                            placeholder="请输入注册电话"
+                            value={miniappInvoiceTitleCreateForm.phone}
+                            onChange={(event) => handleChangeMiniappInvoiceTitleCreate("phone", event.target.value)}
+                          />
+                        </label>
+
+                        <label className={`miniapp-title-form-row is-input ${miniappInvoiceTitleCreateErrors.bank ? "is-error" : ""}`}>
+                          <span className="is-required">开户银行</span>
+                          <input
+                            placeholder="请输入开户银行"
+                            value={miniappInvoiceTitleCreateForm.bank}
+                            onChange={(event) => handleChangeMiniappInvoiceTitleCreate("bank", event.target.value)}
+                          />
+                        </label>
+
+                        <label className={`miniapp-title-form-row is-input ${miniappInvoiceTitleCreateErrors.bankAccount ? "is-error" : ""}`}>
+                          <span className="is-required">开户银行账号</span>
+                          <input
+                            placeholder="请输入完整的开户银行账号"
+                            value={miniappInvoiceTitleCreateForm.bankAccount}
+                            onChange={(event) => handleChangeMiniappInvoiceTitleCreate("bankAccount", event.target.value)}
+                          />
+                        </label>
+                      </>
+                    ) : null}
+
+                    <label className="miniapp-title-form-row is-input">
                       <span>收票人手机</span>
-                      <strong>请输入收票人手机号</strong>
-                    </div>
+                      <input
+                        placeholder="请输入收票人手机号"
+                        value={miniappInvoiceTitleCreateForm.receiverPhone}
+                        onChange={(event) => handleChangeMiniappInvoiceTitleCreate("receiverPhone", event.target.value)}
+                      />
+                    </label>
 
-                    <div className="miniapp-title-form-row is-input">
+                    <label className="miniapp-title-form-row is-input">
                       <span>收票人邮箱</span>
-                      <strong>请输入收票人邮箱</strong>
-                    </div>
+                      <input
+                        placeholder="请输入收票人邮箱"
+                        value={miniappInvoiceTitleCreateForm.receiverEmail}
+                        onChange={(event) => handleChangeMiniappInvoiceTitleCreate("receiverEmail", event.target.value)}
+                      />
+                    </label>
 
                     <div className="miniapp-title-form-switch-row">
                       <div>
                         <span>设为默认抬头</span>
                         <p>设为默认抬头后，将自动填充抬头和税号</p>
                       </div>
-                      <button className="miniapp-title-switch" type="button" aria-label="设为默认抬头">
+                      <button
+                        className={`miniapp-title-switch ${miniappInvoiceTitleCreateForm.isDefault ? "is-active" : ""}`}
+                        type="button"
+                        aria-label="设为默认抬头"
+                        aria-pressed={miniappInvoiceTitleCreateForm.isDefault}
+                        onClick={() => handleChangeMiniappInvoiceTitleCreate("isDefault", !miniappInvoiceTitleCreateForm.isDefault)}
+                      >
                         <span />
                       </button>
                     </div>
@@ -20872,7 +21269,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                 </main>
 
                 <div className="miniapp-title-footer">
-                  <button className="miniapp-title-create-btn" type="button">保存</button>
+                  <button className="miniapp-title-create-btn" type="button" onClick={handleSaveMiniappInvoiceTitleCreate}>保存</button>
                 </div>
               </div>
             ) : isInvoiceTitleManagementView ? (
@@ -20945,7 +21342,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                 </main>
 
                 <div className="miniapp-title-footer">
-                  <button className="miniapp-title-create-btn" type="button" onClick={() => setMiniappView("invoice-title-create")}>+ 新增发票抬头</button>
+                  <button className="miniapp-title-create-btn" type="button" onClick={handleOpenMiniappInvoiceTitleCreate}>+ 新增发票抬头</button>
                 </div>
               </div>
             ) : isMiniappInvoiceMorePageView ? (
