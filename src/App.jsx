@@ -768,7 +768,7 @@ function isShopInvoiceApplicationOverdue(row, overdueDays = 5) {
   const timeoutTime = getShopInvoiceTimeoutTime(row, overdueDays);
   if (Number.isNaN(timeoutTime)) return false;
 
-  return parseShopInvoiceDateStart(Date.now()) > timeoutTime;
+  return parseShopInvoiceDateStart(Date.now()) >= timeoutTime;
 }
 
 function isShopInvoiceApplicationApproachingOverdue(row, overdueDays = 5, warningDays = 1) {
@@ -779,7 +779,7 @@ function isShopInvoiceApplicationApproachingOverdue(row, overdueDays = 5, warnin
 
   const diff = timeoutTime - parseShopInvoiceDateStart(Date.now());
   const warningWindow = warningDays * 24 * 60 * 60 * 1000;
-  return diff >= 0 && diff <= warningWindow;
+  return diff > 0 && diff <= warningWindow;
 }
 
 function getShopInvoiceApproachingTimeoutAt(row, overdueDays = 5) {
@@ -834,6 +834,7 @@ function renderShopInvoiceTimeoutDateCell(row, now = Date.now()) {
 }
 
 function hasShopInvoiceApproachingBadge(row) {
+  if (isShopInvoiceApplicationOverdue(row)) return false;
   return Boolean(row?.approachingTimeoutAt) || isShopInvoiceApplicationApproachingOverdue(row);
 }
 
@@ -1986,6 +1987,7 @@ const buyerPcMallInvoiceTitleRows = [
     title: "企业01",
     invoiceType: "电子普通发票",
     invoiceTypes: ["电子普通发票", "电子增值税专用发票"],
+    defaultBillingType: "normal",
     invoiceTypeTone: "purple",
     titleType: "企业",
     taxpayerId: "33126",
@@ -3620,46 +3622,35 @@ function getBuyerPcMallTitleSupportedInvoiceTypesForOrder(item, invoiceTitleRows
   return normalizeBuyerPcMallSupportedInvoiceTypes(item?.titleType || "企业", item?.invoiceTypes || item?.invoiceType || "");
 }
 
-function getBuyerPcMallTitleDefaultBillingTypeForOrder(item, invoiceTitleRows = []) {
-  const matchedTitle = getBuyerPcMallMatchedInvoiceTitleRow(item, invoiceTitleRows);
-  const supportedInvoiceTypes = matchedTitle
-    ? getBuyerPcMallSupportedInvoiceTypesFromRow(matchedTitle)
-    : getBuyerPcMallTitleSupportedInvoiceTypesForOrder(item, invoiceTitleRows);
-  return normalizeBuyerPcMallDefaultBillingType(
-    matchedTitle?.defaultBillingType ?? item?.defaultBillingType ?? "",
-    supportedInvoiceTypes
-  );
-}
-
 function getBuyerPcMallOrderInvoiceTypeOptions(item, invoiceTitleRows = []) {
   const titleSupportedTypes = getBuyerPcMallTitleSupportedInvoiceTypesForOrder(item, invoiceTitleRows);
   const shopSupportedTypes = getBuyerPcMallSupportedInvoiceTypes(item?.shop, item?.store);
   if (shopSupportedTypes.length === 0) return titleSupportedTypes;
 
   const matchedTypes = titleSupportedTypes.filter((invoiceType) => shopSupportedTypes.includes(invoiceType));
-  return matchedTypes;
+  return matchedTypes.length > 0 ? matchedTypes : titleSupportedTypes;
+}
+
+function getBuyerPcMallDefaultInvoiceTypeForOrder(item, invoiceTitleRows = []) {
+  const matchedTitle = getBuyerPcMallMatchedInvoiceTitleRow(item, invoiceTitleRows);
+  const invoiceTypeOptions = getBuyerPcMallOrderInvoiceTypeOptions(item, invoiceTitleRows);
+  const defaultBillingType = normalizeBuyerPcMallDefaultBillingType(
+    matchedTitle?.defaultBillingType ?? item?.defaultBillingType ?? "",
+    invoiceTypeOptions
+  );
+  return getBuyerPcMallInvoiceTypeFromBillingType(defaultBillingType);
 }
 
 function resolveBuyerPcMallOrderInvoiceType(item, invoiceTitleRows = []) {
   const invoiceTypeOptions = getBuyerPcMallOrderInvoiceTypeOptions(item, invoiceTitleRows);
   if (invoiceTypeOptions.length === 0) return "";
   if (invoiceTypeOptions.length > 1) {
-    const defaultBillingType = getBuyerPcMallTitleDefaultBillingTypeForOrder(item, invoiceTitleRows);
-    const defaultInvoiceType = getBuyerPcMallInvoiceTypeFromBillingType(defaultBillingType);
-    return invoiceTypeOptions.includes(defaultInvoiceType) ? defaultInvoiceType : "";
+    if (invoiceTypeOptions.includes(item?.invoiceType)) return item.invoiceType;
+    return getBuyerPcMallDefaultInvoiceTypeForOrder(item, invoiceTitleRows) || invoiceTypeOptions[0] || "";
   }
   return invoiceTypeOptions.includes(item?.invoiceType)
     ? item.invoiceType
     : (invoiceTypeOptions[0] || item?.invoiceType || buyerPcMallNormalInvoiceType);
-}
-
-function getBuyerPcMallOrderInvoiceTypeValidationMessage(item, invoiceTitleRows = []) {
-  const invoiceTypeOptions = getBuyerPcMallOrderInvoiceTypeOptions(item, invoiceTitleRows);
-  if (invoiceTypeOptions.length === 0) return "请更换符合店铺开票能力的发票抬头";
-  if (invoiceTypeOptions.length > 1 && !resolveBuyerPcMallOrderInvoiceType(item, invoiceTitleRows)) {
-    return "请先维护默认开票类型";
-  }
-  return "";
 }
 
 function normalizeBuyerPcMallOrderInvoiceType(item, invoiceTitleRows = []) {
@@ -7120,16 +7111,16 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
         return result;
       }
 
-      const selectedInvoiceType = item.invoiceType || "";
+      const supportedInvoiceTypes = getBuyerPcMallSupportedInvoiceTypes(item.shop, item.store);
+      const selectedInvoiceType = item.invoiceType || resolveBuyerPcMallOrderInvoiceType(item, invoiceTitleRows);
       const invoiceTypeOptions = getBuyerPcMallOrderInvoiceTypeOptions(item, invoiceTitleRows);
-      const invoiceTypeValidationMessage = getBuyerPcMallOrderInvoiceTypeValidationMessage(item, invoiceTitleRows);
-      if (invoiceTypeValidationMessage) {
-        result[item.orderNo] = invoiceTypeValidationMessage;
+      if (invoiceTypeOptions.length > 1 && !selectedInvoiceType) {
+        result[item.orderNo] = "请选择发票类型";
         return result;
       }
 
-      if (selectedInvoiceType && !invoiceTypeOptions.includes(selectedInvoiceType)) {
-        result[item.orderNo] = getInvoiceTypeMismatchMessage(getBuyerPcMallSupportedInvoiceTypes(item.shop, item.store));
+      if (supportedInvoiceTypes.length > 0 && selectedInvoiceType && !supportedInvoiceTypes.includes(selectedInvoiceType)) {
+        result[item.orderNo] = getInvoiceTypeMismatchMessage(supportedInvoiceTypes);
         return result;
       }
 
@@ -7138,9 +7129,11 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
     }, {})
   ), [invoiceTitleRows, orderItems]);
   const errorOrderItems = useMemo(() => (
-    submitAttempted
-      ? orderItems.filter((item) => orderValidationByOrderNo[item.orderNo])
-      : []
+    orderItems.filter((item) => {
+      const validationMessage = orderValidationByOrderNo[item.orderNo] || "";
+      if (!validationMessage) return false;
+      return submitAttempted || validationMessage.startsWith("该店铺仅支持");
+    })
   ), [orderItems, orderValidationByOrderNo, submitAttempted]);
   const displayedOrderItems = useMemo(() => (
     showOrderFilterTabs && orderFilterTab === "error" ? errorOrderItems : orderItems
@@ -7760,8 +7753,11 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                         {group.items.map((item) => {
                           const invoiceTypeOptions = getBuyerPcMallOrderInvoiceTypeOptions(item, invoiceTitleRows);
                           const resolvedInvoiceType = resolveBuyerPcMallOrderInvoiceType(item, invoiceTitleRows);
+                          const shouldSelectInvoiceType = invoiceTypeOptions.length > 1;
                           const orderValidationMessage = orderValidationByOrderNo[item.orderNo] || "";
-                          const isDefaultBillingTypeError = orderValidationMessage === "请先维护默认开票类型";
+                          const isInvoiceTypeRequiredError = orderValidationMessage === "请选择发票类型";
+                          const isInvoiceTypeMismatchError = orderValidationMessage.startsWith("该店铺仅支持");
+                          const shouldShowOrderValidationMessage = submitAttempted || isInvoiceTypeMismatchError;
 
                           return (
                           <tr key={item.orderNo}>
@@ -7818,10 +7814,10 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                                       </button>
                                     </span>
                                   </div>
-                                  {showOrderFilterTabs && submitAttempted && orderValidationMessage && !isDefaultBillingTypeError ? (
+                                  {showOrderFilterTabs && shouldShowOrderValidationMessage && orderValidationMessage && !isInvoiceTypeRequiredError ? (
                                     <div className="pc-mall-batch-order-error">
                                       <span className="pc-mall-batch-order-error-text">{orderValidationMessage}</span>
-                                      {orderValidationMessage.startsWith("该店铺仅支持") || orderValidationMessage === "请更换符合店铺开票能力的发票抬头" ? (
+                                      {isInvoiceTypeMismatchError ? (
                                         <button className="pc-mall-batch-title-adjust-btn" type="button" onClick={() => onAdjustInvoiceTitle?.(item)}>去调整</button>
                                       ) : null}
                                     </div>
@@ -7832,12 +7828,22 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                             {hideInvoiceAndReceiverSections ? (
                               <td>
                                 <div className="pc-mall-batch-invoice-type-cell">
-                                  {invoiceTypeOptions.length === 0 || !resolvedInvoiceType ? (
+                                  {invoiceTypeOptions.length === 0 ? (
                                     <span>-</span>
+                                  ) : shouldSelectInvoiceType ? (
+                                    <div className="pc-mall-batch-table-select-wrap">
+                                      <div className="pc-mall-batch-select-wrap">
+                                        <select className={submitAttempted && isInvoiceTypeRequiredError ? "is-error" : ""} value={resolvedInvoiceType} onChange={(event) => handleChangeOrderItem(item.orderNo, "invoiceType", event.target.value)}>
+                                          {invoiceTypeOptions.map((invoiceType) => (
+                                            <option key={`${item.orderNo}-${invoiceType}`} value={invoiceType}>{invoiceType}</option>
+                                          ))}
+                                        </select>
+                                      </div>
+                                    </div>
                                   ) : (
                                     <span className={`pc-mall-invoice-tag is-${getBuyerPcMallInvoiceTypeTone(resolvedInvoiceType)}`}>{resolvedInvoiceType}</span>
                                   )}
-                                  {showOrderFilterTabs && submitAttempted && isDefaultBillingTypeError ? (
+                                  {showOrderFilterTabs && submitAttempted && isInvoiceTypeRequiredError ? (
                                     <div className="pc-mall-batch-order-error pc-mall-batch-invoice-type-error">
                                       <span className="pc-mall-batch-order-error-text">{orderValidationMessage}</span>
                                     </div>
@@ -18069,6 +18075,12 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   const [activeTab, setActiveTab] = useState("home");
   const [miniappView, setMiniappView] = useState("main");
   const [miniappOrderOverlay, setMiniappOrderOverlay] = useState("");
+  const [miniappInvoiceSourceOrderKey, setMiniappInvoiceSourceOrderKey] = useState("");
+  const [miniappPreviewInvoiceType, setMiniappPreviewInvoiceType] = useState("");
+  const [isMiniappPreviewInvoiceTypePickerOpen, setIsMiniappPreviewInvoiceTypePickerOpen] = useState(false);
+  const [isMiniappPreviewInvoiceTypeError, setIsMiniappPreviewInvoiceTypeError] = useState(false);
+  const [isMiniappSingleInvoiceHelpOpen, setIsMiniappSingleInvoiceHelpOpen] = useState(false);
+  const [isMiniappSpecialOnlyInvoiceTipOpen, setIsMiniappSpecialOnlyInvoiceTipOpen] = useState(false);
   const [isMiniappInvoiceEditConfirmOpen, setIsMiniappInvoiceEditConfirmOpen] = useState(false);
   const [isMiniappInvoicePreviewOpen, setIsMiniappInvoicePreviewOpen] = useState(false);
   const [miniappInvoicePreviewRecordId, setMiniappInvoicePreviewRecordId] = useState("");
@@ -18162,7 +18174,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       id: "default",
       title: "美团",
       isDefault: true,
-      tags: ["企业", "电子普通发票"],
+      tags: ["企业", "电子普通发票", "电子增值税专用发票"],
       taxNo: "123456789",
       store: "配送移动端众包商家_陈苏燕702",
       storeHint: "(ID:展开)"
@@ -18486,6 +18498,23 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       ]
     },
     {
+      key: "special-only",
+      store: "专票测试店铺",
+      storeStatus: "已完成",
+      specialInvoiceOnlyTip: true,
+      items: [
+        { key: "special-only-1", image: "cover", title: "仅支持专票样本商品", subtitle: "企业采购专用", price: "88", quantity: 1, status: "" },
+        { key: "special-only-2", image: "cover", title: "专票运费商品", subtitle: "", price: "12", quantity: 1, status: "" }
+      ],
+      summaryText: "共2件商品 实付",
+      summaryAmount: "100",
+      actions: [
+        { label: "确认收货", primary: true },
+        { label: "申请开票" },
+        { label: "申请售后" }
+      ]
+    },
+    {
       key: "completed-sample",
       store: "API测试店铺",
       storeStatus: "已完成",
@@ -18501,6 +18530,22 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       ]
     }
   ];
+  const miniappInvoiceSourceOrder = orderCards.find((item) => item.key === miniappInvoiceSourceOrderKey) || orderCards.find((item) => item.actions.some((action) => action.label === "申请开票")) || orderCards[0];
+  const miniappInvoiceStoreName = miniappInvoiceSourceOrder?.store || "-";
+  const isMiniappSpecialOnlyInvoicePreview = Boolean(miniappInvoiceSourceOrder?.specialInvoiceOnlyTip);
+  const miniappPreviewInvoiceTitle = "美团";
+  const miniappPreviewInvoiceTypeOptions = isMiniappSpecialOnlyInvoicePreview
+    ? [buyerPcMallSpecialInvoiceType]
+    : (miniappInvoiceTitleMetaByTitle[miniappPreviewInvoiceTitle]?.invoiceTypes || [buyerPcMallNormalInvoiceType]);
+  const hasMiniappPreviewInvoiceTypePicker = miniappPreviewInvoiceTypeOptions.length > 1;
+  const displayedMiniappPreviewInvoiceType = hasMiniappPreviewInvoiceTypePicker
+    ? miniappPreviewInvoiceType
+    : (miniappPreviewInvoiceTypeOptions[0] || buyerPcMallNormalInvoiceType);
+  const miniappPreviewStoreInvoiceTypesLabel = isMiniappSpecialOnlyInvoicePreview
+    ? buyerPcMallNormalInvoiceType
+    : miniappPreviewInvoiceTypeOptions.length > 0
+    ? miniappPreviewInvoiceTypeOptions.join("、")
+    : "-";
   const wholesaleCatalog = useMemo(() => goodsRows.map((item) => ({
     ...item,
     unitPrice: Number(item.retailPrice || item.price || 0),
@@ -18587,7 +18632,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
     ? "已按提交订单时的最新商品与店铺规则重新校验。"
     : "存在未满足起批条件的商品，暂不可提交订单。";
   const invoiceTypeOptions = ["电子普通发票", "电子增值税专用发票"];
-  const titleTypeOptions = ["个人", "企业"];
+  const titleTypeOptions = ["企业", "个人"];
   const isMineTab = activeTab === "mine";
   const isOrderListView = isMineTab && miniappView === "orders";
   const isInvoiceAssistantView = isMineTab && miniappView === "invoice-helper";
@@ -19726,6 +19771,32 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
     setActiveTab(key);
     setMiniappView("main");
     setMiniappOrderOverlay("");
+    setIsMiniappPreviewInvoiceTypePickerOpen(false);
+    setIsMiniappSingleInvoiceHelpOpen(false);
+    setIsMiniappSpecialOnlyInvoiceTipOpen(false);
+  };
+
+  const resetMiniappPreviewInvoiceTypeSelection = () => {
+    setMiniappPreviewInvoiceType("");
+    setIsMiniappPreviewInvoiceTypeError(false);
+    setIsMiniappPreviewInvoiceTypePickerOpen(false);
+    setIsMiniappSingleInvoiceHelpOpen(false);
+    setIsMiniappSpecialOnlyInvoiceTipOpen(false);
+  };
+
+  const handleSelectMiniappPreviewInvoiceType = (invoiceType) => {
+    setMiniappPreviewInvoiceType(invoiceType);
+    setIsMiniappPreviewInvoiceTypeError(false);
+    setIsMiniappPreviewInvoiceTypePickerOpen(false);
+  };
+
+  const validateMiniappPreviewInvoiceType = () => {
+    if (hasMiniappPreviewInvoiceTypePicker && !miniappPreviewInvoiceType) {
+      setIsMiniappPreviewInvoiceTypeError(true);
+      setMiniappInvoicePreviewNotice("请选择发票类型");
+      return false;
+    }
+    return true;
   };
 
   const handleOpenMiniappBatchInvoice = () => {
@@ -21621,6 +21692,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                           type="button"
                           onClick={() => {
                             setIsMiniappInvoiceEditConfirmOpen(false);
+                            resetMiniappPreviewInvoiceTypeSelection();
                             setIsMiniappInvoicePreviewOpen(true);
                           }}
                         >
@@ -21641,10 +21713,29 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
 
                       <div className="miniapp-order-sheet-body">
                         <section className="miniapp-order-preview-section">
+                          <h4>店铺信息</h4>
+                          <div className="miniapp-order-preview-row"><span>店铺名称</span><strong>{miniappInvoiceStoreName}</strong></div>
+                          <div className="miniapp-order-preview-row"><span>店铺可开</span><strong>{miniappPreviewStoreInvoiceTypesLabel}</strong></div>
+                        </section>
+
+                        <section className="miniapp-order-preview-section">
                           <h4>发票信息</h4>
-                          <div className="miniapp-order-preview-row"><span>发票类型</span><strong>电子普通发票</strong></div>
+                          <div className={`miniapp-order-preview-row miniapp-order-preview-select-row ${isMiniappPreviewInvoiceTypeError ? "is-error" : ""}`}>
+                            <span>发票类型</span>
+                            {hasMiniappPreviewInvoiceTypePicker ? (
+                              <div className="miniapp-order-preview-select-cell">
+                                <button className="miniapp-order-preview-select-trigger" type="button" onClick={() => setIsMiniappPreviewInvoiceTypePickerOpen(true)}>
+                                  <strong className={displayedMiniappPreviewInvoiceType ? "" : "is-placeholder"}>{displayedMiniappPreviewInvoiceType || "请选择发票类型"}</strong>
+                                  <em>›</em>
+                                </button>
+                                {isMiniappPreviewInvoiceTypeError ? <p>请选择发票类型</p> : null}
+                              </div>
+                            ) : (
+                              <strong>{displayedMiniappPreviewInvoiceType}</strong>
+                            )}
+                          </div>
                           <div className="miniapp-order-preview-row"><span>抬头类型</span><strong>企业</strong></div>
-                          <div className="miniapp-order-preview-row"><span>抬头名称</span><strong>美团</strong></div>
+                          <div className="miniapp-order-preview-row"><span>抬头名称</span><strong>{miniappPreviewInvoiceTitle}</strong></div>
                           <div className="miniapp-order-preview-row"><span>纳税人识别号</span><strong>123456789</strong></div>
                           <div className="miniapp-order-preview-row"><span>闪购门店</span><strong>-</strong></div>
                           <div className="miniapp-order-preview-row">
@@ -21661,7 +21752,10 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                             </strong>
                           </div>
                           <div className="miniapp-order-preview-row">
-                            <span>需要单独开票</span>
+                            <span className="miniapp-order-preview-label-with-help">
+                              需要单独开票
+                              <button type="button" aria-label="查看需要单独开票说明" onClick={() => setIsMiniappSingleInvoiceHelpOpen(true)}>?</button>
+                            </span>
                             <strong className="miniapp-order-preview-choice-group">
                               <label className="miniapp-order-preview-choice">
                                 <input type="radio" name="invoicePreviewSingle" />
@@ -21698,6 +21792,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                           className="miniapp-order-sheet-submit"
                           type="button"
                           onClick={() => {
+                            if (!validateMiniappPreviewInvoiceType()) return;
                             setIsMiniappInvoicePreviewOpen(false);
                             setIsMiniappInvoiceEditSubmitted(true);
                           }}
@@ -21705,6 +21800,40 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                           提交
                         </button>
                       </div>
+                      {isMiniappPreviewInvoiceTypePickerOpen ? (
+                        <div className="miniapp-order-overlay miniapp-preview-invoice-type-overlay" onClick={() => setIsMiniappPreviewInvoiceTypePickerOpen(false)}>
+                          <div className="miniapp-order-sheet miniapp-preview-invoice-type-sheet" onClick={(event) => event.stopPropagation()}>
+                            <div className="miniapp-order-sheet-body">
+                              <div className="miniapp-preview-invoice-type-options">
+                                {miniappPreviewInvoiceTypeOptions.map((invoiceType) => (
+                                  <button
+                                    className={`miniapp-preview-invoice-type-option ${miniappPreviewInvoiceType === invoiceType ? "is-active" : ""}`}
+                                    key={`miniapp-preview-invoice-type-${invoiceType}`}
+                                    type="button"
+                                    onClick={() => handleSelectMiniappPreviewInvoiceType(invoiceType)}
+                                  >
+                                    {invoiceType}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : null}
+                      {isMiniappSingleInvoiceHelpOpen ? (
+                        <div className="miniapp-order-overlay miniapp-single-invoice-help-overlay" onClick={() => setIsMiniappSingleInvoiceHelpOpen(false)}>
+                          <div className="miniapp-order-sheet miniapp-single-invoice-help-sheet" onClick={(event) => event.stopPropagation()}>
+                            <div className="miniapp-single-invoice-help-head">
+                              <strong>需要单独开票</strong>
+                              <button type="button" aria-label="关闭" onClick={() => setIsMiniappSingleInvoiceHelpOpen(false)}>×</button>
+                            </div>
+                            <div className="miniapp-single-invoice-help-body">
+                              <p>选择是：本订单需单独开具一张发票；</p>
+                              <p>选择否：本订单可与其他订单合并开具发票，也可单独开具一张发票；由店铺实际处理。</p>
+                            </div>
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                 ) : null}
@@ -21783,7 +21912,11 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                                 : action.toInvoiceEdit
                                   ? () => setMiniappView("invoice-edit")
                                   : action.label === "申请开票"
-                                    ? () => setMiniappOrderOverlay("apply-invoice")
+                                    ? () => {
+                                        setMiniappInvoiceSourceOrderKey(card.key);
+                                        resetMiniappPreviewInvoiceTypeSelection();
+                                        setMiniappOrderOverlay("apply-invoice");
+                                      }
                                     : undefined
                             }
                           >
@@ -21796,6 +21929,30 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
 
                 </main>
 
+                {isMiniappSpecialOnlyInvoiceTipOpen ? (
+                  <div className="miniapp-confirm-mask">
+                    <div className="miniapp-confirm-dialog">
+                      <div className="miniapp-confirm-body">
+                        <h3>温馨提示</h3>
+                        <p>该店铺仅支持电子增值税专用发票</p>
+                      </div>
+                      <div className="miniapp-confirm-actions">
+                        <button className="miniapp-confirm-cancel" type="button" onClick={() => setIsMiniappSpecialOnlyInvoiceTipOpen(false)}>取消</button>
+                        <button
+                          className="miniapp-confirm-submit"
+                          type="button"
+                          onClick={() => {
+                            setIsMiniappSpecialOnlyInvoiceTipOpen(false);
+                            setMiniappView("invoice-titles");
+                          }}
+                        >
+                          去调整抬头
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
                 {miniappOrderOverlay === "apply-invoice" ? (
                   <div className="miniapp-order-overlay">
                     <div className="miniapp-order-sheet">
@@ -21806,10 +21963,29 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
 
                       <div className="miniapp-order-sheet-body">
                         <section className="miniapp-order-preview-section">
+                          <h4>店铺信息</h4>
+                          <div className="miniapp-order-preview-row"><span>店铺名称</span><strong>{miniappInvoiceStoreName}</strong></div>
+                          <div className="miniapp-order-preview-row"><span>店铺可开</span><strong>{miniappPreviewStoreInvoiceTypesLabel}</strong></div>
+                        </section>
+
+                        <section className="miniapp-order-preview-section">
                           <h4>发票信息</h4>
-                          <div className="miniapp-order-preview-row"><span>发票类型</span><strong>电子普通发票</strong></div>
+                          <div className={`miniapp-order-preview-row miniapp-order-preview-select-row ${isMiniappPreviewInvoiceTypeError ? "is-error" : ""}`}>
+                            <span>发票类型</span>
+                            {hasMiniappPreviewInvoiceTypePicker ? (
+                              <div className="miniapp-order-preview-select-cell">
+                                <button className="miniapp-order-preview-select-trigger" type="button" onClick={() => setIsMiniappPreviewInvoiceTypePickerOpen(true)}>
+                                  <strong className={displayedMiniappPreviewInvoiceType ? "" : "is-placeholder"}>{displayedMiniappPreviewInvoiceType || "请选择发票类型"}</strong>
+                                  <em>›</em>
+                                </button>
+                                {isMiniappPreviewInvoiceTypeError ? <p>请选择发票类型</p> : null}
+                              </div>
+                            ) : (
+                              <strong>{displayedMiniappPreviewInvoiceType}</strong>
+                            )}
+                          </div>
                           <div className="miniapp-order-preview-row"><span>抬头类型</span><strong>企业</strong></div>
-                          <div className="miniapp-order-preview-row"><span>抬头名称</span><strong>美团</strong></div>
+                          <div className="miniapp-order-preview-row"><span>抬头名称</span><strong>{miniappPreviewInvoiceTitle}</strong></div>
                           <div className="miniapp-order-preview-row"><span>纳税人识别号</span><strong>123456789</strong></div>
                           <div className="miniapp-order-preview-row"><span>闪购门店</span><strong>-</strong></div>
                           <div className="miniapp-order-preview-row">
@@ -21826,7 +22002,10 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                             </strong>
                           </div>
                           <div className="miniapp-order-preview-row">
-                            <span>需要单独开票</span>
+                            <span className="miniapp-order-preview-label-with-help">
+                              需要单独开票
+                              <button type="button" aria-label="查看需要单独开票说明" onClick={() => setIsMiniappSingleInvoiceHelpOpen(true)}>?</button>
+                            </span>
                             <strong className="miniapp-order-preview-choice-group">
                               <label className="miniapp-order-preview-choice">
                                 <input type="radio" name="singleInvoice" />
@@ -21857,10 +22036,56 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                         <p>请确保发票信息以及收票人信息准确无误</p>
                       </div>
 
-                      <div className="miniapp-order-sheet-footer">
-                        <button className="miniapp-order-sheet-cancel" type="button" onClick={() => setMiniappOrderOverlay("")}>返回</button>
-                        <button className="miniapp-order-sheet-submit" type="button">提交</button>
+                      <div className="miniapp-order-sheet-footer is-single-action">
+                        <button
+                          className="miniapp-order-sheet-submit"
+                          type="button"
+                          onClick={() => {
+                            if (!validateMiniappPreviewInvoiceType()) return;
+                            if (miniappInvoiceSourceOrder?.specialInvoiceOnlyTip) {
+                              setIsMiniappSpecialOnlyInvoiceTipOpen(true);
+                              return;
+                            }
+                            setMiniappOrderOverlay("");
+                          }}
+                        >
+                          提交
+                        </button>
                       </div>
+                      {isMiniappPreviewInvoiceTypePickerOpen ? (
+                        <div className="miniapp-order-overlay miniapp-preview-invoice-type-overlay" onClick={() => setIsMiniappPreviewInvoiceTypePickerOpen(false)}>
+                          <div className="miniapp-order-sheet miniapp-preview-invoice-type-sheet" onClick={(event) => event.stopPropagation()}>
+                            <div className="miniapp-order-sheet-body">
+                              <div className="miniapp-preview-invoice-type-options">
+                                {miniappPreviewInvoiceTypeOptions.map((invoiceType) => (
+                                  <button
+                                    className={`miniapp-preview-invoice-type-option ${miniappPreviewInvoiceType === invoiceType ? "is-active" : ""}`}
+                                    key={`miniapp-preview-invoice-type-${invoiceType}`}
+                                    type="button"
+                                    onClick={() => handleSelectMiniappPreviewInvoiceType(invoiceType)}
+                                  >
+                                    {invoiceType}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : null}
+                      {isMiniappSingleInvoiceHelpOpen ? (
+                        <div className="miniapp-order-overlay miniapp-single-invoice-help-overlay" onClick={() => setIsMiniappSingleInvoiceHelpOpen(false)}>
+                          <div className="miniapp-order-sheet miniapp-single-invoice-help-sheet" onClick={(event) => event.stopPropagation()}>
+                            <div className="miniapp-single-invoice-help-head">
+                              <strong>需要单独开票</strong>
+                              <button type="button" aria-label="关闭" onClick={() => setIsMiniappSingleInvoiceHelpOpen(false)}>×</button>
+                            </div>
+                            <div className="miniapp-single-invoice-help-body">
+                              <p>选择是：本订单需单独开具一张发票；</p>
+                              <p>选择否：本订单可与其他订单合并开具发票，也可单独开具一张发票；由店铺实际处理。</p>
+                            </div>
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                 ) : null}

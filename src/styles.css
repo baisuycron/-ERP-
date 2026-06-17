@@ -4456,6 +4456,7 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 }
 
 .miniapp-order-sheet {
+  position: relative;
   width: 100%;
   max-height: calc(100% - 52px);
   border-radius: 18px 18px 0 0;
@@ -4511,7 +4512,7 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 
 .miniapp-order-preview-row {
   display: grid;
-  grid-template-columns: 92px minmax(0, 1fr);
+  grid-template-columns: 108px minmax(0, 1fr);
   gap: 10px;
   align-items: center;
   min-height: 34px;
@@ -4522,12 +4523,197 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
   font-size: 14px;
 }
 
+.miniapp-order-preview-label-with-help {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.miniapp-order-preview-label-with-help button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #9aa3af;
+  border-radius: 999px;
+  padding: 0;
+  background: #fff;
+  color: #9aa3af;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
 .miniapp-order-preview-row strong {
   color: #202228;
   font-size: 14px;
   font-weight: 400;
   text-align: right;
   word-break: break-word;
+}
+
+.miniapp-order-preview-select-row {
+  align-items: start;
+}
+
+.miniapp-order-preview-select-row > span {
+  padding-top: 7px;
+}
+
+.miniapp-order-preview-select-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.miniapp-order-preview-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-height: 34px;
+  border: none;
+  padding: 0;
+  background: transparent;
+  color: #202228;
+  text-align: right;
+}
+
+.miniapp-order-preview-select-trigger strong {
+  flex: 1;
+  min-width: 0;
+  color: #202228;
+  font-size: 14px;
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.miniapp-order-preview-select-trigger strong.is-placeholder {
+  color: #a8b0bd;
+}
+
+.miniapp-order-preview-select-trigger em {
+  flex: none;
+  color: #9aa3af;
+  font-size: 22px;
+  font-style: normal;
+  line-height: 1;
+}
+
+.miniapp-order-preview-select-cell p {
+  margin: 2px 0 0;
+  color: #ff4d4f;
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: right;
+}
+
+.miniapp-order-preview-select-row.is-error .miniapp-order-preview-select-trigger strong {
+  color: #ff4d4f;
+}
+
+.miniapp-preview-invoice-type-overlay {
+  z-index: 6;
+  padding-top: 0;
+}
+
+.miniapp-preview-invoice-type-sheet {
+  max-height: none;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.14);
+}
+
+.miniapp-preview-invoice-type-sheet .miniapp-order-sheet-body {
+  padding: 0;
+}
+
+.miniapp-preview-invoice-type-options {
+  overflow: hidden;
+  background: #fff;
+}
+
+.miniapp-preview-invoice-type-option {
+  width: 100%;
+  min-height: 72px;
+  border: none;
+  border-bottom: 1px solid #eceef2;
+  background: #fff;
+  color: #202228;
+  font-size: 26px;
+  font-weight: 500;
+}
+
+.miniapp-preview-invoice-type-option:last-child {
+  border-bottom: none;
+}
+
+.miniapp-preview-invoice-type-option.is-active {
+  font-weight: 700;
+}
+
+.miniapp-single-invoice-help-overlay {
+  z-index: 7;
+  padding-top: 0;
+}
+
+.miniapp-single-invoice-help-sheet {
+  max-height: none;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.14);
+}
+
+.miniapp-single-invoice-help-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 76px;
+  border-bottom: 1px solid #f2f3f6;
+  padding: 0 56px;
+}
+
+.miniapp-single-invoice-help-head strong {
+  color: #202228;
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.miniapp-single-invoice-help-head button {
+  position: absolute;
+  right: 22px;
+  top: 50%;
+  width: 36px;
+  height: 36px;
+  border: none;
+  padding: 0;
+  background: transparent;
+  color: #202228;
+  font-size: 40px;
+  font-weight: 300;
+  line-height: 32px;
+  transform: translateY(-50%);
+}
+
+.miniapp-single-invoice-help-body {
+  padding: 24px 18px 34px;
+}
+
+.miniapp-single-invoice-help-body p {
+  margin: 0;
+  color: #202228;
+  font-size: 20px;
+  line-height: 1.55;
+}
+
+.miniapp-single-invoice-help-body p + p {
+  margin-top: 18px;
 }
 
 .miniapp-order-preview-input {
@@ -4608,6 +4794,10 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
   grid-template-columns: 1fr 1fr;
   gap: 10px;
   padding: 8px 12px 12px;
+}
+
+.miniapp-order-sheet-footer.is-single-action {
+  grid-template-columns: 1fr;
 }
 
 .miniapp-order-sheet-cancel {
