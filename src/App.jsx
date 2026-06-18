@@ -15944,12 +15944,14 @@ function ShopInvoicePage({
 
   const handleConfirmInvoiceFileChange = (event) => {
     const selectedFiles = Array.from(event.target.files || []).filter((file) => file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf"));
-    const nextItems = createShopInvoiceUploadItemsFromFiles(selectedFiles, 0);
     setConfirmInvoiceForm((current) => {
-      const firstItem = nextItems[0] || {};
+      const existingItems = current.invoiceItems || [];
+      const appendedItems = createShopInvoiceUploadItemsFromFiles(selectedFiles, existingItems.length);
+      const invoiceItems = [...existingItems, ...appendedItems].slice(0, 5);
+      const firstItem = invoiceItems[0] || {};
       return {
         ...current,
-        invoiceItems: nextItems,
+        invoiceItems,
         attachmentName: firstItem.attachmentName || "",
         invoiceNo: firstItem.invoiceNo || "",
         invoiceAmountWithTax: firstItem.invoiceAmountWithTax || "",
@@ -15983,6 +15985,7 @@ function ShopInvoicePage({
   };
 
   const handleAddConfirmInvoiceItem = () => {
+    if (confirmInvoiceItems.length >= 5) return;
     confirmInvoiceFileInputRef.current?.click();
   };
 
@@ -16064,6 +16067,7 @@ function ShopInvoicePage({
   };
 
   const handleAddModifyInvoiceItem = () => {
+    if (modifyInvoiceItems.length >= 5) return;
     modifyInvoiceFileInputRef.current?.click();
   };
 
@@ -17331,7 +17335,7 @@ function ShopInvoicePage({
 
       {isConfirmInvoiceModalOpen ? (
         <div className="shop-invoice-modal-mask" onClick={handleCloseConfirmInvoiceModal}>
-          <div className="shop-invoice-confirm-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="shop-invoice-confirm-modal shop-invoice-issue-modal" onClick={(e) => e.stopPropagation()}>
             <div className="shop-invoice-confirm-head">
               <div className="shop-invoice-confirm-headline">
                 <h3>{confirmInvoiceModalMode === "single" ? "确认开票" : "批量开票"}</h3>
@@ -17403,17 +17407,9 @@ function ShopInvoicePage({
 
               <section className="shop-invoice-confirm-section shop-invoice-multi-upload-section">
                 <h4>发票明细</h4>
-                <div className={`shop-invoice-multi-upload-drop ${confirmInvoiceErrors.attachmentName ? "is-error" : ""}`}>
-                  <input className="shop-invoice-file-input" ref={confirmInvoiceFileInputRef} type="file" accept=".pdf,application/pdf" multiple onChange={handleConfirmInvoiceFileChange} />
-                  <span className="shop-invoice-multi-upload-icon">⇧</span>
-                  <div>
-                    <p>支持 PDF 格式，单个文件不超过 5M，最多上传 5 张，超过 5 张时仅取前 5 张</p>
-                  </div>
-                  <button className="shop-invoice-multi-upload-add" type="button" onClick={handleAddConfirmInvoiceItem}>添加发票文件</button>
-                </div>
                 <div className="shop-invoice-multi-upload-summary">
                   <div>
-                    <span>本次发票张数</span>
+                    <span>发票张数合计</span>
                     <strong>{confirmInvoiceItems.length} 张</strong>
                   </div>
                   <div>
@@ -17421,41 +17417,37 @@ function ShopInvoicePage({
                     <strong>{confirmInvoiceItemsTotalWithTax}</strong>
                   </div>
                 </div>
-                <div className="shop-invoice-multi-upload-list">
-                  {confirmInvoiceItems.map((item, index) => (
-                    <article className={`shop-invoice-upload-card ${confirmInvoiceErrors.invoiceNo || confirmInvoiceErrors.invoiceAmountWithTax || confirmInvoiceErrors.invoicedDate ? "has-error" : ""}`} key={item.id}>
-                      <div className="shop-invoice-upload-card-head">
-                        <div className="shop-invoice-upload-file">
-                          <span>{`发票 ${index + 1}`}</span>
-                          <strong>{item.attachmentName || "请添加发票文件"}</strong>
-                          {item.attachmentSize ? <em>{item.attachmentSize}</em> : null}
-                        </div>
-                        <div className="shop-invoice-upload-card-actions">
-                          <button type="button">预览</button>
-                          <button type="button" onClick={() => handleReplaceConfirmInvoiceFile(item.id)}>替换文件</button>
-                          <button type="button" onClick={() => handleRemoveConfirmInvoiceItem(item.id)}>删除</button>
-                        </div>
+                <div className="shop-invoice-upload-table">
+                  <div className="shop-invoice-upload-table-row is-head">
+                    <span><i>*</i>发票号码</span>
+                    <span><i>*</i>开票时间</span>
+                    <span><i>*</i>开票金额（含税）</span>
+                    <span>开票金额（不含税）</span>
+                    <span>操作</span>
+                  </div>
+                  {confirmInvoiceItems.length === 0 ? (
+                    <div className="shop-invoice-upload-table-empty">暂无数据</div>
+                  ) : confirmInvoiceItems.map((item) => (
+                    <div className="shop-invoice-upload-table-row is-form" key={item.id}>
+                      <input className={confirmInvoiceErrors.invoiceNo && !item.invoiceNo ? "is-error" : ""} value={item.invoiceNo} placeholder="请输入发票号码" onChange={(e) => handleConfirmInvoiceItemChange(item.id, "invoiceNo", e.target.value)} />
+                      <div className={`shop-invoice-upload-table-date ${confirmInvoiceErrors.invoicedDate && !item.invoicedDate ? "is-error" : ""}`}>
+                        <span className={item.invoicedDate ? "has-value" : "is-placeholder"}>{item.invoicedDate || "请选择时间"}</span>
+                        <input type="date" value={item.invoicedDate} aria-label="请选择时间" onChange={(e) => handleConfirmInvoiceItemChange(item.id, "invoicedDate", e.target.value)} />
                       </div>
-                      <div className="shop-invoice-upload-card-form">
-                        <label>
-                          <span><i>*</i>发票号码</span>
-                          <input className={confirmInvoiceErrors.invoiceNo && !item.invoiceNo ? "is-error" : ""} value={item.invoiceNo} onChange={(e) => handleConfirmInvoiceItemChange(item.id, "invoiceNo", e.target.value)} />
-                        </label>
-                        <label>
-                          <span><i>*</i>开票时间</span>
-                          <input className={confirmInvoiceErrors.invoicedDate && !item.invoicedDate ? "is-error" : ""} type="date" value={item.invoicedDate} onChange={(e) => handleConfirmInvoiceItemChange(item.id, "invoicedDate", e.target.value)} />
-                        </label>
-                        <label>
-                          <span><i>*</i>开票金额(含税)</span>
-                          <input className={confirmInvoiceErrors.invoiceAmountWithTax && !item.invoiceAmountWithTax ? "is-error" : ""} value={item.invoiceAmountWithTax} onChange={(e) => handleConfirmInvoiceItemChange(item.id, "invoiceAmountWithTax", e.target.value)} />
-                        </label>
-                        <label>
-                          <span>开票金额(不含税)</span>
-                          <input value={item.invoiceAmountWithoutTax} placeholder="请输入开票金额(不含税)" onChange={(e) => handleConfirmInvoiceItemChange(item.id, "invoiceAmountWithoutTax", e.target.value)} />
-                        </label>
+                      <input className={confirmInvoiceErrors.invoiceAmountWithTax && !item.invoiceAmountWithTax ? "is-error" : ""} value={item.invoiceAmountWithTax} placeholder="请输入开票金额(含税)" onChange={(e) => handleConfirmInvoiceItemChange(item.id, "invoiceAmountWithTax", e.target.value)} />
+                      <input value={item.invoiceAmountWithoutTax} placeholder="请输入开票金额(不含税)" onChange={(e) => handleConfirmInvoiceItemChange(item.id, "invoiceAmountWithoutTax", e.target.value)} />
+                      <div className="shop-invoice-upload-table-actions">
+                        <span title={item.attachmentName}>{item.attachmentName || "未选择文件"}{item.attachmentSize ? ` ${item.attachmentSize}` : ""}</span>
+                        <button type="button" onClick={() => handleReplaceConfirmInvoiceFile(item.id)}>替换文件</button>
+                        <button type="button" onClick={() => handleRemoveConfirmInvoiceItem(item.id)}>删除</button>
                       </div>
-                    </article>
+                    </div>
                   ))}
+                </div>
+                <div className={`shop-invoice-multi-upload-drop ${confirmInvoiceErrors.attachmentName ? "is-error" : ""}`}>
+                  <input className="shop-invoice-file-input" ref={confirmInvoiceFileInputRef} type="file" accept=".pdf,application/pdf" multiple onChange={handleConfirmInvoiceFileChange} />
+                  <button className="shop-invoice-multi-upload-add" type="button" disabled={confirmInvoiceItems.length >= 5} onClick={handleAddConfirmInvoiceItem}>添加发票文件</button>
+                  <p>支持 PDF 格式，单个文件不超过 5M，最多上传 5 张</p>
                 </div>
               </section>
             </div>
@@ -17506,7 +17498,7 @@ function ShopInvoicePage({
 
       {isModifyInvoiceModalOpen ? (
         <div className="shop-invoice-modal-mask" onClick={handleCloseModifyInvoiceModal}>
-          <div className="shop-invoice-confirm-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="shop-invoice-confirm-modal shop-invoice-issue-modal" onClick={(e) => e.stopPropagation()}>
             <div className="shop-invoice-confirm-head">
               <div className="shop-invoice-confirm-headline">
                 <h3>{modifyInvoiceModalMode === "single" ? "修改发票" : "批量修改开票"}</h3>
@@ -17578,17 +17570,9 @@ function ShopInvoicePage({
 
               <section className="shop-invoice-confirm-section shop-invoice-multi-upload-section">
                 <h4>发票明细</h4>
-                <div className={`shop-invoice-multi-upload-drop ${modifyInvoiceErrors.attachmentName ? "is-error" : ""}`}>
-                  <input className="shop-invoice-file-input" ref={modifyInvoiceFileInputRef} type="file" accept=".pdf,application/pdf" multiple onChange={handleModifyInvoiceFileChange} />
-                  <span className="shop-invoice-multi-upload-icon">⇧</span>
-                  <div>
-                    <p>支持 PDF 格式，单个文件不超过 5M，最多上传 5 张，超过 5 张时仅取前 5 张</p>
-                  </div>
-                  <button className="shop-invoice-multi-upload-add" type="button" onClick={handleAddModifyInvoiceItem}>添加发票文件</button>
-                </div>
                 <div className="shop-invoice-multi-upload-summary">
                   <div>
-                    <span>本次发票张数</span>
+                    <span>发票张数合计</span>
                     <strong>{modifyInvoiceItems.length} 张</strong>
                   </div>
                   <div>
@@ -17596,41 +17580,37 @@ function ShopInvoicePage({
                     <strong>{modifyInvoiceItemsTotalWithTax}</strong>
                   </div>
                 </div>
-                <div className="shop-invoice-multi-upload-list">
-                  {modifyInvoiceItems.map((item, index) => (
-                    <article className={`shop-invoice-upload-card ${modifyInvoiceErrors.invoiceNo || modifyInvoiceErrors.invoiceAmountWithTax || modifyInvoiceErrors.invoicedDate ? "has-error" : ""}`} key={item.id}>
-                      <div className="shop-invoice-upload-card-head">
-                        <div className="shop-invoice-upload-file">
-                          <span>{`发票 ${index + 1}`}</span>
-                          <strong>{item.attachmentName || "请添加发票文件"}</strong>
-                          {item.attachmentSize ? <em>{item.attachmentSize}</em> : null}
-                        </div>
-                        <div className="shop-invoice-upload-card-actions">
-                          <button type="button">预览</button>
-                          <button type="button" onClick={() => handleReplaceModifyInvoiceFile(item.id)}>替换文件</button>
-                          <button type="button" onClick={() => handleRemoveModifyInvoiceItem(item.id)}>删除</button>
-                        </div>
+                <div className="shop-invoice-upload-table">
+                  <div className="shop-invoice-upload-table-row is-head">
+                    <span><i>*</i>发票号码</span>
+                    <span><i>*</i>开票时间</span>
+                    <span><i>*</i>开票金额（含税）</span>
+                    <span>开票金额（不含税）</span>
+                    <span>操作</span>
+                  </div>
+                  {modifyInvoiceItems.length === 0 ? (
+                    <div className="shop-invoice-upload-table-empty">暂无数据</div>
+                  ) : modifyInvoiceItems.map((item) => (
+                    <div className="shop-invoice-upload-table-row is-form" key={item.id}>
+                      <input className={modifyInvoiceErrors.invoiceNo && !item.invoiceNo ? "is-error" : ""} value={item.invoiceNo} placeholder="请输入发票号码" onChange={(e) => handleModifyInvoiceItemChange(item.id, "invoiceNo", e.target.value)} />
+                      <div className={`shop-invoice-upload-table-date ${modifyInvoiceErrors.invoicedDate && !item.invoicedDate ? "is-error" : ""}`}>
+                        <span className={item.invoicedDate ? "has-value" : "is-placeholder"}>{item.invoicedDate || "请选择时间"}</span>
+                        <input type="date" value={item.invoicedDate} aria-label="请选择时间" onChange={(e) => handleModifyInvoiceItemChange(item.id, "invoicedDate", e.target.value)} />
                       </div>
-                      <div className="shop-invoice-upload-card-form">
-                        <label>
-                          <span><i>*</i>发票号码</span>
-                          <input className={modifyInvoiceErrors.invoiceNo && !item.invoiceNo ? "is-error" : ""} value={item.invoiceNo} onChange={(e) => handleModifyInvoiceItemChange(item.id, "invoiceNo", e.target.value)} />
-                        </label>
-                        <label>
-                          <span><i>*</i>开票时间</span>
-                          <input className={modifyInvoiceErrors.invoicedDate && !item.invoicedDate ? "is-error" : ""} type="date" value={item.invoicedDate} onChange={(e) => handleModifyInvoiceItemChange(item.id, "invoicedDate", e.target.value)} />
-                        </label>
-                        <label>
-                          <span><i>*</i>开票金额(含税)</span>
-                          <input className={modifyInvoiceErrors.invoiceAmountWithTax && !item.invoiceAmountWithTax ? "is-error" : ""} value={item.invoiceAmountWithTax} onChange={(e) => handleModifyInvoiceItemChange(item.id, "invoiceAmountWithTax", e.target.value)} />
-                        </label>
-                        <label>
-                          <span>开票金额(不含税)</span>
-                          <input value={item.invoiceAmountWithoutTax} placeholder="请输入开票金额(不含税)" onChange={(e) => handleModifyInvoiceItemChange(item.id, "invoiceAmountWithoutTax", e.target.value)} />
-                        </label>
+                      <input className={modifyInvoiceErrors.invoiceAmountWithTax && !item.invoiceAmountWithTax ? "is-error" : ""} value={item.invoiceAmountWithTax} placeholder="请输入开票金额(含税)" onChange={(e) => handleModifyInvoiceItemChange(item.id, "invoiceAmountWithTax", e.target.value)} />
+                      <input value={item.invoiceAmountWithoutTax} placeholder="请输入开票金额(不含税)" onChange={(e) => handleModifyInvoiceItemChange(item.id, "invoiceAmountWithoutTax", e.target.value)} />
+                      <div className="shop-invoice-upload-table-actions">
+                        <span title={item.attachmentName}>{item.attachmentName || "未选择文件"}{item.attachmentSize ? ` ${item.attachmentSize}` : ""}</span>
+                        <button type="button" onClick={() => handleReplaceModifyInvoiceFile(item.id)}>替换文件</button>
+                        <button type="button" onClick={() => handleRemoveModifyInvoiceItem(item.id)}>删除</button>
                       </div>
-                    </article>
+                    </div>
                   ))}
+                </div>
+                <div className={`shop-invoice-multi-upload-drop ${modifyInvoiceErrors.attachmentName ? "is-error" : ""}`}>
+                  <input className="shop-invoice-file-input" ref={modifyInvoiceFileInputRef} type="file" accept=".pdf,application/pdf" multiple onChange={handleModifyInvoiceFileChange} />
+                  <button className="shop-invoice-multi-upload-add" type="button" disabled={modifyInvoiceItems.length >= 5} onClick={handleAddModifyInvoiceItem}>添加发票文件</button>
+                  <p>支持 PDF 格式，单个文件不超过 5M，最多上传 5 张</p>
                 </div>
               </section>
             </div>
