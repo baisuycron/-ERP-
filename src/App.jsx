@@ -1948,6 +1948,12 @@ const buyerPcMallCartSeedGroups = [
     ]
   }
 ];
+const buyerPcMallVerifiedInvoiceTitle = {
+  id: "title-4",
+  titleName: "景田（深圳）食品饮料集团有限公司",
+  taxpayerId: "91440300192443884R"
+};
+const buyerPcMallInvoiceTitleQualificationMismatchNotice = "企业抬头名称与纳税人识别号不匹配，请核对后重新填写。";
 const buyerPcMallInvoiceTitleRows = [
   {
     id: "title-1",
@@ -2001,12 +2007,12 @@ const buyerPcMallInvoiceTitleRows = [
     isDefault: false
   },
   {
-    id: "title-4",
-    title: "YMbgmkeW8NzoZliBHEAwChSVcJ)--",
+    id: buyerPcMallVerifiedInvoiceTitle.id,
+    title: buyerPcMallVerifiedInvoiceTitle.titleName,
     invoiceType: "电子增值税专用发票",
     invoiceTypeTone: "blue",
     titleType: "企业",
-    taxpayerId: "666666666666666",
+    taxpayerId: buyerPcMallVerifiedInvoiceTitle.taxpayerId,
     registeredAddress: "湖南省长沙市芙蓉区朝阳街道湖南大剧院",
     phone: "13800000002",
     bank: "中国营业",
@@ -6797,6 +6803,19 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
       } else {
         onNotice("开户银行账号为空，请检查");
       }
+      return;
+    }
+
+    const isEditingVerifiedInvoiceTitle = form.id === buyerPcMallVerifiedInvoiceTitle.id;
+    const qualificationMatches = titleName === buyerPcMallVerifiedInvoiceTitle.titleName
+      && taxpayerId === buyerPcMallVerifiedInvoiceTitle.taxpayerId;
+    if (isEditingVerifiedInvoiceTitle && !qualificationMatches) {
+      setErrors((current) => ({
+        ...current,
+        titleName: true,
+        taxpayerId: true
+      }));
+      onNotice(buyerPcMallInvoiceTitleQualificationMismatchNotice);
       return;
     }
 
