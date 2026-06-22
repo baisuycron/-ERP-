@@ -3,7 +3,7 @@ import * as XLSX from "xlsx";
 
 const goodsPageNames = ["商品管理"];
 const tradePageNames = ["交易设置"];
-const buyerPageNames = ["买家列表"];
+const buyerPageNames = ["买家分组", "买家列表"];
 const shopPageNames = ["发票管理"];
 const servicePageNames = ["在线客服"];
 const mixedWholesaleConditionOptions = [
@@ -13979,6 +13979,202 @@ function BuyerListPage({ filters, onFiltersChange, rows, page, setPage, pageSize
   );
 }
 
+function BuyerGroupPage({ groups, buyerRows, onOpenDetail }) {
+  const [filters, setFilters] = useState({ name: "" });
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+
+  const groupRows = useMemo(() => groups.map((group) => ({
+    ...group,
+    buyerCount: buyerRows.filter((buyer) => String(buyer.group || "") === group.id).length
+  })), [groups, buyerRows]);
+
+  const filteredRows = useMemo(() => groupRows.filter((item) => (
+    !filters.name.trim() || item.name.includes(filters.name.trim())
+  )), [filters.name, groupRows]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const pagedRows = filteredRows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  return (
+    <div className="buyer-group-page">
+      <section className="content-card buyer-group-filter-card">
+        <div className="buyer-group-filter-row">
+          <label className="buyer-group-filter-field">
+            <span>分组名称</span>
+            <input value={filters.name} onChange={(event) => setFilters({ name: event.target.value })} />
+          </label>
+          <div className="buyer-filter-actions">
+            <button className="btn btn-reset" type="button" onClick={() => { setFilters({ name: "" }); setPage(1); }}>重置</button>
+            <button className="btn btn-search" type="button" onClick={() => setPage(1)}>查询</button>
+          </div>
+        </div>
+      </section>
+
+      <section className="content-card buyer-group-table-card">
+        <div className="buyer-toolbar">
+          <div className="buyer-toolbar-left">
+            <button className="btn btn-create" type="button">新增分组</button>
+          </div>
+        </div>
+
+        <div className="buyer-table-shell">
+          <table className="buyer-table buyer-group-table">
+            <thead>
+              <tr>
+                <th>分组ID</th>
+                <th>分组名称</th>
+                <th>买家数</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pagedRows.map((item) => (
+                <tr key={item.id}>
+                  <td>{item.id}</td>
+                  <td>{item.name}</td>
+                  <td><button className="buyer-group-count-link" type="button" onClick={() => onOpenDetail(item.id)}>{item.buyerCount}</button></td>
+                  <td>
+                    <div className="buyer-action-links">
+                      <button type="button">编辑</button>
+                      <button type="button">删除</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="buyer-pagination">
+          <span>共 {filteredRows.length} 条</span>
+          <select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1); }}>
+            <option value={20}>20 条/页</option>
+            <option value={50}>50 条/页</option>
+            <option value={100}>100 条/页</option>
+          </select>
+          <button className="page-btn" type="button" disabled={currentPage === 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>‹</button>
+          <button className="page-btn is-current" type="button">{currentPage}</button>
+          <button className="page-btn" type="button" disabled={currentPage >= pageCount} onClick={() => setPage((value) => Math.min(pageCount, value + 1))}>›</button>
+          <span>到第</span>
+          <input className="page-input" placeholder="请输入" />
+          <span>页</span>
+          <button className="btn btn-jump" type="button">跳转</button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function BuyerGroupDetailPage({ group, rows, page, setPage, pageSize, setPageSize, onActionClick }) {
+  const [filters, setFilters] = useState({ id: "", account: "", accountType: "" });
+  const [tipExpanded, setTipExpanded] = useState(true);
+
+  const filteredRows = useMemo(() => rows.filter((item) => {
+    if (group?.id && String(item.group || "") !== group.id) return false;
+    if (filters.id && !item.id.includes(filters.id.trim())) return false;
+    if (filters.account && !item.account.toLowerCase().includes(filters.account.trim().toLowerCase())) return false;
+    if (filters.accountType && item.accountType !== filters.accountType) return false;
+    return true;
+  }), [filters, group?.id, rows]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const pagedRows = filteredRows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  return (
+    <div className="buyer-group-detail-page">
+      <section className="buyer-group-detail-tip">
+        <div>
+          <strong><span>!</span> 温馨提示：</strong>
+          {tipExpanded ? <p>1. 子账号和授权账号多为门店下单时使用；总部账号多为总部用于管理的账号；</p> : null}
+        </div>
+        <button type="button" onClick={() => setTipExpanded((value) => !value)}>{tipExpanded ? "收起" : "展开"} <span>⌄</span></button>
+      </section>
+
+      <section className="content-card buyer-filter-card buyer-group-detail-filter-card">
+        <div className="buyer-group-detail-filter-row">
+          <label className="buyer-filter-field"><span>买家ID</span><input value={filters.id} onChange={(e) => setFilters({ ...filters, id: e.target.value })} /></label>
+          <label className="buyer-filter-field"><span>买家账号</span><input value={filters.account} onChange={(e) => setFilters({ ...filters, account: e.target.value })} /></label>
+          <label className="buyer-filter-field"><span>账号类型</span><select value={filters.accountType} onChange={(e) => setFilters({ ...filters, accountType: e.target.value })}><option value="">请选择</option>{buyerAccountTypes.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
+          <div className="buyer-filter-actions">
+            <button className="btn btn-reset" type="button" onClick={() => { setFilters({ id: "", account: "", accountType: "" }); setPage(1); }}>重置</button>
+            <button className="btn btn-search" type="button" onClick={() => setPage(1)}>查询</button>
+          </div>
+        </div>
+      </section>
+
+      <section className="content-card buyer-table-card buyer-group-detail-table-card">
+        <div className="buyer-toolbar">
+          <div className="buyer-toolbar-left">
+            <button className="btn btn-create" type="button" onClick={() => onActionClick("新增买家")}>新增买家</button>
+            <button className="btn btn-reset buyer-toolbar-btn" type="button" onClick={() => onActionClick(`批量删除 ${group?.name || ""}`)}>批量删除</button>
+            <select className="buyer-group-detail-bulk-select" value="" disabled>
+              <option value="">批量操作</option>
+            </select>
+          </div>
+          <button className="btn btn-reset buyer-export-btn" type="button" onClick={() => onActionClick("导出查询结果")}>导出查询结果</button>
+        </div>
+
+        <div className="buyer-table-shell">
+          <table className="buyer-table buyer-group-detail-table">
+            <thead>
+              <tr>
+                <th><input type="checkbox" /></th>
+                <th>买家ID</th>
+                <th>买家账号</th>
+                <th>账号类型</th>
+                <th>门店优惠同享</th>
+                <th>买家身份</th>
+                <th>新增时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pagedRows.map((item) => (
+                <tr key={item.id}>
+                  <td><input type="checkbox" /></td>
+                  <td>{item.id}</td>
+                  <td>{item.account}</td>
+                  <td>{item.accountType}</td>
+                  <td>
+                    <span className="buyer-group-detail-switch" aria-hidden="true"><i /></span>
+                    <span className="buyer-group-detail-help">?</span>
+                  </td>
+                  <td>{item.identity}</td>
+                  <td>{item.createdAt}</td>
+                  <td>
+                    <div className="buyer-action-links">
+                      <button type="button" onClick={() => onActionClick(`删除买家 ${item.id}`, item)}>删除</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="buyer-pagination">
+          <span>共 {filteredRows.length} 条</span>
+          <select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1); }}>
+            <option value={20}>20 条/页</option>
+            <option value={50}>50 条/页</option>
+            <option value={100}>100 条/页</option>
+          </select>
+          <button className="page-btn" type="button" disabled={currentPage === 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>‹</button>
+          <button className="page-btn is-current" type="button">{currentPage}</button>
+          <button className="page-btn" type="button" disabled={currentPage >= pageCount} onClick={() => setPage((value) => Math.min(pageCount, value + 1))}>›</button>
+          <span>到第</span>
+          <input className="page-input" placeholder="请输入" />
+          <span>页</span>
+          <button className="btn btn-jump" type="button">跳转</button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function SupplierTodoPage({ filters, onFiltersChange, rows, page, setPage, pageSize, setPageSize, onActionClick, onDetailAction, activeDetailItem, onCloseDetail }) {
   const [jumpPageInput, setJumpPageInput] = useState("");
   const filteredRows = useMemo(() => rows.filter((item) => {
@@ -22992,6 +23188,7 @@ export default function App() {
   const [buyerPage, setBuyerPage] = useState(1);
   const [buyerPageSize, setBuyerPageSize] = useState(20);
   const [buyerExpanded, setBuyerExpanded] = useState(true);
+  const [activeBuyerGroupDetailId, setActiveBuyerGroupDetailId] = useState("");
   const [buyerImportFileName, setBuyerImportFileName] = useState("");
   const [buyerImportFile, setBuyerImportFile] = useState(null);
   const [buyerImportResult, setBuyerImportResult] = useState(null);
@@ -23057,6 +23254,9 @@ export default function App() {
     { key: "logout", label: "退出登录", icon: "logout" }
   ]), []);
   const buyerGroupOptions = useMemo(() => buyerGroups, []);
+  const activeBuyerGroupDetail = useMemo(() => (
+    buyerGroups.find((item) => item.id === activeBuyerGroupDetailId) || buyerGroups[0]
+  ), [activeBuyerGroupDetailId]);
 
   const currentPageState = marketingStates[currentMarketingPage] || createInitialMarketingPageState(currentMarketingPage);
   const {
@@ -23793,6 +23993,23 @@ export default function App() {
       requestId: 0
     });
     setActiveBuyerPage(pageName);
+    setActiveBuyerGroupDetailId("");
+    setBuyerPage(1);
+    setEditingBuyer(null);
+    setIsAddBuyerOpen(false);
+    setIsCreating(false);
+    setIsEditMode(false);
+    setDetailSpecProduct(null);
+    setToastMessage("");
+    closeAllCreateOverlays();
+  };
+
+  const handleOpenBuyerGroupDetail = (groupId) => {
+    setActivePortalPage("admin");
+    setActiveSection("buyer");
+    setActiveUtilityPage("");
+    setActiveBuyerPage("分组明细");
+    setActiveBuyerGroupDetailId(groupId);
     setBuyerPage(1);
     setEditingBuyer(null);
     setIsAddBuyerOpen(false);
@@ -24631,7 +24848,7 @@ export default function App() {
                       : isTradeMenu
                       ? activeTradePage === child && isTradeSection
                       : isBuyerMenu
-                      ? activeBuyerPage === child && isBuyerSection
+                      ? (activeBuyerPage === child || (activeBuyerPage === "分组明细" && child === "买家分组")) && isBuyerSection
                       : isShopMenu
                         ? activeShopPage === child && isShopSection
                         : isServiceMenu
@@ -24703,6 +24920,18 @@ export default function App() {
                 onChooseFile={handleChooseBuyerImportFile}
                 onFileChange={handleBuyerImportFileChange}
                 onImport={handleImportBuyers}
+              />
+            ) : activeBuyerPage === "买家分组" ? (
+              <BuyerGroupPage groups={buyerGroups} buyerRows={buyerRows} onOpenDetail={handleOpenBuyerGroupDetail} />
+            ) : activeBuyerPage === "分组明细" ? (
+              <BuyerGroupDetailPage
+                group={activeBuyerGroupDetail}
+                rows={buyerRows}
+                page={buyerPage}
+                setPage={setBuyerPage}
+                pageSize={buyerPageSize}
+                setPageSize={setBuyerPageSize}
+                onActionClick={handleBuyerActionClick}
               />
             ) : (
               <BuyerListPage
