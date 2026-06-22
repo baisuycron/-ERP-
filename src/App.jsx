@@ -3348,7 +3348,7 @@ function createShopInvoiceUploadItem(source = {}, index = 0) {
   const invoicedDate = source.invoicedAt && source.invoicedAt !== "-" ? String(source.invoicedAt).slice(0, 10) : "";
 
   return {
-    id: source.id || `modify-invoice-${Date.now()}-${index}`,
+    id: source.id || `shop-invoice-upload-${Date.now()}-${index}`,
     attachmentName: source.attachmentName || (invoiceNo ? `${invoiceNo}.pdf` : ""),
     attachmentSize: source.attachmentSize || (source.attachmentName || invoiceNo ? "37 KB" : ""),
     invoiceNo,
@@ -3358,8 +3358,24 @@ function createShopInvoiceUploadItem(source = {}, index = 0) {
   };
 }
 
+function isShopInvoiceUploadItemBlank(item) {
+  return !String(item?.attachmentName || "").trim()
+    && !String(item?.invoiceNo || "").trim()
+    && !String(item?.invoiceAmountWithTax || "").trim()
+    && !String(item?.invoiceAmountWithoutTax || "").trim()
+    && !String(item?.invoicedDate || "").trim();
+}
+
+function hasShopInvoiceUploadItemContent(item) {
+  return !isShopInvoiceUploadItemBlank(item);
+}
+
 function getShopInvoiceUploadItemsTotal(items) {
   return formatMoneyDisplay((items || []).reduce((sum, item) => sum + parseMoneyValue(item.invoiceAmountWithTax), 0));
+}
+
+function getShopInvoiceUploadedItemCount(items) {
+  return (items || []).filter((item) => String(item.attachmentName || "").trim()).length;
 }
 
 function createShopInvoiceUploadItemsFromFiles(files, startIndex = 0) {
@@ -15142,6 +15158,7 @@ function ShopInvoicePage({
   const [confirmInvoiceModalMode, setConfirmInvoiceModalMode] = useState("batch");
   const [confirmInvoiceForm, setConfirmInvoiceForm] = useState(initialShopInvoiceConfirmForm);
   const [confirmInvoiceErrors, setConfirmInvoiceErrors] = useState(initialShopInvoiceConfirmErrors);
+  const [confirmInvoiceItemErrors, setConfirmInvoiceItemErrors] = useState({});
   const [isRejectInvoiceModalOpen, setIsRejectInvoiceModalOpen] = useState(false);
   const [rejectInvoiceModalMode, setRejectInvoiceModalMode] = useState("batch");
   const [rejectInvoiceForm, setRejectInvoiceForm] = useState(initialShopInvoiceRejectForm);
@@ -15151,6 +15168,7 @@ function ShopInvoicePage({
   const [selectedModifyInvoiceOrderNos, setSelectedModifyInvoiceOrderNos] = useState([]);
   const [modifyInvoiceForm, setModifyInvoiceForm] = useState(initialShopInvoiceModifyForm);
   const [modifyInvoiceErrors, setModifyInvoiceErrors] = useState(initialShopInvoiceModifyErrors);
+  const [modifyInvoiceItemErrors, setModifyInvoiceItemErrors] = useState({});
   const [shopInvoiceColumnPrefs, setShopInvoiceColumnPrefs] = useState(initialShopInvoiceColumnPrefs);
   const [shopInvoiceColumnOrder, setShopInvoiceColumnOrder] = useState(initialShopInvoiceColumnOrder);
   const [invoiceCountdownNow, setInvoiceCountdownNow] = useState(() => Date.now());
@@ -15161,8 +15179,10 @@ function ShopInvoicePage({
   const columnTriggerRef = useRef(null);
   const orderMarkerTooltipRef = useRef(null);
   const confirmInvoiceFileInputRef = useRef(null);
+  const confirmInvoiceUploadTargetIdRef = useRef("");
   const confirmInvoiceDateInputRef = useRef(null);
   const modifyInvoiceFileInputRef = useRef(null);
+  const modifyInvoiceUploadTargetIdRef = useRef("");
   const modifyInvoiceDateInputRef = useRef(null);
   const displayedInvoiceStatusTabs = useMemo(() => (
     isPlatformVariant ? shopInvoiceStatusTabs.filter((tab) => tab !== "发票设置") : shopInvoiceStatusTabs
@@ -15352,6 +15372,9 @@ function ShopInvoicePage({
   const confirmInvoiceItemsTotalWithTax = useMemo(() => (
     getShopInvoiceUploadItemsTotal(confirmInvoiceItems)
   ), [confirmInvoiceItems]);
+  const confirmInvoiceUploadedCount = useMemo(() => (
+    getShopInvoiceUploadedItemCount(confirmInvoiceItems)
+  ), [confirmInvoiceItems]);
   const selectedModifyRows = useMemo(() => {
     const selectedSet = new Set(selectedModifyInvoiceOrderNos);
     return shopInvoiceRows.filter((item) => selectedSet.has(item.orderNo));
@@ -15387,6 +15410,9 @@ function ShopInvoicePage({
   const modifyInvoiceItems = modifyInvoiceForm.invoiceItems || [];
   const modifyInvoiceItemsTotalWithTax = useMemo(() => (
     getShopInvoiceUploadItemsTotal(modifyInvoiceItems)
+  ), [modifyInvoiceItems]);
+  const modifyInvoiceUploadedCount = useMemo(() => (
+    getShopInvoiceUploadedItemCount(modifyInvoiceItems)
   ), [modifyInvoiceItems]);
   const activeOrderDetail = useMemo(() => (
     createShopInvoiceOrderDetail(shopInvoiceRows.find((item) => item.orderNo === activeOrderDetailNo))
@@ -15799,6 +15825,7 @@ function ShopInvoicePage({
     });
     setConfirmInvoiceModalMode(mode);
     setConfirmInvoiceErrors(initialShopInvoiceConfirmErrors);
+    setConfirmInvoiceItemErrors({});
     setIsConfirmInvoiceModalOpen(true);
   };
 
@@ -15865,6 +15892,7 @@ function ShopInvoicePage({
     });
     setModifyInvoiceModalMode(mode);
     setModifyInvoiceErrors(initialShopInvoiceModifyErrors);
+    setModifyInvoiceItemErrors({});
     setIsModifyInvoiceModalOpen(true);
   };
 
@@ -15875,8 +15903,12 @@ function ShopInvoicePage({
   const handleCloseConfirmInvoiceModal = () => {
     setIsConfirmInvoiceModalOpen(false);
     setConfirmInvoiceModalMode("batch");
-    setConfirmInvoiceForm(initialShopInvoiceConfirmForm);
+    setConfirmInvoiceForm({
+      ...initialShopInvoiceConfirmForm,
+      invoiceItems: []
+    });
     setConfirmInvoiceErrors(initialShopInvoiceConfirmErrors);
+    setConfirmInvoiceItemErrors({});
   };
 
   const handleCloseRejectInvoiceModal = () => {
@@ -15892,6 +15924,7 @@ function ShopInvoicePage({
     setSelectedModifyInvoiceOrderNos([]);
     setModifyInvoiceForm(initialShopInvoiceModifyForm);
     setModifyInvoiceErrors(initialShopInvoiceModifyErrors);
+    setModifyInvoiceItemErrors({});
   };
 
   const handlePreviewInvoicePdf = async (detail, action = "preview") => {
@@ -15962,22 +15995,30 @@ function ShopInvoicePage({
   };
 
   const handleConfirmInvoiceFileChange = (event) => {
-    const selectedFiles = Array.from(event.target.files || []).filter((file) => file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf"));
-    setConfirmInvoiceForm((current) => {
-      const existingItems = current.invoiceItems || [];
-      const appendedItems = createShopInvoiceUploadItemsFromFiles(selectedFiles, existingItems.length);
-      const invoiceItems = [...existingItems, ...appendedItems].slice(0, 5);
-      const firstItem = invoiceItems[0] || {};
-      return {
-        ...current,
-        invoiceItems,
-        attachmentName: firstItem.attachmentName || "",
-        invoiceNo: firstItem.invoiceNo || "",
-        invoiceAmountWithTax: firstItem.invoiceAmountWithTax || "",
-        invoiceAmountWithoutTax: firstItem.invoiceAmountWithoutTax || "",
-        invoicedDate: firstItem.invoicedDate || ""
-      };
-    });
+    const targetId = confirmInvoiceUploadTargetIdRef.current;
+    const selectedFile = Array.from(event.target.files || [])[0];
+    confirmInvoiceUploadTargetIdRef.current = "";
+
+    if (!targetId || !selectedFile) {
+      event.target.value = "";
+      return;
+    }
+
+    const isPdfFile = selectedFile.type === "application/pdf" || selectedFile.name.toLowerCase().endsWith(".pdf");
+    if (!isPdfFile) {
+      setShopInvoiceNotice("仅支持上传 PDF 格式发票。");
+      event.target.value = "";
+      return;
+    }
+
+    if (selectedFile.size > 5 * 1024 * 1024) {
+      setShopInvoiceNotice("单个文件不能超过 5M。");
+      event.target.value = "";
+      return;
+    }
+
+    handleConfirmInvoiceItemChange(targetId, "attachmentName", selectedFile.name);
+    handleConfirmInvoiceItemChange(targetId, "attachmentSize", selectedFile.size ? `${Math.max(1, Math.round(selectedFile.size / 1024))} KB` : "");
     setConfirmInvoiceErrors((current) => ({ ...current, attachmentName: false }));
     event.target.value = "";
   };
@@ -16000,19 +16041,65 @@ function ShopInvoicePage({
     });
     if (["attachmentName", "invoiceNo", "invoiceAmountWithTax", "invoicedDate"].includes(field)) {
       setConfirmInvoiceErrors((current) => ({ ...current, [field]: false }));
+      setConfirmInvoiceItemErrors((current) => {
+        if (!current[itemId]?.[field]) return current;
+        const nextItemErrors = { ...current[itemId] };
+        delete nextItemErrors[field];
+        const nextErrors = { ...current };
+        if (Object.keys(nextItemErrors).length > 0) {
+          nextErrors[itemId] = nextItemErrors;
+        } else {
+          delete nextErrors[itemId];
+        }
+        return nextErrors;
+      });
     }
   };
 
   const handleAddConfirmInvoiceItem = () => {
-    if (confirmInvoiceItems.length >= 5) return;
-    confirmInvoiceFileInputRef.current?.click();
+    if (confirmInvoiceItems.length >= 5) {
+      setShopInvoiceNotice("最多只能添加 5 张发票。");
+      return;
+    }
+
+    if (confirmInvoiceItems.some((item) => isShopInvoiceUploadItemBlank(item))) {
+      setShopInvoiceNotice("当前已有空白发票行，请先选择发票文件。");
+      return;
+    }
+
+    const nextIndex = confirmInvoiceItems.length;
+    setConfirmInvoiceForm((current) => {
+      const invoiceItems = [...(current.invoiceItems || []), createShopInvoiceUploadItem({}, nextIndex)];
+      const firstItem = invoiceItems[0] || {};
+      return {
+        ...current,
+        invoiceItems,
+        attachmentName: firstItem.attachmentName || "",
+        invoiceNo: firstItem.invoiceNo || "",
+        invoiceAmountWithTax: firstItem.invoiceAmountWithTax || "",
+        invoiceAmountWithoutTax: firstItem.invoiceAmountWithoutTax || "",
+        invoicedDate: firstItem.invoicedDate || ""
+      };
+    });
   };
 
   const handleReplaceConfirmInvoiceFile = (itemId) => {
-    handleConfirmInvoiceItemChange(itemId, "attachmentName", `替换发票文件-${String(Date.now()).slice(-4)}.pdf`);
+    confirmInvoiceUploadTargetIdRef.current = itemId;
+    confirmInvoiceFileInputRef.current?.click();
+  };
+
+  const handleSelectConfirmInvoiceFile = (itemId) => {
+    confirmInvoiceUploadTargetIdRef.current = itemId;
+    confirmInvoiceFileInputRef.current?.click();
   };
 
   const handleRemoveConfirmInvoiceItem = (itemId) => {
+    const removingItem = confirmInvoiceItems.find((item) => item.id === itemId);
+    if (hasShopInvoiceUploadItemContent(removingItem)) {
+      const confirmed = window.confirm("删除后，该发票文件及已填写的发票信息将一并清除，是否确认删除？");
+      if (!confirmed) return;
+    }
+
     setConfirmInvoiceForm((current) => {
       const invoiceItems = current.invoiceItems.filter((item) => item.id !== itemId);
       const firstItem = invoiceItems[0] || {};
@@ -16025,6 +16112,12 @@ function ShopInvoicePage({
         invoiceAmountWithoutTax: firstItem.invoiceAmountWithoutTax || "",
         invoicedDate: firstItem.invoicedDate || ""
       };
+    });
+    setConfirmInvoiceItemErrors((current) => {
+      if (!current[itemId]) return current;
+      const nextErrors = { ...current };
+      delete nextErrors[itemId];
+      return nextErrors;
     });
   };
 
@@ -16082,19 +16175,65 @@ function ShopInvoicePage({
     });
     if (["attachmentName", "invoiceNo", "invoiceAmountWithTax", "invoicedDate"].includes(field)) {
       setModifyInvoiceErrors((current) => ({ ...current, [field]: false }));
+      setModifyInvoiceItemErrors((current) => {
+        if (!current[itemId]?.[field]) return current;
+        const nextItemErrors = { ...current[itemId] };
+        delete nextItemErrors[field];
+        const nextErrors = { ...current };
+        if (Object.keys(nextItemErrors).length > 0) {
+          nextErrors[itemId] = nextItemErrors;
+        } else {
+          delete nextErrors[itemId];
+        }
+        return nextErrors;
+      });
     }
   };
 
   const handleAddModifyInvoiceItem = () => {
-    if (modifyInvoiceItems.length >= 5) return;
+    if (modifyInvoiceItems.length >= 5) {
+      setShopInvoiceNotice("最多只能添加 5 张发票。");
+      return;
+    }
+
+    if (modifyInvoiceItems.some((item) => isShopInvoiceUploadItemBlank(item))) {
+      setShopInvoiceNotice("当前已有空白发票行，请先选择发票文件。");
+      return;
+    }
+
+    const nextIndex = modifyInvoiceItems.length;
+    setModifyInvoiceForm((current) => {
+      const invoiceItems = [...(current.invoiceItems || []), createShopInvoiceUploadItem({}, nextIndex)];
+      const firstItem = invoiceItems[0] || {};
+      return {
+        ...current,
+        invoiceItems,
+        attachmentName: firstItem.attachmentName || "",
+        invoiceNo: firstItem.invoiceNo || "",
+        invoiceAmountWithTax: firstItem.invoiceAmountWithTax || "",
+        invoiceAmountWithoutTax: firstItem.invoiceAmountWithoutTax || "",
+        invoicedDate: firstItem.invoicedDate || ""
+      };
+    });
+  };
+
+  const handleSelectModifyInvoiceFile = (itemId) => {
+    modifyInvoiceUploadTargetIdRef.current = itemId;
     modifyInvoiceFileInputRef.current?.click();
   };
 
   const handleReplaceModifyInvoiceFile = (itemId) => {
-    handleModifyInvoiceItemChange(itemId, "attachmentName", `替换发票文件-${String(Date.now()).slice(-4)}.pdf`);
+    modifyInvoiceUploadTargetIdRef.current = itemId;
+    modifyInvoiceFileInputRef.current?.click();
   };
 
   const handleRemoveModifyInvoiceItem = (itemId) => {
+    const removingItem = modifyInvoiceItems.find((item) => item.id === itemId);
+    if (hasShopInvoiceUploadItemContent(removingItem)) {
+      const confirmed = window.confirm("删除后，该发票文件及已填写的发票信息将一并清除，是否确认删除？");
+      if (!confirmed) return;
+    }
+
     setModifyInvoiceForm((current) => {
       const invoiceItems = current.invoiceItems.filter((item) => item.id !== itemId);
       const firstItem = invoiceItems[0] || {};
@@ -16108,25 +16247,39 @@ function ShopInvoicePage({
         invoicedDate: firstItem.invoicedDate || ""
       };
     });
+    setModifyInvoiceItemErrors((current) => {
+      if (!current[itemId]) return current;
+      const nextErrors = { ...current };
+      delete nextErrors[itemId];
+      return nextErrors;
+    });
   };
 
   const handleModifyInvoiceFileChange = (event) => {
-    const selectedFiles = Array.from(event.target.files || []).filter((file) => file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf"));
-    setModifyInvoiceForm((current) => {
-      const existingItems = current.invoiceItems || [];
-      const appendedItems = createShopInvoiceUploadItemsFromFiles(selectedFiles, existingItems.length);
-      const invoiceItems = [...existingItems, ...appendedItems].slice(0, 5);
-      const firstItem = invoiceItems[0] || {};
-      return {
-        ...current,
-        invoiceItems,
-        attachmentName: firstItem.attachmentName || "",
-        invoiceNo: firstItem.invoiceNo || "",
-        invoiceAmountWithTax: firstItem.invoiceAmountWithTax || "",
-        invoiceAmountWithoutTax: firstItem.invoiceAmountWithoutTax || "",
-        invoicedDate: firstItem.invoicedDate || ""
-      };
-    });
+    const targetId = modifyInvoiceUploadTargetIdRef.current;
+    const selectedFile = Array.from(event.target.files || [])[0];
+    modifyInvoiceUploadTargetIdRef.current = "";
+
+    if (!targetId || !selectedFile) {
+      event.target.value = "";
+      return;
+    }
+
+    const isPdfFile = selectedFile.type === "application/pdf" || selectedFile.name.toLowerCase().endsWith(".pdf");
+    if (!isPdfFile) {
+      setShopInvoiceNotice("仅支持上传 PDF 格式发票。");
+      event.target.value = "";
+      return;
+    }
+
+    if (selectedFile.size > 5 * 1024 * 1024) {
+      setShopInvoiceNotice("单个文件不能超过 5M。");
+      event.target.value = "";
+      return;
+    }
+
+    handleModifyInvoiceItemChange(targetId, "attachmentName", selectedFile.name);
+    handleModifyInvoiceItemChange(targetId, "attachmentSize", selectedFile.size ? `${Math.max(1, Math.round(selectedFile.size / 1024))} KB` : "");
     setModifyInvoiceErrors((current) => ({ ...current, attachmentName: false }));
     event.target.value = "";
   };
@@ -16152,30 +16305,108 @@ function ShopInvoicePage({
   };
 
   const handleSubmitConfirmInvoice = () => {
-    const invoiceItems = confirmInvoiceForm.invoiceItems && confirmInvoiceForm.invoiceItems.length > 0
-      ? confirmInvoiceForm.invoiceItems
-      : [createShopInvoiceUploadItem(confirmInvoiceForm, 0)];
-    const hasInvalidInvoiceItem = invoiceItems.some((item) => (
-      !item.attachmentName
-      || !String(item.invoiceNo || "").trim()
-      || !String(item.invoiceAmountWithTax || "").trim()
-      || !String(item.invoicedDate || "").trim()
-    ));
-    const nextErrors = {
-      attachmentName: hasInvalidInvoiceItem,
-      invoiceNo: hasInvalidInvoiceItem,
-      invoiceAmountWithTax: hasInvalidInvoiceItem,
-      invoiceAmountWithoutTax: false,
-      invoicedDate: hasInvalidInvoiceItem
-    };
+    const invoiceItems = confirmInvoiceForm.invoiceItems || [];
+    const uploadedItems = invoiceItems.filter((item) => String(item.attachmentName || "").trim());
+    const rowsToValidate = invoiceItems.filter((item) => hasShopInvoiceUploadItemContent(item));
+    const buildRequiredItemErrors = (items) => items.reduce((result, item) => {
+      const itemErrors = {};
+      if (!String(item.attachmentName || "").trim()) itemErrors.attachmentName = "请上传发票附件";
+      if (!String(item.invoiceNo || "").trim()) itemErrors.invoiceNo = "请输入发票号码";
+      if (!String(item.invoicedDate || "").trim()) itemErrors.invoicedDate = "请选择开票时间";
+      if (!String(item.invoiceAmountWithTax || "").trim()) itemErrors.invoiceAmountWithTax = "请输入开票金额(含税)";
+      if (Object.keys(itemErrors).length > 0) result[item.id] = itemErrors;
+      return result;
+    }, {});
 
-    if (Object.values(nextErrors).some(Boolean)) {
-      setConfirmInvoiceErrors(nextErrors);
-      setShopInvoiceNotice("请补全确认开票信息后再提交。");
+    if (uploadedItems.length === 0 && rowsToValidate.length === 0) {
+      setConfirmInvoiceErrors((current) => ({
+        ...current,
+        attachmentName: true,
+        invoiceNo: true,
+        invoicedDate: true,
+        invoiceAmountWithTax: true
+      }));
+      setConfirmInvoiceItemErrors(buildRequiredItemErrors(invoiceItems));
+      setShopInvoiceNotice("至少需要添加并上传 1 张发票。");
       return;
     }
 
-    const normalizedItems = invoiceItems.map((item, index) => ({
+    const seenInvoiceNos = new Map();
+    let validationNotice = "";
+    let nextErrors = {
+      attachmentName: false,
+      invoiceNo: false,
+      invoiceAmountWithTax: false,
+      invoiceAmountWithoutTax: false,
+      invoicedDate: false
+    };
+
+    for (let index = 0; index < rowsToValidate.length; index += 1) {
+      const item = rowsToValidate[index];
+      const rowNumber = invoiceItems.findIndex((invoiceItem) => invoiceItem.id === item.id) + 1;
+      const invoiceNo = String(item.invoiceNo || "").trim();
+      const invoicedDate = String(item.invoicedDate || "").trim();
+      const amountText = String(item.invoiceAmountWithTax || "").trim();
+      const amountValue = parseMoneyValue(amountText);
+
+      if (!String(item.attachmentName || "").trim()) {
+        validationNotice = `第 ${rowNumber} 张发票未选择发票附件`;
+        nextErrors.attachmentName = true;
+        nextErrors.invoiceNo = !invoiceNo;
+        nextErrors.invoicedDate = !invoicedDate;
+        nextErrors.invoiceAmountWithTax = !amountText;
+        break;
+      }
+
+      if (!invoiceNo) {
+        validationNotice = `第 ${rowNumber} 张发票未填写发票号码`;
+        nextErrors.invoiceNo = true;
+        nextErrors.invoicedDate = !invoicedDate;
+        nextErrors.invoiceAmountWithTax = !amountText;
+        break;
+      }
+
+      if (!invoicedDate) {
+        validationNotice = `第 ${rowNumber} 张发票未选择开票时间`;
+        nextErrors.invoicedDate = true;
+        nextErrors.invoiceAmountWithTax = !amountText;
+        break;
+      }
+
+      if (!amountText || amountValue <= 0) {
+        validationNotice = `第 ${rowNumber} 张发票开票金额（含税）无效`;
+        nextErrors.invoiceAmountWithTax = true;
+        break;
+      }
+
+      if (seenInvoiceNos.has(invoiceNo)) {
+        validationNotice = `第 ${rowNumber} 张发票号码与第 ${seenInvoiceNos.get(invoiceNo)} 张重复`;
+        nextErrors.invoiceNo = true;
+        break;
+      }
+
+      seenInvoiceNos.set(invoiceNo, rowNumber);
+    }
+
+    if (validationNotice) {
+      setConfirmInvoiceErrors(nextErrors);
+      setConfirmInvoiceItemErrors(buildRequiredItemErrors(rowsToValidate));
+      setShopInvoiceNotice(validationNotice);
+      return;
+    }
+
+    setConfirmInvoiceItemErrors({});
+
+    const totalInvoiceAmountCents = Math.round(rowsToValidate.reduce((sum, item) => sum + parseMoneyValue(item.invoiceAmountWithTax), 0) * 100);
+    const shouldInvoiceAmountCents = Math.round(parseMoneyValue(confirmInvoiceSummary.shouldInvoiceAmount) * 100);
+
+    if (totalInvoiceAmountCents !== shouldInvoiceAmountCents) {
+      setConfirmInvoiceErrors((current) => ({ ...current, invoiceAmountWithTax: true }));
+      setShopInvoiceNotice("发票开票金额合计与本次应开票金额不一致，请核对后再提交。");
+      return;
+    }
+
+    const normalizedItems = rowsToValidate.map((item, index) => ({
       id: item.id || `confirmed-invoice-${index + 1}`,
       invoiceNo: String(item.invoiceNo || "").trim(),
       invoiceAmountWithTax: String(item.invoiceAmountWithTax || "").trim(),
@@ -16256,30 +16487,108 @@ function ShopInvoicePage({
   };
 
   const handleSubmitModifyInvoice = () => {
-    const invoiceItems = modifyInvoiceForm.invoiceItems && modifyInvoiceForm.invoiceItems.length > 0
-      ? modifyInvoiceForm.invoiceItems
-      : [createShopInvoiceUploadItem(modifyInvoiceForm, 0)];
-    const hasInvalidInvoiceItem = invoiceItems.some((item) => (
-      !item.attachmentName
-      || !String(item.invoiceNo || "").trim()
-      || !String(item.invoiceAmountWithTax || "").trim()
-      || !String(item.invoicedDate || "").trim()
-    ));
-    const nextErrors = {
-      attachmentName: hasInvalidInvoiceItem,
-      invoiceNo: hasInvalidInvoiceItem,
-      invoiceAmountWithTax: hasInvalidInvoiceItem,
-      invoiceAmountWithoutTax: false,
-      invoicedDate: hasInvalidInvoiceItem
-    };
+    const invoiceItems = modifyInvoiceForm.invoiceItems || [];
+    const uploadedItems = invoiceItems.filter((item) => String(item.attachmentName || "").trim());
+    const rowsToValidate = invoiceItems.filter((item) => hasShopInvoiceUploadItemContent(item));
+    const buildRequiredItemErrors = (items) => items.reduce((result, item) => {
+      const itemErrors = {};
+      if (!String(item.attachmentName || "").trim()) itemErrors.attachmentName = "请上传发票附件";
+      if (!String(item.invoiceNo || "").trim()) itemErrors.invoiceNo = "请输入发票号码";
+      if (!String(item.invoicedDate || "").trim()) itemErrors.invoicedDate = "请选择开票时间";
+      if (!String(item.invoiceAmountWithTax || "").trim()) itemErrors.invoiceAmountWithTax = "请输入开票金额(含税)";
+      if (Object.keys(itemErrors).length > 0) result[item.id] = itemErrors;
+      return result;
+    }, {});
 
-    if (Object.values(nextErrors).some(Boolean)) {
-      setModifyInvoiceErrors(nextErrors);
-      setShopInvoiceNotice("请补全修改发票信息后再提交。");
+    if (uploadedItems.length === 0 && rowsToValidate.length === 0) {
+      setModifyInvoiceErrors((current) => ({
+        ...current,
+        attachmentName: true,
+        invoiceNo: true,
+        invoicedDate: true,
+        invoiceAmountWithTax: true
+      }));
+      setModifyInvoiceItemErrors(buildRequiredItemErrors(invoiceItems));
+      setShopInvoiceNotice("至少需要添加并上传 1 张发票。");
       return;
     }
 
-    const normalizedItems = invoiceItems.map((item, index) => ({
+    const seenInvoiceNos = new Map();
+    let validationNotice = "";
+    let nextErrors = {
+      attachmentName: false,
+      invoiceNo: false,
+      invoiceAmountWithTax: false,
+      invoiceAmountWithoutTax: false,
+      invoicedDate: false
+    };
+
+    for (let index = 0; index < rowsToValidate.length; index += 1) {
+      const item = rowsToValidate[index];
+      const rowNumber = invoiceItems.findIndex((invoiceItem) => invoiceItem.id === item.id) + 1;
+      const invoiceNo = String(item.invoiceNo || "").trim();
+      const invoicedDate = String(item.invoicedDate || "").trim();
+      const amountText = String(item.invoiceAmountWithTax || "").trim();
+      const amountValue = parseMoneyValue(amountText);
+
+      if (!String(item.attachmentName || "").trim()) {
+        validationNotice = `第 ${rowNumber} 张发票未选择发票附件`;
+        nextErrors.attachmentName = true;
+        nextErrors.invoiceNo = !invoiceNo;
+        nextErrors.invoicedDate = !invoicedDate;
+        nextErrors.invoiceAmountWithTax = !amountText;
+        break;
+      }
+
+      if (!invoiceNo) {
+        validationNotice = `第 ${rowNumber} 张发票未填写发票号码`;
+        nextErrors.invoiceNo = true;
+        nextErrors.invoicedDate = !invoicedDate;
+        nextErrors.invoiceAmountWithTax = !amountText;
+        break;
+      }
+
+      if (!invoicedDate) {
+        validationNotice = `第 ${rowNumber} 张发票未选择开票时间`;
+        nextErrors.invoicedDate = true;
+        nextErrors.invoiceAmountWithTax = !amountText;
+        break;
+      }
+
+      if (!amountText || amountValue <= 0) {
+        validationNotice = `第 ${rowNumber} 张发票开票金额（含税）无效`;
+        nextErrors.invoiceAmountWithTax = true;
+        break;
+      }
+
+      if (seenInvoiceNos.has(invoiceNo)) {
+        validationNotice = `第 ${rowNumber} 张发票号码与第 ${seenInvoiceNos.get(invoiceNo)} 张重复`;
+        nextErrors.invoiceNo = true;
+        break;
+      }
+
+      seenInvoiceNos.set(invoiceNo, rowNumber);
+    }
+
+    if (validationNotice) {
+      setModifyInvoiceErrors(nextErrors);
+      setModifyInvoiceItemErrors(buildRequiredItemErrors(rowsToValidate));
+      setShopInvoiceNotice(validationNotice);
+      return;
+    }
+
+    setModifyInvoiceItemErrors({});
+
+    const totalInvoiceAmountCents = Math.round(rowsToValidate.reduce((sum, item) => sum + parseMoneyValue(item.invoiceAmountWithTax), 0) * 100);
+    const shouldInvoiceAmountCents = Math.round(parseMoneyValue(modifyInvoiceSummary.shouldInvoiceAmount) * 100);
+
+    if (totalInvoiceAmountCents !== shouldInvoiceAmountCents) {
+      setModifyInvoiceErrors((current) => ({ ...current, invoiceAmountWithTax: true }));
+      setShopInvoiceNotice("发票开票金额合计与本次应开票金额不一致，请核对后再提交。");
+      return;
+    }
+
+    const normalizedItems = rowsToValidate.map((item, index) => ({
       id: item.id || `modified-invoice-${index + 1}`,
       invoiceNo: String(item.invoiceNo || "").trim(),
       invoiceAmountWithTax: String(item.invoiceAmountWithTax || "").trim(),
@@ -17424,49 +17733,74 @@ function ShopInvoicePage({
                 </div>
               </section>
 
-              <section className="shop-invoice-confirm-section shop-invoice-multi-upload-section">
+              <section className="shop-invoice-confirm-section shop-invoice-multi-upload-section is-confirm-upload">
                 <h4>发票明细</h4>
                 <div className="shop-invoice-multi-upload-summary">
                   <div>
                     <span>发票张数合计</span>
-                    <strong>{confirmInvoiceItems.length} 张</strong>
+                    <strong>{confirmInvoiceUploadedCount} 张</strong>
                   </div>
                   <div>
                     <span>开票金额（含税）合计</span>
                     <strong>{confirmInvoiceItemsTotalWithTax}</strong>
                   </div>
                 </div>
+                <div className={`shop-invoice-multi-upload-drop ${confirmInvoiceErrors.attachmentName ? "is-error" : ""}`}>
+                  <input className="shop-invoice-file-input" ref={confirmInvoiceFileInputRef} type="file" accept=".pdf,application/pdf" onChange={handleConfirmInvoiceFileChange} />
+                  <button className="shop-invoice-multi-upload-add" type="button" onClick={handleAddConfirmInvoiceItem}>+ 增加发票</button>
+                  <p>支持 PDF 格式，单个文件不超过 5M，最多添加 5 张发票。</p>
+                </div>
                 <div className="shop-invoice-upload-table">
                   <div className="shop-invoice-upload-table-row is-head">
+                    <span>序号</span>
+                    <span><i>*</i>发票附件</span>
                     <span><i>*</i>发票号码</span>
                     <span><i>*</i>开票时间</span>
                     <span><i>*</i>开票金额（含税）</span>
                     <span>开票金额（不含税）</span>
-                    <span>操作</span>
                   </div>
                   {confirmInvoiceItems.length === 0 ? (
-                    <div className="shop-invoice-upload-table-empty">暂无数据</div>
-                  ) : confirmInvoiceItems.map((item) => (
-                    <div className="shop-invoice-upload-table-row is-form" key={item.id}>
-                      <input className={confirmInvoiceErrors.invoiceNo && !item.invoiceNo ? "is-error" : ""} value={item.invoiceNo} placeholder="请输入发票号码" onChange={(e) => handleConfirmInvoiceItemChange(item.id, "invoiceNo", e.target.value)} />
-                      <div className={`shop-invoice-upload-table-date ${confirmInvoiceErrors.invoicedDate && !item.invoicedDate ? "is-error" : ""}`}>
-                        <span className={item.invoicedDate ? "has-value" : "is-placeholder"}>{item.invoicedDate || "请选择时间"}</span>
-                        <input type="date" value={item.invoicedDate} aria-label="请选择时间" onChange={(e) => handleConfirmInvoiceItemChange(item.id, "invoicedDate", e.target.value)} />
+                    <div className="shop-invoice-upload-table-empty">暂无发票数据</div>
+                  ) : confirmInvoiceItems.map((item, index) => {
+                    const itemErrors = confirmInvoiceItemErrors[item.id] || {};
+                    return (
+                      <div className="shop-invoice-upload-table-row is-form" key={item.id}>
+                        <div className="shop-invoice-upload-table-index">{index + 1}</div>
+                        <div className="shop-invoice-upload-table-actions">
+                          {item.attachmentName ? (
+                            <>
+                              <span title={item.attachmentName}>{item.attachmentName}</span>
+                              <div className="shop-invoice-upload-file-links">
+                                <button type="button" onClick={() => handleReplaceConfirmInvoiceFile(item.id)}>替换</button>
+                                <button type="button" onClick={() => handleRemoveConfirmInvoiceItem(item.id)}>删除</button>
+                              </div>
+                            </>
+                          ) : (
+                            <button className={`shop-invoice-upload-select-btn ${itemErrors.attachmentName ? "is-error" : ""}`} type="button" onClick={() => handleSelectConfirmInvoiceFile(item.id)}>选择文件</button>
+                          )}
+                          {itemErrors.attachmentName ? <div className="shop-invoice-upload-field-error">{itemErrors.attachmentName}</div> : null}
+                        </div>
+                        <div className="shop-invoice-upload-field">
+                          <input className={itemErrors.invoiceNo || (confirmInvoiceErrors.invoiceNo && !item.invoiceNo) ? "is-error" : ""} value={item.invoiceNo} placeholder="请输入发票号码" onChange={(e) => handleConfirmInvoiceItemChange(item.id, "invoiceNo", e.target.value)} />
+                          {itemErrors.invoiceNo ? <div className="shop-invoice-upload-field-error">{itemErrors.invoiceNo}</div> : null}
+                        </div>
+                        <div className="shop-invoice-upload-field">
+                          <div className={`shop-invoice-upload-table-date ${itemErrors.invoicedDate || (confirmInvoiceErrors.invoicedDate && !item.invoicedDate) ? "is-error" : ""}`}>
+                            <span className={item.invoicedDate ? "has-value" : "is-placeholder"}>{item.invoicedDate || "年 -月 -日"}</span>
+                            <input type="date" value={item.invoicedDate} aria-label="请选择时间" onChange={(e) => handleConfirmInvoiceItemChange(item.id, "invoicedDate", e.target.value)} />
+                          </div>
+                          {itemErrors.invoicedDate ? <div className="shop-invoice-upload-field-error">{itemErrors.invoicedDate}</div> : null}
+                        </div>
+                        <div className="shop-invoice-upload-field">
+                          <input className={itemErrors.invoiceAmountWithTax || (confirmInvoiceErrors.invoiceAmountWithTax && !item.invoiceAmountWithTax) ? "is-error" : ""} value={item.invoiceAmountWithTax} placeholder="请输入开票金额(含税)" onChange={(e) => handleConfirmInvoiceItemChange(item.id, "invoiceAmountWithTax", e.target.value)} />
+                          {itemErrors.invoiceAmountWithTax ? <div className="shop-invoice-upload-field-error">{itemErrors.invoiceAmountWithTax}</div> : null}
+                        </div>
+                        <div className="shop-invoice-upload-field">
+                          <input value={item.invoiceAmountWithoutTax} placeholder="请输入开票金额(不含税)" onChange={(e) => handleConfirmInvoiceItemChange(item.id, "invoiceAmountWithoutTax", e.target.value)} />
+                        </div>
                       </div>
-                      <input className={confirmInvoiceErrors.invoiceAmountWithTax && !item.invoiceAmountWithTax ? "is-error" : ""} value={item.invoiceAmountWithTax} placeholder="请输入开票金额(含税)" onChange={(e) => handleConfirmInvoiceItemChange(item.id, "invoiceAmountWithTax", e.target.value)} />
-                      <input value={item.invoiceAmountWithoutTax} placeholder="请输入开票金额(不含税)" onChange={(e) => handleConfirmInvoiceItemChange(item.id, "invoiceAmountWithoutTax", e.target.value)} />
-                      <div className="shop-invoice-upload-table-actions">
-                        <span title={item.attachmentName}>{item.attachmentName || "未选择文件"}{item.attachmentSize ? ` ${item.attachmentSize}` : ""}</span>
-                        <button type="button" onClick={() => handleReplaceConfirmInvoiceFile(item.id)}>替换文件</button>
-                        <button type="button" onClick={() => handleRemoveConfirmInvoiceItem(item.id)}>删除</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className={`shop-invoice-multi-upload-drop ${confirmInvoiceErrors.attachmentName ? "is-error" : ""}`}>
-                  <input className="shop-invoice-file-input" ref={confirmInvoiceFileInputRef} type="file" accept=".pdf,application/pdf" multiple onChange={handleConfirmInvoiceFileChange} />
-                  <button className="shop-invoice-multi-upload-add" type="button" disabled={confirmInvoiceItems.length >= 5} onClick={handleAddConfirmInvoiceItem}>添加发票文件</button>
-                  <p>支持 PDF 格式，单个文件不超过 5M，最多上传 5 张</p>
+                    );
+                  })}
                 </div>
               </section>
             </div>
@@ -17587,49 +17921,74 @@ function ShopInvoicePage({
                 </div>
               </section>
 
-              <section className="shop-invoice-confirm-section shop-invoice-multi-upload-section">
+              <section className="shop-invoice-confirm-section shop-invoice-multi-upload-section is-confirm-upload">
                 <h4>发票明细</h4>
                 <div className="shop-invoice-multi-upload-summary">
                   <div>
                     <span>发票张数合计</span>
-                    <strong>{modifyInvoiceItems.length} 张</strong>
+                    <strong>{modifyInvoiceUploadedCount} 张</strong>
                   </div>
                   <div>
                     <span>开票金额（含税）合计</span>
                     <strong>{modifyInvoiceItemsTotalWithTax}</strong>
                   </div>
                 </div>
+                <div className={`shop-invoice-multi-upload-drop ${modifyInvoiceErrors.attachmentName ? "is-error" : ""}`}>
+                  <input className="shop-invoice-file-input" ref={modifyInvoiceFileInputRef} type="file" accept=".pdf,application/pdf" onChange={handleModifyInvoiceFileChange} />
+                  <button className="shop-invoice-multi-upload-add" type="button" onClick={handleAddModifyInvoiceItem}>+ 增加发票</button>
+                  <p>支持 PDF 格式，单个文件不超过 5M，最多添加 5 张发票。</p>
+                </div>
                 <div className="shop-invoice-upload-table">
                   <div className="shop-invoice-upload-table-row is-head">
+                    <span>序号</span>
+                    <span><i>*</i>发票附件</span>
                     <span><i>*</i>发票号码</span>
                     <span><i>*</i>开票时间</span>
                     <span><i>*</i>开票金额（含税）</span>
                     <span>开票金额（不含税）</span>
-                    <span>操作</span>
                   </div>
                   {modifyInvoiceItems.length === 0 ? (
-                    <div className="shop-invoice-upload-table-empty">暂无数据</div>
-                  ) : modifyInvoiceItems.map((item) => (
-                    <div className="shop-invoice-upload-table-row is-form" key={item.id}>
-                      <input className={modifyInvoiceErrors.invoiceNo && !item.invoiceNo ? "is-error" : ""} value={item.invoiceNo} placeholder="请输入发票号码" onChange={(e) => handleModifyInvoiceItemChange(item.id, "invoiceNo", e.target.value)} />
-                      <div className={`shop-invoice-upload-table-date ${modifyInvoiceErrors.invoicedDate && !item.invoicedDate ? "is-error" : ""}`}>
-                        <span className={item.invoicedDate ? "has-value" : "is-placeholder"}>{item.invoicedDate || "请选择时间"}</span>
-                        <input type="date" value={item.invoicedDate} aria-label="请选择时间" onChange={(e) => handleModifyInvoiceItemChange(item.id, "invoicedDate", e.target.value)} />
+                    <div className="shop-invoice-upload-table-empty">暂无发票数据</div>
+                  ) : modifyInvoiceItems.map((item, index) => {
+                    const itemErrors = modifyInvoiceItemErrors[item.id] || {};
+                    return (
+                      <div className="shop-invoice-upload-table-row is-form" key={item.id}>
+                        <div className="shop-invoice-upload-table-index">{index + 1}</div>
+                        <div className="shop-invoice-upload-table-actions">
+                          {item.attachmentName ? (
+                            <>
+                              <span title={item.attachmentName}>{item.attachmentName}</span>
+                              <div className="shop-invoice-upload-file-links">
+                                <button type="button" onClick={() => handleReplaceModifyInvoiceFile(item.id)}>替换</button>
+                                <button type="button" onClick={() => handleRemoveModifyInvoiceItem(item.id)}>删除</button>
+                              </div>
+                            </>
+                          ) : (
+                            <button className={`shop-invoice-upload-select-btn ${itemErrors.attachmentName ? "is-error" : ""}`} type="button" onClick={() => handleSelectModifyInvoiceFile(item.id)}>选择文件</button>
+                          )}
+                          {itemErrors.attachmentName ? <div className="shop-invoice-upload-field-error">{itemErrors.attachmentName}</div> : null}
+                        </div>
+                        <div className="shop-invoice-upload-field">
+                          <input className={itemErrors.invoiceNo || (modifyInvoiceErrors.invoiceNo && !item.invoiceNo) ? "is-error" : ""} value={item.invoiceNo} placeholder="请输入发票号码" onChange={(e) => handleModifyInvoiceItemChange(item.id, "invoiceNo", e.target.value)} />
+                          {itemErrors.invoiceNo ? <div className="shop-invoice-upload-field-error">{itemErrors.invoiceNo}</div> : null}
+                        </div>
+                        <div className="shop-invoice-upload-field">
+                          <div className={`shop-invoice-upload-table-date ${itemErrors.invoicedDate || (modifyInvoiceErrors.invoicedDate && !item.invoicedDate) ? "is-error" : ""}`}>
+                            <span className={item.invoicedDate ? "has-value" : "is-placeholder"}>{item.invoicedDate || "年 -月 -日"}</span>
+                            <input type="date" value={item.invoicedDate} aria-label="请选择时间" onChange={(e) => handleModifyInvoiceItemChange(item.id, "invoicedDate", e.target.value)} />
+                          </div>
+                          {itemErrors.invoicedDate ? <div className="shop-invoice-upload-field-error">{itemErrors.invoicedDate}</div> : null}
+                        </div>
+                        <div className="shop-invoice-upload-field">
+                          <input className={itemErrors.invoiceAmountWithTax || (modifyInvoiceErrors.invoiceAmountWithTax && !item.invoiceAmountWithTax) ? "is-error" : ""} value={item.invoiceAmountWithTax} placeholder="请输入开票金额(含税)" onChange={(e) => handleModifyInvoiceItemChange(item.id, "invoiceAmountWithTax", e.target.value)} />
+                          {itemErrors.invoiceAmountWithTax ? <div className="shop-invoice-upload-field-error">{itemErrors.invoiceAmountWithTax}</div> : null}
+                        </div>
+                        <div className="shop-invoice-upload-field">
+                          <input value={item.invoiceAmountWithoutTax} placeholder="请输入开票金额(不含税)" onChange={(e) => handleModifyInvoiceItemChange(item.id, "invoiceAmountWithoutTax", e.target.value)} />
+                        </div>
                       </div>
-                      <input className={modifyInvoiceErrors.invoiceAmountWithTax && !item.invoiceAmountWithTax ? "is-error" : ""} value={item.invoiceAmountWithTax} placeholder="请输入开票金额(含税)" onChange={(e) => handleModifyInvoiceItemChange(item.id, "invoiceAmountWithTax", e.target.value)} />
-                      <input value={item.invoiceAmountWithoutTax} placeholder="请输入开票金额(不含税)" onChange={(e) => handleModifyInvoiceItemChange(item.id, "invoiceAmountWithoutTax", e.target.value)} />
-                      <div className="shop-invoice-upload-table-actions">
-                        <span title={item.attachmentName}>{item.attachmentName || "未选择文件"}{item.attachmentSize ? ` ${item.attachmentSize}` : ""}</span>
-                        <button type="button" onClick={() => handleReplaceModifyInvoiceFile(item.id)}>替换文件</button>
-                        <button type="button" onClick={() => handleRemoveModifyInvoiceItem(item.id)}>删除</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className={`shop-invoice-multi-upload-drop ${modifyInvoiceErrors.attachmentName ? "is-error" : ""}`}>
-                  <input className="shop-invoice-file-input" ref={modifyInvoiceFileInputRef} type="file" accept=".pdf,application/pdf" multiple onChange={handleModifyInvoiceFileChange} />
-                  <button className="shop-invoice-multi-upload-add" type="button" disabled={modifyInvoiceItems.length >= 5} onClick={handleAddModifyInvoiceItem}>添加发票文件</button>
-                  <p>支持 PDF 格式，单个文件不超过 5M，最多上传 5 张</p>
+                    );
+                  })}
                 </div>
               </section>
             </div>
