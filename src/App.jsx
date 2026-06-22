@@ -13100,7 +13100,7 @@ function TabSection({ creating, editing, detailing, onSwitchToList, currentMarke
   );
 }
 
-function SpecialPriceListLayout({ pageConfig, filters, setFilters, page, setPage, pageSize, setPageSize, onCreate, onAction, activities }) {
+function SpecialPriceListLayout({ pageConfig, filters, setFilters, page, setPage, pageSize, setPageSize, onCreate, onAction, activities, onOpenBuyerGroupDetail }) {
   const filteredActivities = useMemo(() => activities.filter((item) => {
     if (filters.status && item.status !== filters.status) return false;
     if (filters.activityId && !item.id.includes(filters.activityId.trim())) return false;
@@ -13159,7 +13159,7 @@ function SpecialPriceListLayout({ pageConfig, filters, setFilters, page, setPage
                 <tr key={item.id}>
                   <td>{item.id}</td>
                   <td>{item.name}</td>
-                  <td><button className="table-link-button" type="button">{item.buyerGroup}</button></td>
+                  <td><button className="table-link-button" type="button" onClick={() => onOpenBuyerGroupDetail?.(item.buyerGroup)}>{item.buyerGroup}</button></td>
                   <td>{item.startTime}</td>
                   <td>{item.endTime}</td>
                   <td className={`status-cell status-${item.status}`}>{item.status}</td>
@@ -13193,13 +13193,13 @@ function SpecialPrice2ListPage(props) {
   return <SpecialPriceListLayout {...props} pageConfig={marketingPageConfigs.专享价2} />;
 }
 
-function ListPage({ pageName, filters, setFilters, page, setPage, pageSize, setPageSize, onCreate, onAction, activities }) {
+function ListPage({ pageName, filters, setFilters, page, setPage, pageSize, setPageSize, onCreate, onAction, activities, onOpenBuyerGroupDetail }) {
   if (isPrimarySpecialPricePage(pageName)) {
-    return <SpecialPriceListPage filters={filters} setFilters={setFilters} page={page} setPage={setPage} pageSize={pageSize} setPageSize={setPageSize} onCreate={onCreate} onAction={onAction} activities={activities} />;
+    return <SpecialPriceListPage filters={filters} setFilters={setFilters} page={page} setPage={setPage} pageSize={pageSize} setPageSize={setPageSize} onCreate={onCreate} onAction={onAction} activities={activities} onOpenBuyerGroupDetail={onOpenBuyerGroupDetail} />;
   }
 
   if (isSecondarySpecialPricePage(pageName)) {
-    return <SpecialPrice2ListPage filters={filters} setFilters={setFilters} page={page} setPage={setPage} pageSize={pageSize} setPageSize={setPageSize} onCreate={onCreate} onAction={onAction} activities={activities} />;
+    return <SpecialPrice2ListPage filters={filters} setFilters={setFilters} page={page} setPage={setPage} pageSize={pageSize} setPageSize={setPageSize} onCreate={onCreate} onAction={onAction} activities={activities} onOpenBuyerGroupDetail={onOpenBuyerGroupDetail} />;
   }
 
   const showFlashSaleOneBuyerFields = isFlashSaleOnePage(pageName);
@@ -18480,6 +18480,69 @@ function ActivityTerminateConfirmModal({ open, onClose, onConfirm, title = "活�
   );
 }
 
+function BuyerDeleteConfirmPopover({ buyer, onClose, onConfirm }) {
+  if (!buyer) return null;
+
+  return (
+    <div className="buyer-delete-popover" role="dialog" aria-modal="false" aria-label="删除确认">
+      <div className="buyer-delete-popover-arrow" />
+      <p>确定删除吗？</p>
+      <div className="buyer-delete-popover-actions">
+        <button className="buyer-delete-popover-cancel" type="button" onClick={onClose}>取消</button>
+        <button className="buyer-delete-popover-confirm" type="button" onClick={onConfirm}>确定</button>
+      </div>
+    </div>
+  );
+}
+
+function BuyerDeleteActivityModal({ buyer, onClose, onConfirm }) {
+  if (!buyer) return null;
+
+  const affectedActivities = [
+    { id: "1107", name: "普通客户A", type: "专享价" },
+    { id: "1108", name: "四川分组限时购", type: "限时购" },
+    { id: "1109", name: "门店采购满减", type: "满减" },
+    { id: "1110", name: "夏季饮品专享", type: "专享价" }
+  ];
+
+  return (
+    <div className="modal-overlay buyer-delete-activity-overlay" role="presentation">
+      <div className="modal-mask buyer-delete-activity-mask" onClick={onClose} />
+      <div className="buyer-delete-activity-modal" role="dialog" aria-modal="true" aria-labelledby="buyer-delete-activity-title" onClick={(event) => event.stopPropagation()}>
+        <div className="buyer-delete-activity-head">
+          <h3 id="buyer-delete-activity-title">删除买家</h3>
+          <button className="buyer-delete-activity-close" type="button" aria-label="关闭" onClick={onClose}>×</button>
+        </div>
+        <div className="buyer-delete-activity-body">
+          <p>删除后买家将不再参与以下活动，您确定删除吗？</p>
+          <table className="buyer-delete-activity-table">
+            <thead>
+              <tr>
+                <th>活动ID</th>
+                <th>活动名</th>
+                <th>活动类型</th>
+              </tr>
+            </thead>
+            <tbody>
+              {affectedActivities.map((item) => (
+                <tr key={item.id}>
+                  <td>{item.id}</td>
+                  <td>{item.name}</td>
+                  <td>{item.type}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="buyer-delete-activity-foot">
+          <button className="buyer-delete-activity-cancel" type="button" onClick={onClose}>取消</button>
+          <button className="buyer-delete-activity-confirm" type="button" onClick={onConfirm}>确定</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function BuyerImportResultModal({ result, onClose, onConfirm }) {
   if (!result) return null;
 
@@ -23194,6 +23257,8 @@ export default function App() {
   const [buyerImportResult, setBuyerImportResult] = useState(null);
   const buyerImportInputRef = useRef(null);
   const [editingBuyer, setEditingBuyer] = useState(null);
+  const [pendingDeleteBuyer, setPendingDeleteBuyer] = useState(null);
+  const [activityDeleteBuyer, setActivityDeleteBuyer] = useState(null);
   const [buyerEditForm, setBuyerEditForm] = useState({ identity: "", group: "", discount: "" });
   const [buyerEditDiscountInvalid, setBuyerEditDiscountInvalid] = useState(false);
   const [isAddBuyerOpen, setIsAddBuyerOpen] = useState(false);
@@ -23996,6 +24061,8 @@ export default function App() {
     setActiveBuyerGroupDetailId("");
     setBuyerPage(1);
     setEditingBuyer(null);
+    setPendingDeleteBuyer(null);
+    setActivityDeleteBuyer(null);
     setIsAddBuyerOpen(false);
     setIsCreating(false);
     setIsEditMode(false);
@@ -24004,14 +24071,21 @@ export default function App() {
     closeAllCreateOverlays();
   };
 
-  const handleOpenBuyerGroupDetail = (groupId) => {
+  const handleOpenBuyerGroupDetail = (groupIdentifier) => {
+    const normalizedGroupIdentifier = String(groupIdentifier || "").trim();
+    const targetGroup = buyerGroups.find((group) => (
+      group.id === normalizedGroupIdentifier || group.name === normalizedGroupIdentifier
+    ));
+
     setActivePortalPage("admin");
     setActiveSection("buyer");
     setActiveUtilityPage("");
     setActiveBuyerPage("分组明细");
-    setActiveBuyerGroupDetailId(groupId);
+    setActiveBuyerGroupDetailId(targetGroup?.id || normalizedGroupIdentifier);
     setBuyerPage(1);
     setEditingBuyer(null);
+    setPendingDeleteBuyer(null);
+    setActivityDeleteBuyer(null);
     setIsAddBuyerOpen(false);
     setIsCreating(false);
     setIsEditMode(false);
@@ -24145,6 +24219,8 @@ export default function App() {
   const handleBuyerActionClick = (actionLabel, buyer) => {
     if (actionLabel === "新增买家") {
       setEditingBuyer(null);
+      setPendingDeleteBuyer(null);
+      setActivityDeleteBuyer(null);
       setNewBuyerForm(initialNewBuyerForm);
       setNewBuyerDiscountInvalid(false);
       setIsAddBuyerOpen(true);
@@ -24153,6 +24229,8 @@ export default function App() {
 
     if (actionLabel === "批量导入买家") {
       setEditingBuyer(null);
+      setPendingDeleteBuyer(null);
+      setActivityDeleteBuyer(null);
       setIsAddBuyerOpen(false);
       setActiveBuyerPage("导入买家");
       setToastMessage("");
@@ -24161,6 +24239,8 @@ export default function App() {
 
     if (actionLabel === "编辑买家" && buyer) {
       setIsAddBuyerOpen(false);
+      setPendingDeleteBuyer(null);
+      setActivityDeleteBuyer(null);
       setEditingBuyer(buyer);
       setBuyerEditForm({
         identity: buyer.identity || "",
@@ -24171,7 +24251,30 @@ export default function App() {
       return;
     }
 
+    if (actionLabel.startsWith("删除买家") && buyer) {
+      setIsAddBuyerOpen(false);
+      setEditingBuyer(null);
+      setPendingDeleteBuyer(buyer);
+      setActivityDeleteBuyer(null);
+      setToastMessage("");
+      return;
+    }
+
     setToastMessage(`${actionLabel}功能已按截图位置复刻，后续可继续接真实接口。`);
+  };
+
+  const handleConfirmBuyerDeletePopover = () => {
+    if (!pendingDeleteBuyer) return;
+    setActivityDeleteBuyer(pendingDeleteBuyer);
+    setPendingDeleteBuyer(null);
+  };
+
+  const handleConfirmBuyerActivityDelete = () => {
+    if (!activityDeleteBuyer) return;
+    setBuyerRows((current) => current.filter((item) => item.id !== activityDeleteBuyer.id));
+    setActivityDeleteBuyer(null);
+    setPendingDeleteBuyer(null);
+    setToastMessage("删除成功");
   };
 
   const handleSaveBuyerEdit = () => {
@@ -24968,7 +25071,7 @@ export default function App() {
           ) : (
             <>
               {!(isPrimarySpecialPricePage(currentMarketingPage) || isSecondarySpecialPricePage(currentMarketingPage)) ? <TabSection creating={isCreating} editing={isEditMode} detailing={!isCreating && !!detailActivity} currentMarketingPage={currentMarketingPage} onSwitchToList={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); updateCurrentField("detailActivity", null); }} /> : null}
-              {isCreating ? (isPrimarySpecialPricePage(currentMarketingPage) ? <SpecialPriceCreatePage form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} productFieldEditModesByProduct={productFieldEditModesByProduct || {}} productFieldErrorsByProduct={productFieldErrorsByProduct || {}} onToggleProductFieldEditMode={handleToggleProductFieldEditMode} onToggleGoodsSelection={handleToggleGoodsSelection} onRemoveProduct={handleRemoveProduct} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onShowSpecDetail={setDetailSpecProduct} onTerminateProduct={handleTerminateProduct} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} /> : isSecondarySpecialPricePage(currentMarketingPage) ? <SpecialPrice2CreatePage form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} productFieldEditModesByProduct={productFieldEditModesByProduct || {}} productFieldErrorsByProduct={productFieldErrorsByProduct || {}} onToggleProductFieldEditMode={handleToggleProductFieldEditMode} onToggleGoodsSelection={handleToggleGoodsSelection} onRemoveProduct={handleRemoveProduct} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onShowSpecDetail={setDetailSpecProduct} onTerminateProduct={handleTerminateProduct} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} /> : <CreatePage pageName={currentMarketingPage} form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} productFieldEditModesByProduct={productFieldEditModesByProduct || {}} productFieldErrorsByProduct={productFieldErrorsByProduct || {}} onToggleProductFieldEditMode={handleToggleProductFieldEditMode} onToggleGoodsSelection={handleToggleGoodsSelection} onRemoveProduct={handleRemoveProduct} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onShowSpecDetail={setDetailSpecProduct} onTerminateProduct={handleTerminateProduct} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} />) : detailActivity ? <DetailPage detailActivity={detailActivity} page={detailPage} setPage={(value) => updateCurrentField("detailPage", typeof value === "function" ? value(detailPage) : value)} pageSize={detailPageSize} setPageSize={(value) => updateCurrentField("detailPageSize", value)} onShowSpecDetail={setDetailSpecProduct} /> : <ListPage pageName={currentMarketingPage} filters={filters} setFilters={(value) => updateCurrentField("filters", value)} page={page} setPage={(value) => updateCurrentField("page", typeof value === "function" ? value(page) : value)} pageSize={pageSize} setPageSize={(value) => updateCurrentField("pageSize", value)} onCreate={() => { resetCreateState(); setIsCreating(true); updateCurrentField("detailActivity", null); }} onAction={handleActivityAction} activities={activities} />}
+              {isCreating ? (isPrimarySpecialPricePage(currentMarketingPage) ? <SpecialPriceCreatePage form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} productFieldEditModesByProduct={productFieldEditModesByProduct || {}} productFieldErrorsByProduct={productFieldErrorsByProduct || {}} onToggleProductFieldEditMode={handleToggleProductFieldEditMode} onToggleGoodsSelection={handleToggleGoodsSelection} onRemoveProduct={handleRemoveProduct} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onShowSpecDetail={setDetailSpecProduct} onTerminateProduct={handleTerminateProduct} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} /> : isSecondarySpecialPricePage(currentMarketingPage) ? <SpecialPrice2CreatePage form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} productFieldEditModesByProduct={productFieldEditModesByProduct || {}} productFieldErrorsByProduct={productFieldErrorsByProduct || {}} onToggleProductFieldEditMode={handleToggleProductFieldEditMode} onToggleGoodsSelection={handleToggleGoodsSelection} onRemoveProduct={handleRemoveProduct} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onShowSpecDetail={setDetailSpecProduct} onTerminateProduct={handleTerminateProduct} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} /> : <CreatePage pageName={currentMarketingPage} form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} productFieldEditModesByProduct={productFieldEditModesByProduct || {}} productFieldErrorsByProduct={productFieldErrorsByProduct || {}} onToggleProductFieldEditMode={handleToggleProductFieldEditMode} onToggleGoodsSelection={handleToggleGoodsSelection} onRemoveProduct={handleRemoveProduct} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onShowSpecDetail={setDetailSpecProduct} onTerminateProduct={handleTerminateProduct} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} />) : detailActivity ? <DetailPage detailActivity={detailActivity} page={detailPage} setPage={(value) => updateCurrentField("detailPage", typeof value === "function" ? value(detailPage) : value)} pageSize={detailPageSize} setPageSize={(value) => updateCurrentField("detailPageSize", value)} onShowSpecDetail={setDetailSpecProduct} /> : <ListPage pageName={currentMarketingPage} filters={filters} setFilters={(value) => updateCurrentField("filters", value)} page={page} setPage={(value) => updateCurrentField("page", typeof value === "function" ? value(page) : value)} pageSize={pageSize} setPageSize={(value) => updateCurrentField("pageSize", value)} onCreate={() => { resetCreateState(); setIsCreating(true); updateCurrentField("detailActivity", null); }} onAction={handleActivityAction} activities={activities} onOpenBuyerGroupDetail={handleOpenBuyerGroupDetail} />}
             </>
           )}
         </main>
@@ -24981,6 +25084,8 @@ export default function App() {
       {isMarketingSection && detailSpecProduct ? <DetailSpecModal product={detailSpecProduct} onClose={() => setDetailSpecProduct(null)} /> : null}
       {isBuyerSection ? <AddBuyerModal open={isAddBuyerOpen} groupOptions={buyerGroupOptions} form={newBuyerForm} discountInvalid={newBuyerDiscountInvalid || isBuyerDiscountInvalid(newBuyerForm.discount)} onFormChange={(updater) => { setNewBuyerDiscountInvalid(false); setNewBuyerForm(updater); }} onClose={() => { setIsAddBuyerOpen(false); setNewBuyerDiscountInvalid(false); }} onSave={handleSaveNewBuyer} /> : null}
       {isBuyerSection ? <EditBuyerModal buyer={editingBuyer} groupOptions={buyerGroupOptions} form={buyerEditForm} discountInvalid={buyerEditDiscountInvalid || isBuyerDiscountInvalid(buyerEditForm.discount)} onFormChange={(updater) => { setBuyerEditDiscountInvalid(false); setBuyerEditForm(updater); }} onClose={() => { setEditingBuyer(null); setBuyerEditDiscountInvalid(false); }} onSave={handleSaveBuyerEdit} /> : null}
+      {isBuyerSection ? <BuyerDeleteConfirmPopover buyer={pendingDeleteBuyer} onClose={() => setPendingDeleteBuyer(null)} onConfirm={handleConfirmBuyerDeletePopover} /> : null}
+      {isBuyerSection ? <BuyerDeleteActivityModal buyer={activityDeleteBuyer} onClose={() => setActivityDeleteBuyer(null)} onConfirm={handleConfirmBuyerActivityDelete} /> : null}
       {isBuyerSection ? <BuyerImportResultModal result={buyerImportResult} onClose={handleCloseBuyerImportResult} onConfirm={handleConfirmBuyerImportResult} /> : null}
       {isGlobalExportRecordModalOpen ? <PcMallExportRecordModal rows={buyerPcMallExportRecordRows} onClose={() => setIsGlobalExportRecordModalOpen(false)} /> : null}
       {toastMessage ? <div className="page-toast">{toastMessage}</div> : null}
