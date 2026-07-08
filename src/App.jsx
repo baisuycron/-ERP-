@@ -4,7 +4,7 @@ import * as XLSX from "xlsx";
 const goodsPageNames = ["商品管理"];
 const tradePageNames = ["交易设置"];
 const buyerPageNames = ["买家分组", "买家列表"];
-const shopPageNames = ["发票管理"];
+const shopPageNames = ["发票管理", "合同管理"];
 const servicePageNames = ["在线客服"];
 const mixedWholesaleConditionOptions = [
   { value: "quantity", label: "满 X 件" },
@@ -1330,7 +1330,7 @@ const menuItems = [
   { label: "店铺", icon: "shop", badge: "2", children: shopPageNames },
   { label: "系统", icon: "system" },
   { label: "统计", icon: "stats" },
-  { label: "营销", icon: "marketing", children: ["专享价", "专享价2", "限时购1", "限时购"] },
+  { label: "营销", icon: "marketing", children: ["满减", "专享价", "专享价2", "限时购1", "限时购"] },
   { label: "小程序", icon: "miniapp" },
   { label: "客服", icon: "service", badge: "7", children: servicePageNames }
 ];
@@ -1381,6 +1381,67 @@ const supplierDashboardInvoiceCards = [
   { value: "3", label: "即将超时开票申请", targetStatusTab: "待开票", targetMarkerFilter: "即将超时" },
   { value: "4", label: "超时未处理开票申请", targetStatusTab: "待开票", targetMarkerFilter: "超时" }
 ];
+const supplierContractTabs = ["合同管理", "补充协议管理", "先货后款协议", "CA证书管理"];
+const supplierContractStatusOptions = ["", "待签署", "已签署", "已过期"];
+const supplierContractRows = [
+  {
+    contractNo: "CGPTCO202607077857",
+    status: "待签署",
+    createdAt: "2026-07-07 14:52:08",
+    expiredAt: "2099-12-31 23:59:59",
+    actions: ["查看", "签署合同", "预览合同", "下载合同", "补充协议"]
+  },
+  {
+    contractNo: "CGPTCO202607073312",
+    status: "待签署",
+    createdAt: "2026-07-07 14:51:53",
+    expiredAt: "2099-12-31 23:59:59",
+    actions: ["查看", "签署合同", "预览合同", "下载合同", "补充协议"]
+  },
+  {
+    contractNo: "CGPTCO202605071415",
+    status: "已签署",
+    createdAt: "2026-05-07 15:33:31",
+    expiredAt: "2099-12-31 23:59:59",
+    actions: ["查看", "预览合同", "下载合同", "补充协议"]
+  },
+  {
+    contractNo: "CGPTCO202404182461",
+    status: "已过期",
+    createdAt: "2024-04-18 09:49:58",
+    expiredAt: "2025-04-18 09:49:58",
+    actions: ["查看", "预览合同", "下载合同", "补充协议"]
+  }
+];
+const supplierCertificateRows = [
+  {
+    certificateNo: "CGPTCO202607077857",
+    status: "生效中",
+    validRange: "2026-07-07 14:51:53~2027-07-07 14:51:53",
+    issuedAt: "2026-07-07 14:51:53",
+    subjectName: "农妇三拳",
+    subjectId: "91330106MA2CGPT001",
+    actions: ["查看"]
+  },
+  {
+    certificateNo: "CGPTCO202605071415",
+    status: "已吊销",
+    validRange: "2026-05-07 15:33:31~2027-05-07 15:33:31",
+    issuedAt: "2026-05-07 15:33:31",
+    subjectName: "农妇三拳",
+    subjectId: "91330106MA2CGPT003",
+    actions: ["查看"]
+  },
+  {
+    certificateNo: "CGPTCO202404182461",
+    status: "已过期",
+    validRange: "2024-04-18 09:49:58~2025-04-18 09:49:58",
+    issuedAt: "2024-04-18 09:49:58",
+    subjectName: "农妇三拳",
+    subjectId: "91330106MA2CGPT004",
+    actions: ["查看"]
+  }
+];
 const platformCenterSidebarItems = [
   { key: "home", label: "首页", icon: "home" },
   { key: "goods", label: "商品", icon: "goods" },
@@ -1393,7 +1454,8 @@ const platformCenterSidebarItems = [
     badge: "99+",
     children: [
       { key: "shop-invoice-management", label: "发票管理" },
-      { key: "shop-todo-management", label: "待办管理" }
+      { key: "shop-todo-management", label: "待办管理" },
+      { key: "shop-contract-management", label: "合同管理" }
     ]
   },
   { key: "website", label: "网站", icon: "website" },
@@ -1404,12 +1466,20 @@ const platformCenterSidebarItems = [
     label: "营销",
     icon: "marketing",
     children: [
+      { key: "marketing-full-reduction", label: "满减" },
       { key: "marketing-flash-sale", label: "限时购" }
     ]
   },
   { key: "miniapp", label: "小程序", icon: "miniapp" }
 ];
 const platformTradeSettingsTabs = ["交易参数", "发票参数", "售后原因设置"];
+const platformContractTabs = ["合同管理", "补充协议管理", "买家先货后款协议", "店铺先货后款协议", "CA证书查询", "合同设置"];
+const platformContractSupplementRows = [
+  { name: "新增类目补充协议", fileName: "c2efb4082bb6fd8e942153284a1ee001_1768469898479.ftl" },
+  { name: "佣金变更补充协议", fileName: "4148fea224f4ec84253cbb0a5b283e32_1768469904334.ftl" },
+  { name: "卖家先货后款协议", fileName: "4148fea224f4ec84253cbb0a5b283e32_1768469904334.ftl" },
+  { name: "买家先货后款协议", fileName: "0ddaafb28085266108810920de2df5ff_1781522366019.ftl" }
+];
 const platformFlashSaleTabs = ["限时购列表", "页面设置", "活动商品分类", "参数设置"];
 const platformFlashSaleRows = [
   {
@@ -1423,8 +1493,44 @@ const platformFlashSaleRows = [
     status: "进行中"
   }
 ];
+const platformFullReductionRows = [
+  {
+    id: "4328",
+    name: "订单满1000立减100",
+    shopId: "2557",
+    shopName: "农妇三拳",
+    condition: "订单满1000减10",
+    startTime: "2026-06-27 15:55:27",
+    endTime: "2026-06-28 15:55:27",
+    stacked: "否",
+    status: "未开始"
+  },
+  {
+    id: "4327",
+    name: "订单满1000立减100",
+    shopId: "2557",
+    shopName: "农妇三拳",
+    condition: "订单满1000减100",
+    startTime: "2026-06-23 15:53:43",
+    endTime: "2026-06-26 15:53:43",
+    stacked: "否",
+    status: "进行中"
+  },
+  {
+    id: "4323",
+    name: "订单满1000立减100",
+    shopId: "2557",
+    shopName: "农妇三拳",
+    condition: "订单满1000减100",
+    startTime: "2026-05-27 22:43:32",
+    endTime: "2026-05-29 22:43:32",
+    stacked: "是",
+    status: "已结束"
+  }
+];
 const platformTradeSettingsOrderRows = [
   { label: "下单后，超过", value: "50", suffix: "小时未付款，订单关闭", hint: "自动取消订单，订单状态从待付款变为已关闭" },
+  { label: "订单支付后，超过", value: "1", suffix: "天未发货，订单自动退款", hint: "自动退款，订单状态从待发货变为已退款" },
   { label: "发货后，超过", value: "1", suffix: "天未收货，订单自动完成", hint: "自动确认收货，订单状态从待收货变为已完成" },
   { label: "发货后，订单自动完成前", value: "1", suffix: "天可申请延长收货，一次可延长", extraValue: "1", extraSuffix: "天" },
   { label: "收货后，超过", value: "1", suffix: "天未评价，关闭评价通道", hint: "评价通道关闭后用户可发起追加评论" },
@@ -1532,7 +1638,7 @@ const statuses = ["全部", "未开始", "进行中", "已结束"];
 const activityCategories = ["常规活动", "节日活动", "品牌活动"];
 const productCategories = ["饮料酒水", "休闲食品", "日化用品"];
 
-const marketingPageNames = ["专享价", "专享价2", "限时购1", "限时购"];
+const marketingPageNames = ["满减", "专享价", "专享价2", "限时购1", "限时购"];
 const buyerAccountTypes = ["总部账号", "授权账号", "子账号", "自主认证账号", "默认账号"];
 const buyerGroups = [
   { id: "1", name: "北京分组" },
@@ -1645,6 +1751,11 @@ const createSpecialPriceSeedActivities = () => ([
   { id: "828", name: "2083059433", buyerGroup: "四川分组", buyerId: "2083059433", goodsCount: 125, goodsFlag: "部分已失效", startTime: "2026-03-18 00:00:00", endTime: "2026-03-20 23:59:59", status: "已结束", actions: ["查看", "复制"] }
 ]);
 const seedActivitiesByPage = {
+  满减: [
+    { id: "4328", name: "订单满1000立减100", participantBuyerType: "all", buyerGroup: "全部买家", buyerId: "", condition: "订单满1000减10", startTime: "2026-06-27 15:55:27", endTime: "2026-06-28 15:55:27", stacked: "否", status: "未开始", actions: ["查看", "编辑", "提前结束"] },
+    { id: "4327", name: "订单满1000立减100", participantBuyerType: "group", buyerGroup: "北京分组", buyerId: "2083059433", condition: "订单满1000减100", startTime: "2026-06-23 15:53:43", endTime: "2026-06-26 15:53:43", stacked: "否", status: "进行中", actions: ["查看", "编辑", "提前结束"] },
+    { id: "4323", name: "订单满1000立减100", participantBuyerType: "group", buyerGroup: "四川分组", buyerId: "2080403003", condition: "订单满1000减100", startTime: "2026-05-27 22:43:32", endTime: "2026-05-29 22:43:32", stacked: "是", status: "已结束", actions: ["查看"] }
+  ],
   专享价: createSpecialPriceSeedActivities(),
   专享价2: createSpecialPriceSeedActivities(),
   限时购1: [
@@ -1665,7 +1776,7 @@ const pickerRows = [
   { id: "162101", name: "景田饮用纯净水560ml", stock: 1633, marketPrice: "￥100", specCount: 1, image: "景" }
 ];
 const buyerPcMallOrderTabKeys = ["可申请开票", "已申请开票", "已开具发票"];
-const buyerPcMallViewKeys = ["home", "list", "batch", "title-management", "detail", "cart", "checkout", "product-detail", "orders"];
+const buyerPcMallViewKeys = ["home", "list", "batch", "title-management", "detail", "cart", "checkout", "product-detail", "orders", "pay-later-service", "pay-later-sign", "pay-later-certificate"];
 const buyerPcMallOrderCenterTabs = ["全部订单", "待付款", "支付中", "待发货", "待收货", "已关闭", "已完成", "待评价"];
 const buyerPcMallOrderCenterSeedRows = [
   {
@@ -1688,6 +1799,7 @@ const buyerPcMallOrderCenterSeedRows = [
 const buyerPcMallSidebarGroups = [
   { title: "商家中心" },
   { title: "订单中心", items: ["我的订单", "咨询管理", "评价管理", "采购统计"] },
+  { title: "先货后款", items: ["签约代扣", "先货后款额度", "先货后款账单", "先货后款服务"] },
   { title: "资产中心", items: ["我的优惠券"] },
   { title: "我的关注", items: ["商品关注", "店铺关注", "常购清单"] },
   { title: "售后服务", items: ["退款退货", "投诉维权", "平台客服"] },
@@ -1902,14 +2014,14 @@ const buyerPcMallExportRecordRows = [
   { id: "export-008", type: "商品列表导出", exportedAt: "2026-05-11 02:42:45", operator: "NFSQ369", status: "执行成功" }
 ];
 const buyerPcMallImportTaskRows = [
-  { id: "import-001", type: "批量导入发票", exportedAt: "2026-05-18 17:50:06", operator: "NFSQ369", status: "全部失败", actionLabel: "查看原因", failReason: "ZIP包内只允许存在一个XLSX文件" },
-  { id: "import-002", type: "商品列表导入", exportedAt: "2026-05-16 03:43:10", operator: "NFSQ369", status: "全部成功", actionLabel: "" },
-  { id: "import-003", type: "商品列表导入", exportedAt: "2026-05-16 03:43:10", operator: "NFSQ369", status: "部分失败", actionLabel: "下载失败数据" },
-  { id: "import-004", type: "商品列表导入", exportedAt: "2026-05-16 03:43:10", operator: "NFSQ369", status: "全部成功", actionLabel: "" },
-  { id: "import-005", type: "商品列表导入", exportedAt: "2026-05-16 03:43:09", operator: "NFSQ369", status: "全部成功", actionLabel: "" },
-  { id: "import-006", type: "买家列表导入", exportedAt: "2026-05-16 02:51:48", operator: "NFSQ369", status: "全部成功", actionLabel: "" },
-  { id: "import-007", type: "买家列表导入", exportedAt: "2026-05-16 02:51:48", operator: "NFSQ369", status: "全部成功", actionLabel: "" },
-  { id: "import-008", type: "买家列表导入", exportedAt: "2026-05-16 02:51:47", operator: "NFSQ369", status: "全部成功", actionLabel: "" }
+  { id: "import-001", type: "批量导入发票", exportedAt: "2026-05-18 17:50:06", operator: "NFSQ369", status: "全部失败", actionLabel: "查看原因", failReason: "ZIP包内只允许存在一个XLSX文件", successCount: 0, failureCount: 12 },
+  { id: "import-002", type: "商品列表导入", exportedAt: "2026-05-16 03:43:10", operator: "NFSQ369", status: "全部成功", actionLabel: "", successCount: 86, failureCount: 0 },
+  { id: "import-003", type: "商品列表导入", exportedAt: "2026-05-16 03:43:10", operator: "NFSQ369", status: "部分失败", actionLabel: "下载失败数据", successCount: 42, failureCount: 8 },
+  { id: "import-004", type: "商品列表导入", exportedAt: "2026-05-16 03:43:10", operator: "NFSQ369", status: "全部成功", actionLabel: "", successCount: 56, failureCount: 0 },
+  { id: "import-005", type: "商品列表导入", exportedAt: "2026-05-16 03:43:09", operator: "NFSQ369", status: "全部成功", actionLabel: "", successCount: 34, failureCount: 0 },
+  { id: "import-006", type: "买家列表导入", exportedAt: "2026-05-16 02:51:48", operator: "NFSQ369", status: "全部成功", actionLabel: "", successCount: 72, failureCount: 0 },
+  { id: "import-007", type: "买家列表导入", exportedAt: "2026-05-16 02:51:48", operator: "NFSQ369", status: "全部成功", actionLabel: "", successCount: 65, failureCount: 0 },
+  { id: "import-008", type: "买家列表导入", exportedAt: "2026-05-16 02:51:47", operator: "NFSQ369", status: "全部成功", actionLabel: "", successCount: 38, failureCount: 0 }
 ];
 const buyerPcMallExportCenterRows = [
   { id: "export-center-001", type: "发票查询数据导出", exportedAt: "2026-05-22 09:18:36", operator: "NFSQ369", status: "执行成功" },
@@ -1929,9 +2041,9 @@ const buyerPcMallCartSeedGroups = [
     promotionTag: "满减",
     promotionText: "已购满100.00元，已减20.00元",
     items: [
-      { id: "cart-1", name: "小尼首次审核260128", sku: "69476373", spec: "深灰色，160/80(XS)", price: 8, quantity: 1, image: "花", selected: true, tag: "起批", limit: 20, purchasedCount: 5 },
-      { id: "cart-2", name: "小尼首次审核260128", sku: "69476373", spec: "灰色，160/80(XS)", price: 8, quantity: 5, image: "花", selected: true, tag: "起批", limit: 25, purchasedCount: 0 },
-      { id: "cart-3", name: "20260324单规格商品", sku: "55070505", spec: "默认规格", price: 55, quantity: 4, image: "人", selected: true, tag: "起批", hint: "再选6件或232.00元满足起批条件" }
+      { id: "cart-1", name: "小尼首次审核260128", sku: "69476373", spec: "深灰色，160/80(XS)", price: 8, originalPrice: 10, quantity: 1, image: "花", selected: true, tag: "起批", limit: 20, purchasedCount: 5 },
+      { id: "cart-2", name: "小尼首次审核260128", sku: "69476373", spec: "灰色，160/80(XS)", price: 8, originalPrice: 10, quantity: 5, image: "花", selected: true, tag: "起批", limit: 25, purchasedCount: 0 },
+      { id: "cart-3", name: "20260324单规格商品", sku: "55070505", spec: "默认规格", price: 55, originalPrice: 60, quantity: 4, image: "人", selected: true, tag: "起批", hint: "再选6件或232.00元满足起批条件" }
     ]
   },
   {
@@ -1941,10 +2053,10 @@ const buyerPcMallCartSeedGroups = [
     promotionTag: "满减",
     promotionText: "订单满300.00减70.00元",
     items: [
-      { id: "cart-4", name: "UPC必填时，允许无条码开启，填无条商品的规格", sku: "202601291816", spec: "无条商品规格", price: 10, quantity: 14, image: "码", selected: false, totalLimitGroup: "cart-total-limit-upc-202601291816", totalLimit: 20 },
-      { id: "cart-5", name: "UPC必填时，允许无条码开启，填无条商品的规格", sku: "202601291816", spec: "500ML", price: 10, quantity: 14, image: "码", selected: false, totalLimitGroup: "cart-total-limit-upc-202601291816", totalLimit: 20 },
-      { id: "cart-6", name: "百事可乐", sku: "202605190500", spec: "500ml", price: 6, quantity: 1, image: "百", selected: false, totalLimitGroup: "cart-total-limit-pepsi-20260519", totalLimit: 20, totalPurchasedCount: 5 },
-      { id: "cart-7", name: "百事可乐", sku: "202605191000", spec: "1000ml", price: 10, quantity: 1, image: "百", selected: false, totalLimitGroup: "cart-total-limit-pepsi-20260519", totalLimit: 20, totalPurchasedCount: 5 }
+      { id: "cart-4", name: "UPC必填时，允许无条码开启，填无条商品的规格", sku: "202601291816", spec: "无条商品规格", price: 10, originalPrice: 12, quantity: 14, image: "码", selected: false, totalLimitGroup: "cart-total-limit-upc-202601291816", totalLimit: 20 },
+      { id: "cart-5", name: "UPC必填时，允许无条码开启，填无条商品的规格", sku: "202601291816", spec: "500ML", price: 10, originalPrice: 12, quantity: 14, image: "码", selected: false, totalLimitGroup: "cart-total-limit-upc-202601291816", totalLimit: 20 },
+      { id: "cart-6", name: "百事可乐", sku: "202605190500", spec: "500ml", price: 6, originalPrice: 8, quantity: 1, image: "百", selected: false, totalLimitGroup: "cart-total-limit-pepsi-20260519", totalLimit: 20, totalPurchasedCount: 5 },
+      { id: "cart-7", name: "百事可乐", sku: "202605191000", spec: "1000ml", price: 10, originalPrice: 12, quantity: 1, image: "百", selected: false, totalLimitGroup: "cart-total-limit-pepsi-20260519", totalLimit: 20, totalPurchasedCount: 5 }
     ]
   }
 ];
@@ -3211,7 +3323,18 @@ const buyerPcMallShopSupportedInvoiceTypesMap = {
   老百姓大药房: ["电子普通发票"],
   格力官方旗舰店: ["电子普通发票", "电子增值税专用发票"],
   显示设备专营店: ["电子普通发票", "电子增值税专用发票"],
-  品质生活馆: ["电子普通发票"]
+  品质生活馆: ["电子普通发票"],
+  北京科技有限公司: ["电子增值税专用发票"],
+  上海贸易有限公司: ["电子普通发票", "电子增值税专用发票"],
+  广州科技股份有限公司: ["电子普通发票", "电子增值税专用发票"],
+  深圳电子有限公司: ["电子普通发票", "电子增值税专用发票"],
+  杭州服饰有限公司: ["电子普通发票", "电子增值税专用发票"],
+  苏州工业设备有限公司: ["电子普通发票", "电子增值税专用发票"],
+  华东办公商城: ["电子普通发票", "电子增值税专用发票"],
+  成都锦行商贸有限公司: ["电子普通发票", "电子增值税专用发票"],
+  宁波云采贸易有限公司: ["电子普通发票", "电子增值税专用发票"],
+  华南集采运营有限公司: ["电子普通发票", "电子增值税专用发票"],
+  上海电子设备有限公司: ["电子普通发票", "电子增值税专用发票"]
 };
 const buyerPcMallStoreMetaMap = buyerPcMallStoreSearchOptions.reduce((result, option) => {
   result[option.value] = option.meta || "";
@@ -3624,8 +3747,17 @@ function getBuyerPcMallSupportedInvoiceTypes(shopName, storeName) {
   return storeInvoiceType ? [storeInvoiceType] : [];
 }
 
-function getBuyerPcMallSupportedInvoiceTypeText(shopName, storeName) {
-  const supportedTypes = getBuyerPcMallSupportedInvoiceTypes(shopName, storeName);
+function getBuyerPcMallSupportedInvoiceTypesForOrder(item) {
+  const configuredTypes = getBuyerPcMallSupportedInvoiceTypes(item?.shop, item?.store);
+  if (configuredTypes.length > 0) return configuredTypes;
+  if (!item?.invoiceType && !item?.invoiceTypes) return [];
+  return normalizeBuyerPcMallSupportedInvoiceTypes(item?.titleType || "企业", item?.invoiceTypes || item?.invoiceType || "");
+}
+
+function getBuyerPcMallSupportedInvoiceTypeText(itemOrShopName, storeName) {
+  const supportedTypes = typeof itemOrShopName === "object" && itemOrShopName !== null
+    ? getBuyerPcMallSupportedInvoiceTypesForOrder(itemOrShopName)
+    : getBuyerPcMallSupportedInvoiceTypes(itemOrShopName, storeName);
   return supportedTypes.length > 0 ? `可开：${supportedTypes.join("、")}` : "可开：-";
 }
 
@@ -3646,7 +3778,7 @@ function getBuyerPcMallTitleSupportedInvoiceTypesForOrder(item, invoiceTitleRows
 
 function getBuyerPcMallOrderInvoiceTypeOptions(item, invoiceTitleRows = []) {
   const titleSupportedTypes = getBuyerPcMallTitleSupportedInvoiceTypesForOrder(item, invoiceTitleRows);
-  const shopSupportedTypes = getBuyerPcMallSupportedInvoiceTypes(item?.shop, item?.store);
+  const shopSupportedTypes = getBuyerPcMallSupportedInvoiceTypesForOrder(item);
   if (shopSupportedTypes.length === 0) return titleSupportedTypes;
 
   const matchedTypes = titleSupportedTypes.filter((invoiceType) => shopSupportedTypes.includes(invoiceType));
@@ -3696,9 +3828,31 @@ function getInvoiceTypeMismatchMessage(supportedInvoiceTypes) {
 }
 
 function getMiniappSupportedInvoiceTypeText(row) {
-  const supportedInvoiceType = String(row?.supportedInvoiceType || "").trim();
-  if (supportedInvoiceType) return supportedInvoiceType;
-  return "电子普通发票、电子增值税专用发票";
+  return getMiniappSupportedInvoiceTypes(row).join("、");
+}
+
+function getMiniappSupportedInvoiceTypes(row) {
+  const configuredTypes = String(row?.supportedInvoiceType || "")
+    .split("、")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  if (configuredTypes.length === 0) return [...buyerPcMallInvoiceTypeOptions];
+  return buyerPcMallInvoiceTypeOptions.filter((invoiceType) => configuredTypes.includes(invoiceType));
+}
+
+function getMiniappBatchDefaultInvoiceType(row, titleMeta = {}) {
+  const storeInvoiceTypes = getMiniappSupportedInvoiceTypes(row);
+  const titleInvoiceTypes = titleMeta.invoiceTypes || (titleMeta.invoiceType ? [titleMeta.invoiceType] : []);
+  const storeSupportsBoth = buyerPcMallInvoiceTypeOptions.every((invoiceType) => storeInvoiceTypes.includes(invoiceType));
+  const titleSupportsBoth = buyerPcMallInvoiceTypeOptions.every((invoiceType) => titleInvoiceTypes.includes(invoiceType));
+  if (!storeSupportsBoth || !titleSupportsBoth) return "";
+
+  const configuredDefaultInvoiceType = getBuyerPcMallInvoiceTypeFromBillingType(titleMeta.defaultBillingType)
+    || titleMeta.invoiceType
+    || "";
+  return titleInvoiceTypes.includes(configuredDefaultInvoiceType)
+    ? configuredDefaultInvoiceType
+    : (titleInvoiceTypes[0] || "");
 }
 
 function getBuyerPcMallInvoiceTitleStoreBindings(row) {
@@ -5001,6 +5155,10 @@ const createSpecialPricePageConfig = () => ({
   ]
 });
 const marketingPageConfigs = {
+  满减: {
+    createLabel: "新增满减",
+    initialFilters: { activityName: "订单满1000立减100", status: "", startTime: "", endTime: "", activityId: "", buyerGroup: "", buyerId: "" }
+  },
   专享价: createSpecialPricePageConfig(),
   专享价2: createSpecialPricePageConfig(),
   限时购1: {
@@ -5020,6 +5178,7 @@ const cloneProducts = (products) => JSON.parse(JSON.stringify(products));
 const isPrimarySpecialPricePage = (pageName) => pageName === "专享价";
 const isSecondarySpecialPricePage = (pageName) => pageName === "专享价2";
 const isFlashSaleOnePage = (pageName) => pageName === "限时购1";
+const isFullReductionPage = (pageName) => pageName === "满减";
 const isAnySpecialPricePage = (pageName) => isPrimarySpecialPricePage(pageName) || isSecondarySpecialPricePage(pageName);
 function getActivityBuyerScope(activity) {
   const buyerGroup = activity?.participantBuyerGroup || activity?.buyerGroup || "";
@@ -6141,6 +6300,33 @@ function PcMallExportRecordModal({ rows, onClose }) {
   const handleHideImportTooltip = () => {
     setImportTooltip(null);
   };
+  const getImportTaskSummaryText = (item) => {
+    if (item.status !== "全部成功" && item.status !== "部分失败") return "";
+    const successCount = Number.isFinite(Number(item.successCount)) ? Number(item.successCount) : 0;
+    const failureCount = Number.isFinite(Number(item.failureCount)) ? Number(item.failureCount) : 0;
+    return `成功导入【${successCount}】条，失败【${failureCount}】条`;
+  };
+  const renderImportTaskStatus = (item) => {
+    const summaryText = getImportTaskSummaryText(item);
+    return (
+      <span className="pc-mall-export-record-status-main">
+        <span>{item.status}</span>
+        {summaryText ? (
+          <button
+            className="pc-mall-export-record-status-help"
+            type="button"
+            aria-label={summaryText}
+            onMouseEnter={(event) => handleShowImportTooltip(event, { failReason: summaryText })}
+            onMouseLeave={handleHideImportTooltip}
+            onFocus={(event) => handleShowImportTooltip(event, { failReason: summaryText })}
+            onBlur={handleHideImportTooltip}
+          >
+            ?
+          </button>
+        ) : null}
+      </span>
+    );
+  };
   const renderImportTaskAction = (item) => {
     if (item.status === "全部失败" && item.failReason) {
       return (
@@ -6218,7 +6404,7 @@ function PcMallExportRecordModal({ rows, onClose }) {
                   <td>{item.operator}</td>
                   <td>
                     <div className="pc-mall-export-record-status">
-                      <span>{item.status}</span>
+                      {isExportTab ? <span>{item.status}</span> : renderImportTaskStatus(item)}
                       {isExportTab ? <em>成功1000条，失败0条</em> : null}
                     </div>
                   </td>
@@ -6348,16 +6534,17 @@ function PcMallExportProcessingModal({ onClose, onViewProgress }) {
   );
 }
 
-function BuyerPcMallInvoiceActionModal({ title, message, confirmText = "确定", onClose, onConfirm }) {
+function BuyerPcMallInvoiceActionModal({ title, message, confirmText = "确定", onClose, onConfirm, showCancel = true, className = "", showClose = false }) {
   return (
     <div className="home-invoice-alert-overlay" onClick={onClose} role="presentation">
-      <div className="home-invoice-alert-dialog pc-mall-invoice-action-dialog" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="pc-mall-invoice-action-title">
+      <div className={`home-invoice-alert-dialog pc-mall-invoice-action-dialog ${className}`} onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="pc-mall-invoice-action-title">
+        {showClose ? <button className="pc-mall-invoice-action-close" type="button" aria-label="关闭" onClick={onClose}>×</button> : null}
         <div className="pc-mall-invoice-action-body">
           <h3 className="pc-mall-invoice-action-title" id="pc-mall-invoice-action-title">{title}</h3>
           <p className="home-invoice-alert-message pc-mall-invoice-action-message">{message}</p>
         </div>
         <div className="pc-mall-invoice-action-foot">
-          <button className="pc-mall-btn" type="button" onClick={onClose}>取消</button>
+          {showCancel ? <button className="pc-mall-btn" type="button" onClick={onClose}>取消</button> : null}
           <button className="home-invoice-alert-action" type="button" onClick={onConfirm}>{confirmText}</button>
         </div>
       </div>
@@ -6679,7 +6866,7 @@ function BuyerPcMallInvoiceDetailPage({ detail, onPreview, onModifyInvoiceInfo, 
   );
 }
 
-const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal({ initialForm, storeOptions, onClose, onSave, onNotice }) {
+const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal({ initialForm, storeOptions, onClose, onSave, onNotice, disableStoreSelect = false }) {
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState(initialBuyerPcMallInvoiceTitleFieldErrors);
 
@@ -6928,8 +7115,14 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
 
           <label className="pc-mall-title-modal-row">
             <span>闪购门店</span>
-            <div className="pc-mall-title-modal-select-wrap">
-              <select value={form.storeName} onChange={(event) => handleChange("storeName", event.target.value)}>
+            <div className={`pc-mall-title-modal-select-wrap ${disableStoreSelect ? "is-disabled" : ""}`}>
+              <select
+                className={disableStoreSelect ? "is-disabled" : ""}
+                value={form.storeName}
+                disabled={disableStoreSelect}
+                aria-disabled={disableStoreSelect}
+                onChange={(event) => handleChange("storeName", event.target.value)}
+              >
                 <option value="">请选择闪购门店</option>
                 {storeOptions.map((option) => <option key={option} value={option}>{option}</option>)}
               </select>
@@ -7073,7 +7266,8 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
   onOrderItemsChange,
   enableBatchTitleReplace = false,
   showOrderFilterTabs = false,
-  onAdjustInvoiceTitle
+  onAdjustInvoiceTitle,
+  isModifyInvoiceMode = false
 }) {
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState(initialBatchInvoiceFieldErrors);
@@ -7082,6 +7276,7 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
   const [orderFilterTab, setOrderFilterTab] = useState("all");
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [batchReplaceTitleId, setBatchReplaceTitleId] = useState("");
+  const [batchReplaceTitleTouched, setBatchReplaceTitleTouched] = useState(false);
   const [batchReplaceInvoiceContent, setBatchReplaceInvoiceContent] = useState("");
   const [batchReplaceSingleInvoice, setBatchReplaceSingleInvoice] = useState("");
   const [invoiceTitleTooltip, setInvoiceTitleTooltip] = useState(null);
@@ -7089,6 +7284,31 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
   const pendingScrollTopRef = useRef(null);
   const invoiceTitleTooltipRef = useRef(null);
   const batchTableClassName = `pc-mall-table pc-mall-batch-table${allowToggleOrder ? "" : " is-without-toggle"}${hideInvoiceAndReceiverSections ? " has-row-invoice-fields" : ""}${enableBatchTitleReplace ? " has-batch-content-column" : ""}`;
+  const batchReplaceTitleOptions = useMemo(() => {
+    if (!enableBatchTitleReplace) return invoiceTitleRows;
+
+    const optionMap = new Map(invoiceTitleRows.map((item) => [item.title, item]));
+    orderItems.forEach((item) => {
+      const invoiceTitle = String(item.invoiceTitle || "").trim();
+      if (!invoiceTitle || optionMap.has(invoiceTitle)) return;
+      optionMap.set(invoiceTitle, {
+        id: `applied-title-${item.orderNo}`,
+        title: invoiceTitle,
+        invoiceType: item.invoiceType || buyerPcMallNormalInvoiceType,
+        invoiceTypes: item.invoiceTypes || item.invoiceType || buyerPcMallNormalInvoiceType,
+        defaultBillingType: item.defaultBillingType || getBuyerPcMallBillingTypeFromInvoiceType(item.invoiceType),
+        titleType: item.titleType || buyerPcMallBatchInvoiceForm.titleType,
+        taxpayerId: item.taxpayerId || "",
+        registeredAddress: item.registeredAddress || "",
+        phone: item.phone || "",
+        bank: item.bank || "",
+        bankAccount: item.bankAccount || "",
+        receiverPhone: item.receiverPhone || buyerPcMallDefaultReceiverPhone,
+        receiverEmail: item.receiverEmail || buyerPcMallDefaultReceiverEmail
+      });
+    });
+    return Array.from(optionMap.values());
+  }, [enableBatchTitleReplace, invoiceTitleRows, orderItems]);
 
   useEffect(() => {
     setForm(initialForm.invoiceType === "电子增值税专用发票" ? { ...initialForm, titleType: "企业" } : initialForm);
@@ -7100,11 +7320,19 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
 
   useEffect(() => {
     if (!enableBatchTitleReplace) return;
-    const firstMatchedTitleId = orderItems.find((item) => item.invoiceTitleId)?.invoiceTitleId || "";
+    const firstOrderWithTitle = orderItems.find((item) => item.invoiceTitleId || item.invoiceTitle);
+    const firstMatchedTitleId = firstOrderWithTitle
+      ? (
+        firstOrderWithTitle.invoiceTitleId
+        || batchReplaceTitleOptions.find((item) => item.title === firstOrderWithTitle.invoiceTitle)?.id
+        || ""
+      )
+      : "";
     setBatchReplaceTitleId(firstMatchedTitleId);
+    setBatchReplaceTitleTouched(false);
     setBatchReplaceInvoiceContent("");
     setBatchReplaceSingleInvoice("");
-  }, [enableBatchTitleReplace, orderItems]);
+  }, [batchReplaceTitleOptions, enableBatchTitleReplace, orderItems]);
 
   useLayoutEffect(() => {
     if (pendingScrollTopRef.current == null || !modalBodyRef.current) return;
@@ -7141,7 +7369,7 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
   const isSpecialInvoiceLayout = form.invoiceType === "电子增值税专用发票";
   const orderValidationByOrderNo = useMemo(() => (
     orderItems.reduce((result, item) => {
-      if (isBuyerPcMallHiddenStoreRow(item) && !item.invoiceTitleId) {
+      if (!isModifyInvoiceMode && isBuyerPcMallHiddenStoreRow(item) && !item.invoiceTitleId) {
         result[item.orderNo] = "发票抬头不能为空";
         return result;
       }
@@ -7150,7 +7378,7 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
       const selectedInvoiceType = item.invoiceType || resolveBuyerPcMallOrderInvoiceType(item, invoiceTitleRows);
       const invoiceTypeOptions = getBuyerPcMallOrderInvoiceTypeOptions(item, invoiceTitleRows);
       if (invoiceTypeOptions.length > 1 && !selectedInvoiceType) {
-        result[item.orderNo] = "请选择发票类型";
+        result[item.orderNo] = "请选择开票类型";
         return result;
       }
 
@@ -7162,7 +7390,7 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
       result[item.orderNo] = "";
       return result;
     }, {})
-  ), [invoiceTitleRows, orderItems]);
+  ), [invoiceTitleRows, isModifyInvoiceMode, orderItems]);
   const errorOrderItems = useMemo(() => (
     orderItems.filter((item) => {
       const validationMessage = orderValidationByOrderNo[item.orderNo] || "";
@@ -7375,13 +7603,14 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
 
   const handleBatchReplaceInvoiceTitle = () => {
     if (!enableBatchTitleReplace || !onOrderItemsChange) return;
-    if (!batchReplaceTitleId && !batchReplaceInvoiceContent && !batchReplaceSingleInvoice) {
+    const shouldReplaceTitle = batchReplaceTitleTouched && Boolean(batchReplaceTitleId);
+    if (!shouldReplaceTitle && !batchReplaceInvoiceContent && !batchReplaceSingleInvoice) {
       onNotice("请选择要批量修改的内容");
       return;
     }
 
-    const matchedTitle = batchReplaceTitleId ? invoiceTitleRows.find((item) => item.id === batchReplaceTitleId) : null;
-    if (batchReplaceTitleId && !matchedTitle) {
+    const matchedTitle = shouldReplaceTitle ? batchReplaceTitleOptions.find((item) => item.id === batchReplaceTitleId) : null;
+    if (shouldReplaceTitle && !matchedTitle) {
       onNotice("未找到对应的发票抬头，请重新选择");
       return;
     }
@@ -7460,7 +7689,7 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
       setErrors(nextErrors);
 
       if (nextErrors.invoiceType) {
-        onNotice("请选择发票类型");
+        onNotice("请选择开票类型");
         return;
       }
       if (nextErrors.titleType) {
@@ -7682,7 +7911,7 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                   </label>
                 ) : null}
               </div>
-              {showOrderFilterTabs ? (
+              {showOrderFilterTabs && !enableBatchTitleReplace ? (
                 <div className="pc-mall-batch-order-tabs" role="tablist" aria-label="订单筛选">
                   {buyerPcMallBatchInvoiceOrderFilterTabs.map((tab) => (
                     <button
@@ -7703,9 +7932,12 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                   <span className="pc-mall-batch-title-replace-label">批量修改</span>
                   <div className="pc-mall-batch-title-replace-controls">
                     <div className="pc-mall-batch-select-wrap pc-mall-batch-title-replace-select">
-                      <select value={batchReplaceTitleId} onChange={(e) => setBatchReplaceTitleId(e.target.value)}>
+                      <select value={batchReplaceTitleId} onChange={(e) => {
+                        setBatchReplaceTitleId(e.target.value);
+                        setBatchReplaceTitleTouched(true);
+                      }}>
                         <option value="">请选择发票抬头</option>
-                        {invoiceTitleRows.map((titleItem) => (
+                        {batchReplaceTitleOptions.map((titleItem) => (
                           <option key={titleItem.id} value={titleItem.id}>{titleItem.title}</option>
                         ))}
                       </select>
@@ -7728,6 +7960,22 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                     </div>
                     <button className="pc-mall-batch-title-replace-confirm" type="button" onClick={handleBatchReplaceInvoiceTitle}>确定</button>
                   </div>
+                </div>
+              ) : null}
+              {showOrderFilterTabs && enableBatchTitleReplace ? (
+                <div className="pc-mall-batch-order-tabs" role="tablist" aria-label="订单筛选">
+                  {buyerPcMallBatchInvoiceOrderFilterTabs.map((tab) => (
+                    <button
+                      className={`pc-mall-batch-order-tab ${orderFilterTab === tab.key ? "is-active" : ""}`}
+                      key={tab.key}
+                      type="button"
+                      role="tab"
+                      aria-selected={orderFilterTab === tab.key}
+                      onClick={() => setOrderFilterTab(tab.key)}
+                    >
+                      {tab.key === "error" ? `${tab.label}（${errorOrderItems.length}）` : tab.label}
+                    </button>
+                  ))}
                 </div>
               ) : null}
               {showOrderFilterTabs && displayedOrderItems.length === 0 ? (
@@ -7763,7 +8011,7 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                           <th>申请开票金额</th>
                           <th>闪购门店</th>
                           {hideInvoiceAndReceiverSections ? <th>发票抬头</th> : null}
-                          {hideInvoiceAndReceiverSections ? <th>发票类型</th> : null}
+                          {hideInvoiceAndReceiverSections ? <th>申请开票类型</th> : null}
                           {hideInvoiceAndReceiverSections ? <th>收票信息</th> : null}
                           {enableBatchTitleReplace ? <th>发票内容</th> : null}
                           {showSeparateInvoiceColumn && (!hideInvoiceAndReceiverSections || enableBatchTitleReplace || editableSeparateInvoiceColumn) ? (
@@ -7790,7 +8038,7 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                           const resolvedInvoiceType = resolveBuyerPcMallOrderInvoiceType(item, invoiceTitleRows);
                           const shouldSelectInvoiceType = invoiceTypeOptions.length > 1;
                           const orderValidationMessage = orderValidationByOrderNo[item.orderNo] || "";
-                          const isInvoiceTypeRequiredError = orderValidationMessage === "请选择发票类型";
+                          const isInvoiceTypeRequiredError = orderValidationMessage === "请选择开票类型";
                           const isInvoiceTypeMismatchError = orderValidationMessage.startsWith("该店铺仅支持");
                           const shouldShowOrderValidationMessage = submitAttempted || isInvoiceTypeMismatchError;
 
@@ -7808,7 +8056,7 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                                     <span>{item.shop || "-"}</span>
                                     <PcMallContactSellerIconButton />
                                   </div>
-                                  <em>{getBuyerPcMallSupportedInvoiceTypeText(item.shop, item.store)}</em>
+                                  <em>{getBuyerPcMallSupportedInvoiceTypeText(item)}</em>
                                 </div>
                               </div>
                             </td>
@@ -7826,7 +8074,7 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                               <td>
                                 <div className="pc-mall-batch-title-cell">
                                   <div className="pc-mall-batch-table-select-wrap">
-                                    {isBuyerPcMallHiddenStoreRow(item) ? (
+                                    {isBuyerPcMallHiddenStoreRow(item) && !isModifyInvoiceMode ? (
                                       <BuyerPcMallInvoiceTitleSearchSelect
                                         value={item.invoiceTitleId || ""}
                                         options={invoiceTitleRows}
@@ -7842,14 +8090,17 @@ const BuyerPcMallBatchInvoiceModal = memo(function BuyerPcMallBatchInvoiceModal(
                                       <button
                                         className="pc-mall-batch-title-view-btn"
                                         type="button"
-                                        onMouseEnter={(event) => handleShowInvoiceTitleTooltip(event, invoiceTitleRows.find((titleItem) => titleItem.id === item.invoiceTitleId) || null)}
+                                        onMouseEnter={(event) => handleShowInvoiceTitleTooltip(event, batchReplaceTitleOptions.find((titleItem) => (
+                                          (item.invoiceTitleId && titleItem.id === item.invoiceTitleId)
+                                          || (!item.invoiceTitleId && item.invoiceTitle && titleItem.title === item.invoiceTitle)
+                                        )) || null)}
                                         onMouseLeave={handleHideInvoiceTitleTooltip}
                                       >
                                         查看
                                       </button>
                                     </span>
                                   </div>
-                                  {showOrderFilterTabs && shouldShowOrderValidationMessage && orderValidationMessage && !isInvoiceTypeRequiredError ? (
+                                  {(showOrderFilterTabs || isModifyInvoiceMode) && shouldShowOrderValidationMessage && orderValidationMessage && !isInvoiceTypeRequiredError ? (
                                     <div className="pc-mall-batch-order-error">
                                       <span className="pc-mall-batch-order-error-text">{orderValidationMessage}</span>
                                       {isInvoiceTypeMismatchError ? (
@@ -8475,6 +8726,8 @@ function BuyerPcMallCheckoutPage({ allCartItemCount, order, onBackToCart, onChan
   const items = Array.isArray(order?.items) ? order.items : [];
   const totalQuantity = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
   const totalAmount = items.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0), 0);
+  const deliveryFee = Number(order?.deliveryFee || 0);
+  const payableAmount = totalAmount + deliveryFee;
   const storeName = order?.shopName || items[0]?.shopName || "农妇三拳";
   const getCheckoutLimitMessage = (item) => {
     const limit = Number(item?.limit || 0);
@@ -8559,6 +8812,7 @@ function BuyerPcMallCheckoutPage({ allCartItemCount, order, onBackToCart, onChan
                   <div className="pc-checkout-product">
                     <div className={`pc-checkout-thumb is-${item.image || "flowers"}`}>
                       {item.tag ? <span>{item.tag}</span> : null}
+                      <strong>{item.image || "商"}</strong>
                     </div>
                     <div>
                       <div className="pc-checkout-product-title">
@@ -8569,7 +8823,13 @@ function BuyerPcMallCheckoutPage({ allCartItemCount, order, onBackToCart, onChan
                     </div>
                   </div>
                   <div className="pc-checkout-service">{item.spec}</div>
-                  <div className="pc-checkout-price">{`¥ ${Number(item.price || 0).toFixed(0)}`}</div>
+                  <div className="pc-checkout-price">
+                    <div className="pc-checkout-current-price">
+                      <span className="pc-checkout-price-currency">¥</span>
+                      <span>{Number(item.price || 0).toFixed(0)}</span>
+                    </div>
+                    {item.originalPrice ? <div className="pc-checkout-original-price">原价 ¥ {item.originalPrice}</div> : null}
+                  </div>
                   <div className="pc-checkout-quantity">
                     <div className="pc-cart-quantity-box">
                       <button type="button" disabled={Number(item.quantity || 0) <= Number(item.purchaseStep || 1)} onClick={() => onChangeQuantity?.(item.id, -Number(item.purchaseStep || 1))}>-</button>
@@ -8593,13 +8853,16 @@ function BuyerPcMallCheckoutPage({ allCartItemCount, order, onBackToCart, onChan
               <span>配送方式</span>
               <strong>● 快递配送</strong>
             </div>
-            <div className="pc-checkout-summary-line">{`共 ${totalQuantity} 件商品，总商品金额： ${formatMoneyDisplay(totalAmount)}`}</div>
+            <div className="pc-checkout-summary">
+              <div>{`共 ${totalQuantity} 件商品，总商品金额： ${formatMoneyDisplay(totalAmount)}`}</div>
+              <div><span>运费：</span><strong>{formatMoneyDisplay(deliveryFee)}</strong></div>
+            </div>
           </section>
 
           <footer className="pc-checkout-footer">
             <button className="pc-checkout-back" type="button" onClick={onBackToCart}>返回购物车</button>
             <div className="pc-checkout-total">
-              <span>{`应付总额：${formatMoneyDisplay(totalAmount)}`}</span>
+              <span>{`应付总额：${formatMoneyDisplay(payableAmount)}`}</span>
               <button type="button">提交订单</button>
             </div>
           </footer>
@@ -8607,6 +8870,314 @@ function BuyerPcMallCheckoutPage({ allCartItemCount, order, onBackToCart, onChan
       </main>
       <BuyerPcMallHomeFloatbar allCartItemCount={allCartItemCount} />
     </div>
+  );
+}
+
+function BuyerPcMallPayLaterServicePage({ onOpenCertificateManagement, onSignAgreement }) {
+  const serviceSteps = [
+    "签署先货后款协议",
+    "为闪购门店开通先货后款服务",
+    "闪购门店签署代扣协议",
+    "闪购门店可采购先货后款商品"
+  ];
+  const serviceRows = [
+    {
+      id: "2344386",
+      storeName: "测试门店异受胀撒布",
+      subjectName: "测试较迷"
+    }
+  ];
+
+  return (
+    <>
+      <div className="pc-mall-breadcrumb">商家中心 <span>››</span> 先货后款服务</div>
+      <div className="pc-paylater-page">
+        <section className="pc-paylater-section pc-paylater-sign-section">
+          <span className="pc-paylater-section-index">01</span>
+          <div className="pc-paylater-section-head">
+            <h2>签约先货后款协议</h2>
+            <button className="pc-paylater-certificate-btn" type="button" onClick={onOpenCertificateManagement}>CA证书管理</button>
+          </div>
+          <div className="pc-paylater-agreement-card">
+            <div className="pc-paylater-card-title">
+              <strong>先货后款</strong>
+              <span>0元下单 资金无压力</span>
+            </div>
+            <div className="pc-paylater-step-track">
+              {serviceSteps.map((step, index) => (
+                <div className="pc-paylater-step" key={step}>
+                  <em>{String(index + 1).padStart(2, "0")}</em>
+                  <span>{step}</span>
+                </div>
+              ))}
+            </div>
+            <div className="pc-paylater-sign-actions">
+              <button className="pc-paylater-secondary-btn" type="button">查看先货后款协议</button>
+              <button className="pc-paylater-primary-btn" type="button" onClick={onSignAgreement}>签署先货后款协议</button>
+            </div>
+          </div>
+        </section>
+
+        <section className="pc-paylater-section pc-paylater-service-section">
+          <span className="pc-paylater-section-index">02</span>
+          <h2>闪购门店开通先货后款服务</h2>
+          <div className="pc-paylater-tabs">
+            <button className="is-active" type="button">未开通</button>
+            <button type="button">已开通</button>
+          </div>
+
+          <div className="pc-paylater-filter">
+            <label>
+              <span>闪购门店ID:</span>
+              <div className="pc-paylater-edit-input">
+                <input placeholder="请输入闪购门店ID" />
+                <i aria-hidden="true" />
+              </div>
+            </label>
+            <label>
+              <span>闪购门店名称:</span>
+              <input placeholder="请输入闪购门店名称" />
+            </label>
+            <label>
+              <span>主体名称:</span>
+              <input placeholder="请输入主体名称" />
+            </label>
+            <div className="pc-paylater-filter-actions">
+              <button className="pc-paylater-secondary-btn" type="button">重置</button>
+              <button className="pc-paylater-primary-btn" type="button">查询</button>
+            </div>
+          </div>
+
+          <div className="pc-paylater-toolbar">
+            <button className="pc-paylater-primary-btn" type="button">批量开通服务</button>
+            <button className="pc-paylater-secondary-btn" type="button">同步闪购门店</button>
+          </div>
+
+          <div className="pc-paylater-table-wrap">
+            <table className="pc-paylater-table">
+              <thead>
+                <tr>
+                  <th><input type="checkbox" /></th>
+                  <th>闪购门店ID</th>
+                  <th>闪购门店名称</th>
+                  <th>主体名称</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {serviceRows.map((item) => (
+                  <tr key={item.id}>
+                    <td><input type="checkbox" /></td>
+                    <td>{item.id}</td>
+                    <td>{item.storeName}</td>
+                    <td>{item.subjectName}</td>
+                    <td><button type="button">开通先货后款服务</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="pc-paylater-pagination">
+            <span>共1条</span>
+            <button className="pc-paylater-page-size" type="button">10 条/页</button>
+            <button className="pc-paylater-page-arrow" type="button" disabled>‹</button>
+            <button className="pc-paylater-page-current" type="button">1</button>
+            <button className="pc-paylater-page-arrow" type="button" disabled>›</button>
+            <span>到第</span>
+            <input placeholder="请输入" />
+            <span>页</span>
+            <button className="pc-paylater-jump-btn" type="button">跳转</button>
+          </div>
+        </section>
+      </div>
+    </>
+  );
+}
+
+function BuyerPcMallPayLaterSignPage() {
+  return (
+    <>
+      <div className="pc-mall-breadcrumb">商家中心 <span>››</span> 先货后款服务 <span>››</span> 签署先货后款协议</div>
+      <div className="pc-paylater-sign-page">
+        <section className="pc-paylater-sign-stepper">
+          <div className="pc-paylater-sign-step is-active">
+            <span>1</span>
+            <strong>填写签约信息</strong>
+          </div>
+          <div className="pc-paylater-sign-line" />
+          <div className="pc-paylater-sign-step">
+            <span>2</span>
+            <strong>预览合同</strong>
+          </div>
+          <div className="pc-paylater-sign-line" />
+          <div className="pc-paylater-sign-step">
+            <span>3</span>
+            <strong>提交成功</strong>
+          </div>
+        </section>
+
+        <section className="pc-paylater-sign-form">
+          <div className="pc-paylater-form-section">
+            <h2><span>1</span> 签约主体</h2>
+            <div className="pc-paylater-form-row">
+              <label><em>*</em> 签约主体:</label>
+              <div className="pc-paylater-select-field">
+                <input value="测试较迷" readOnly />
+              </div>
+            </div>
+            <p className="pc-paylater-form-tip">如未找到对应主体，请前往 <button type="button">【商家中心-账户管理-身份认证】</button> 添加</p>
+            <div className="pc-paylater-form-row">
+              <label><em>*</em> 企业名称:</label>
+              <input className="pc-paylater-disabled-input" value="测试较迷" readOnly />
+            </div>
+            <div className="pc-paylater-form-row">
+              <label><em>*</em> 统一社会信用代码:</label>
+              <input className="pc-paylater-disabled-input" value="913261547448178456" readOnly />
+            </div>
+          </div>
+
+          <div className="pc-paylater-form-section">
+            <h2><span>2</span> 协议签署人</h2>
+            <div className="pc-paylater-form-row pc-paylater-sign-method-row">
+              <label><em>*</em> 签署方式:</label>
+              <div className="pc-paylater-method-card is-active">
+                <strong>法定代表人签署 <b>推荐</b></strong>
+                <p>由法人本人完成电子签章</p>
+              </div>
+              <div className="pc-paylater-method-card">
+                <strong>委托授权人签署</strong>
+                <p>由经办人代签，需填写授权人实名信息</p>
+              </div>
+            </div>
+            <div className="pc-paylater-form-row">
+              <label><em>*</em> 法定代表人:</label>
+              <input placeholder="请输入法定代表人姓名" />
+            </div>
+            <div className="pc-paylater-form-row">
+              <label><em>*</em> 法人身份证号:</label>
+              <input placeholder="请输入法人 18 位居民身份证号" />
+            </div>
+            <div className="pc-paylater-form-row">
+              <label><em>*</em> 法人手机号:</label>
+              <input placeholder="请输入法人本人手机号" />
+            </div>
+          </div>
+
+          <div className="pc-paylater-form-section">
+            <h2><span>3</span> 联系人 <small>用于运营人员联系处理合同相关问题</small></h2>
+            <div className="pc-paylater-form-row">
+              <label>联系人姓名:</label>
+              <input placeholder="不填则默认为签署人相同" />
+            </div>
+            <div className="pc-paylater-form-row">
+              <label>联系人手机号:</label>
+              <input placeholder="不填则默认为签署人相同" />
+            </div>
+          </div>
+
+          <div className="pc-paylater-form-actions">
+            <button className="pc-paylater-primary-btn" type="button">下一步，查看协议</button>
+          </div>
+        </section>
+      </div>
+    </>
+  );
+}
+
+function BuyerPcMallPayLaterCertificatePage() {
+  const [certificateNoticeOpen, setCertificateNoticeOpen] = useState(false);
+  const certificateRows = [
+    {
+      certificateNo: "CGPTCO202607077857",
+      status: "生效中",
+      validRange: "2026-07-07 14:51:53~2027-07-07 14:51:53",
+      issuedAt: "2026-07-07 14:51:53",
+      subjectName: "测试较迷",
+      subjectId: "91330106MA2CGPT001"
+    },
+    {
+      certificateNo: "CGPTCO202605071415",
+      status: "已吊销",
+      validRange: "2026-05-07 15:33:31~2027-05-07 15:33:31",
+      issuedAt: "2026-05-07 15:33:31",
+      subjectName: "测试较迷",
+      subjectId: "91330106MA2CGPT003"
+    },
+    {
+      certificateNo: "CGPTCO202404182461",
+      status: "已过期",
+      validRange: "2024-04-18 09:49:58~2025-04-18 09:49:58",
+      issuedAt: "2024-04-18 09:49:58",
+      subjectName: "测试较迷",
+      subjectId: "91330106MA2CGPT004"
+    }
+  ];
+  const hasActiveCertificate = certificateRows.some((item) => item.status === "生效中");
+  const handleApplyCertificate = () => {
+    if (hasActiveCertificate) {
+      setCertificateNoticeOpen(true);
+    }
+  };
+
+  return (
+    <>
+      <div className="pc-mall-breadcrumb">商家中心 <span>››</span> 先货后款服务 <span>››</span> CA证书管理</div>
+      <div className="pc-paylater-certificate-page">
+        <div className="pc-paylater-certificate-toolbar">
+          <button type="button" onClick={handleApplyCertificate}>申请CA证书</button>
+        </div>
+        <div className="pc-paylater-certificate-table-wrap">
+          <table className="pc-paylater-certificate-table">
+            <thead>
+              <tr>
+                <th>证书编号</th>
+                <th>状态</th>
+                <th>证书有效期起止时间</th>
+                <th>证书签发时间</th>
+                <th>主体名称</th>
+                <th>主体证件号</th>
+              </tr>
+            </thead>
+            <tbody>
+              {certificateRows.map((item) => (
+                <tr key={item.certificateNo}>
+                  <td>{item.certificateNo}</td>
+                  <td>{item.status}</td>
+                  <td>{item.validRange}</td>
+                  <td>{item.issuedAt}</td>
+                  <td>{item.subjectName}</td>
+                  <td>{item.subjectId}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="pc-paylater-certificate-pagination">
+          <span>{`共${certificateRows.length}条`}</span>
+          <button className="pc-paylater-page-size" type="button">20 条/页</button>
+          <button className="pc-paylater-page-arrow" type="button" disabled>‹</button>
+          <button className="pc-paylater-page-current" type="button">1</button>
+          <button className="pc-paylater-page-arrow" type="button" disabled>›</button>
+          <span>到第</span>
+          <input placeholder="请输入" />
+          <span>页</span>
+          <button className="pc-paylater-jump-btn" type="button">跳转</button>
+        </div>
+      </div>
+      {certificateNoticeOpen ? (
+        <BuyerPcMallInvoiceActionModal
+          title="申请CA证书"
+          message="当前已有生效中的证书，无需重复申请"
+          confirmText="确定"
+          showCancel={false}
+          showClose
+          className="ca-certificate-notice-dialog"
+          onClose={() => setCertificateNoticeOpen(false)}
+          onConfirm={() => setCertificateNoticeOpen(false)}
+        />
+      ) : null}
+    </>
   );
 }
 
@@ -8844,6 +9415,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
   const [invoiceTitleRows, setInvoiceTitleRows] = useState(buyerPcMallInvoiceTitleRows);
   const [isInvoiceTitleModalOpen, setIsInvoiceTitleModalOpen] = useState(false);
   const [activeInvoiceTitleForm, setActiveInvoiceTitleForm] = useState(initialBuyerPcMallInvoiceTitleForm);
+  const [disableInvoiceTitleStoreSelect, setDisableInvoiceTitleStoreSelect] = useState(false);
   const [activeInvoiceTitleStores, setActiveInvoiceTitleStores] = useState(null);
   const [batchInvoiceOrderItems, setBatchInvoiceOrderItems] = useState(() => (
     Array.isArray(buyerPcMallStoredView.batchInvoiceOrderItems) ? buyerPcMallStoredView.batchInvoiceOrderItems : []
@@ -9030,9 +9602,11 @@ function BuyerPcMallPage({ onPortalActionClick }) {
   ), [cartStoreGroups]);
   const allCartItems = useMemo(() => cartStoreGroups.flatMap((group) => group.items), [cartStoreGroups]);
   const allCartItemsSelected = allCartItems.length > 0 && allCartItems.every((item) => item.selected);
-  const activeBuyerPcMallSidebarItem = useMemo(() => (
-    invoicePageView === "orders" ? "我的订单" : "发票管理"
-  ), [invoicePageView]);
+  const activeBuyerPcMallSidebarItem = useMemo(() => {
+    if (invoicePageView === "orders") return "我的订单";
+    if (invoicePageView === "pay-later-service" || invoicePageView === "pay-later-sign" || invoicePageView === "pay-later-certificate") return "先货后款服务";
+    return "发票管理";
+  }, [invoicePageView]);
   const sidebarGroupsForInvoicePage = useMemo(() => (
     buyerPcMallSidebarGroups.map((group) => (
       group.title === "账户管理"
@@ -9144,7 +9718,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
     setInvoicePageView("title-management");
   };
 
-  const handleAdjustInvoiceTitleForOrder = (orderItem) => {
+  const handleAdjustInvoiceTitleForOrder = (orderItem, options = {}) => {
     if (!orderItem) return;
 
     const matchedTitle = orderItem.invoiceTitleId
@@ -9157,6 +9731,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
     }
 
     setActiveInvoiceTitleForm(createBuyerPcMallInvoiceTitleFormFromRow(matchedTitle));
+    setDisableInvoiceTitleStoreSelect(Boolean(options.disableStoreSelect));
     setIsInvoiceTitleModalOpen(true);
   };
   const handleOpenCartPage = () => {
@@ -9194,6 +9769,36 @@ function BuyerPcMallPage({ onPortalActionClick }) {
     setActiveHomeProductId("");
     setInvoicePageView("orders");
   };
+  const handleOpenPayLaterService = () => {
+    setActiveBuyerInvoiceDetail(null);
+    setActiveHomeProductId("");
+    setInvoicePageView("pay-later-service");
+    if (typeof window !== "undefined") {
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      });
+    }
+  };
+  const handleOpenPayLaterSignPage = () => {
+    setActiveBuyerInvoiceDetail(null);
+    setActiveHomeProductId("");
+    setInvoicePageView("pay-later-sign");
+    if (typeof window !== "undefined") {
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      });
+    }
+  };
+  const handleOpenPayLaterCertificatePage = () => {
+    setActiveBuyerInvoiceDetail(null);
+    setActiveHomeProductId("");
+    setInvoicePageView("pay-later-certificate");
+    if (typeof window !== "undefined") {
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      });
+    }
+  };
   const handleResetOrderCenterFilters = () => {
     setOrderCenterKeyword("");
     setOrderCenterPaymentChannel("");
@@ -9225,6 +9830,34 @@ function BuyerPcMallPage({ onPortalActionClick }) {
   };
   const handleOpenDirectBuyCheckout = (order) => {
     setDirectBuyOrder(order);
+    setInvoicePageView("checkout");
+    if (typeof window !== "undefined") {
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      });
+    }
+  };
+  const handleOpenCartCheckout = () => {
+    const selectedGroups = cartStoreGroups
+      .map((group) => ({
+        ...group,
+        items: group.items
+          .filter((item) => item.selected)
+          .map((item) => ({
+            ...item,
+            shopName: group.storeName
+          }))
+      }))
+      .filter((group) => group.items.length > 0);
+
+    if (selectedGroups.length === 0) return;
+
+    setDirectBuyOrder({
+      source: "cart",
+      shopName: selectedGroups[0].storeName,
+      deliveryFee: 0,
+      items: selectedGroups.flatMap((group) => group.items)
+    });
     setInvoicePageView("checkout");
     if (typeof window !== "undefined") {
       window.requestAnimationFrame(() => {
@@ -9300,14 +9933,17 @@ function BuyerPcMallPage({ onPortalActionClick }) {
   };
   const handleOpenInvoiceTitleModal = () => {
     setActiveInvoiceTitleForm(initialBuyerPcMallInvoiceTitleForm);
+    setDisableInvoiceTitleStoreSelect(false);
     setIsInvoiceTitleModalOpen(true);
   };
   const handleOpenEditInvoiceTitleModal = (row) => {
     setActiveInvoiceTitleForm(createBuyerPcMallInvoiceTitleFormFromRow(row));
+    setDisableInvoiceTitleStoreSelect(false);
     setIsInvoiceTitleModalOpen(true);
   };
   const handleCloseInvoiceTitleModal = () => {
     setActiveInvoiceTitleForm(initialBuyerPcMallInvoiceTitleForm);
+    setDisableInvoiceTitleStoreSelect(false);
     setIsInvoiceTitleModalOpen(false);
   };
   const handleOpenInvoiceTitleStores = (row) => {
@@ -9366,6 +10002,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
       return [nextRow, ...normalizedCurrent];
     });
     setIsInvoiceTitleModalOpen(false);
+    setDisableInvoiceTitleStoreSelect(false);
     setActiveInvoiceTitleForm(initialBuyerPcMallInvoiceTitleForm);
     setBatchInvoiceNotice(form.id ? "编辑发票抬头成功" : "新增发票抬头成功");
   };
@@ -9841,6 +10478,9 @@ function BuyerPcMallPage({ onPortalActionClick }) {
   const isCheckoutView = invoicePageView === "checkout";
   const isInvoiceTitleManagementView = invoicePageView === "title-management";
   const isInvoiceDetailView = invoicePageView === "detail";
+  const isPayLaterServiceView = invoicePageView === "pay-later-service";
+  const isPayLaterSignView = invoicePageView === "pay-later-sign";
+  const isPayLaterCertificateView = invoicePageView === "pay-later-certificate";
   const shouldEnableInvoiceDetailScroll = isInvoiceDetailView && (isAppliedTab || isInvoicedTab);
   const defaultInvoiceTitleRow = invoiceTitleRows.find((item) => item.isDefault) || invoiceTitleRows[0] || null;
   const batchInvoiceInitialForm = useMemo(() => (
@@ -10068,7 +10708,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
       showSeparateInvoiceColumn
       hideInvoiceAndReceiverSections
       showOrderFilterTabs
-      onAdjustInvoiceTitle={handleAdjustInvoiceTitleForOrder}
+      onAdjustInvoiceTitle={(orderItem) => handleAdjustInvoiceTitleForOrder(orderItem, { disableStoreSelect: true })}
     />
   ) : null;
   const modifyInvoiceModal = modifyInvoiceOrders.length > 0 ? (
@@ -10094,9 +10734,11 @@ function BuyerPcMallPage({ onPortalActionClick }) {
       showSeparateInvoiceColumn
       editableSeparateInvoiceColumn={modifyInvoiceOrders.length === 1}
       hideInvoiceAndReceiverSections
-      allowRemoveOrder={false}
+      allowRemoveOrder={modifyInvoiceOrders.length > 1}
       enableBatchTitleReplace={modifyInvoiceOrders.length > 1}
-      onAdjustInvoiceTitle={handleAdjustInvoiceTitleForOrder}
+      showOrderFilterTabs
+      isModifyInvoiceMode
+      onAdjustInvoiceTitle={(orderItem) => handleAdjustInvoiceTitleForOrder(orderItem, { disableStoreSelect: true })}
     />
   ) : null;
   const singleInvoiceModal = singleInvoiceOrder ? (
@@ -10255,7 +10897,13 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                         </div>
                         <div className="pc-cart-product-spec">{item.spec}</div>
                       </div>
-                      <div className="pc-cart-price-cell">¥ {item.price}</div>
+                      <div className="pc-cart-price-cell">
+                        <div className="pc-cart-current-price">
+                          <span className="pc-cart-price-currency">¥</span>
+                          <span className="pc-cart-price-number">{item.price}</span>
+                        </div>
+                        {item.originalPrice ? <div className="pc-cart-original-price">原价 ¥ {item.originalPrice}</div> : null}
+                      </div>
                       <div className="pc-cart-quantity-cell">
                         <div className="pc-cart-quantity-box">
                           <button type="button" onClick={() => handleChangeCartQuantity(group.id, item.id, -1)}>-</button>
@@ -10310,7 +10958,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
             <div className="pc-cart-footer-right">
               <span>{`已选择 ${selectedCartSummary.count} 件商品`}</span>
               <span>{`总价(不含运费) ¥ ${selectedCartSummary.totalAmount.toFixed(0)}`}</span>
-              <button className="pc-cart-submit-btn" type="button" disabled={selectedCartSummary.count === 0}>去结算</button>
+              <button className="pc-cart-submit-btn" type="button" disabled={selectedCartSummary.count === 0} onClick={handleOpenCartCheckout}>去结算</button>
             </div>
           </div>
         </footer>
@@ -10354,7 +11002,22 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                 {group.items ? (
                   <div className="pc-mall-side-links">
                     {group.items.map((item) => (
-                      <button className={`pc-mall-side-link ${group.activeItem === item ? "is-active" : ""}`} key={item} type="button">{item}</button>
+                      <button
+                        className={`pc-mall-side-link ${group.activeItem === item ? "is-active" : ""}`}
+                        key={item}
+                        type="button"
+                        onClick={() => {
+                          if (item === "我的订单") {
+                            handleOpenBuyerOrderCenter();
+                          } else if (item === "发票管理") {
+                            handleOpenBuyerInvoiceCenter();
+                          } else if (item === "先货后款服务") {
+                            handleOpenPayLaterService();
+                          }
+                        }}
+                      >
+                        {item}
+                      </button>
                     ))}
                   </div>
                 ) : null}
@@ -10476,7 +11139,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
             </div>
           </section>
         </div>
-        {isInvoiceTitleModalOpen ? <BuyerPcMallInvoiceTitleModal initialForm={activeInvoiceTitleForm} storeOptions={buyerPcMallStoreOptions} onClose={handleCloseInvoiceTitleModal} onSave={handleSaveInvoiceTitle} onNotice={setBatchInvoiceNotice} /> : null}
+        {isInvoiceTitleModalOpen ? <BuyerPcMallInvoiceTitleModal initialForm={activeInvoiceTitleForm} storeOptions={buyerPcMallStoreOptions} onClose={handleCloseInvoiceTitleModal} onSave={handleSaveInvoiceTitle} onNotice={setBatchInvoiceNotice} disableStoreSelect={disableInvoiceTitleStoreSelect} /> : null}
         {activeInvoiceTitleStores ? <BuyerPcMallInvoiceTitleStoreModal title={activeInvoiceTitleStores.title} stores={activeInvoiceTitleStores.stores} onClose={handleCloseInvoiceTitleStores} /> : null}
         {exportProcessingModal}
         {exportCenterModal}
@@ -10525,6 +11188,8 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                             handleOpenBuyerOrderCenter();
                           } else if (item === "发票管理") {
                             handleOpenBuyerInvoiceCenter();
+                          } else if (item === "先货后款服务") {
+                            handleOpenPayLaterService();
                           }
                         }}
                       >
@@ -10563,6 +11228,15 @@ function BuyerPcMallPage({ onPortalActionClick }) {
               rows={buyerPcMallOrderCenterSeedRows}
               onReset={handleResetOrderCenterFilters}
             />
+          ) : isPayLaterServiceView ? (
+            <BuyerPcMallPayLaterServicePage
+              onOpenCertificateManagement={handleOpenPayLaterCertificatePage}
+              onSignAgreement={handleOpenPayLaterSignPage}
+            />
+          ) : isPayLaterSignView ? (
+            <BuyerPcMallPayLaterSignPage />
+          ) : isPayLaterCertificateView ? (
+            <BuyerPcMallPayLaterCertificatePage />
           ) : (
             <>
               {batchInvoiceNotice ? <div className="page-toast">{batchInvoiceNotice}</div> : null}
@@ -11180,12 +11854,12 @@ function BuyerPcMallPage({ onPortalActionClick }) {
       {exportProcessingModal}
       {exportCenterModal}
       {activeProductDetailRow ? <BuyerPcMallProductDetailModal row={activeProductDetailRow} onClose={() => setActiveProductDetailOrderNo("")} /> : null}
-      {isInvoiceTitleModalOpen ? <BuyerPcMallInvoiceTitleModal initialForm={activeInvoiceTitleForm} storeOptions={buyerPcMallStoreOptions} onClose={handleCloseInvoiceTitleModal} onSave={handleSaveInvoiceTitle} onNotice={setBatchInvoiceNotice} /> : null}
+      {isInvoiceTitleModalOpen ? <BuyerPcMallInvoiceTitleModal initialForm={activeInvoiceTitleForm} storeOptions={buyerPcMallStoreOptions} onClose={handleCloseInvoiceTitleModal} onSave={handleSaveInvoiceTitle} onNotice={setBatchInvoiceNotice} disableStoreSelect={disableInvoiceTitleStoreSelect} /> : null}
     </div>
   );
 }
 
-function Header({ currentMarketingPage, specialCreateTab, onTopActionClick, customTabs, homeTabLabel = "首页-控制台", topActionItems: customTopActionItems }) {
+function Header({ currentMarketingPage, specialCreateTab, onTopActionClick, customTabs, homeTabLabel = "首页-控制台", topActionItems: customTopActionItems, showHomeTab = true }) {
   const pendingCount = 24;
   const topActionItems = customTopActionItems || [
     { key: "platform-center", label: "平台中心", icon: "platform" },
@@ -11201,7 +11875,7 @@ function Header({ currentMarketingPage, specialCreateTab, onTopActionClick, cust
   return (
     <header className="workspace-topbar">
       <div className="page-tabs">
-        <div className={`page-tab ${isHomeTab ? "is-current" : ""}`}>{homeTabLabel} <span>×</span></div>
+        {showHomeTab ? <div className={`page-tab ${isHomeTab ? "is-current" : ""}`}>{homeTabLabel} <span>×</span></div> : null}
         {!isHomeTab && customTabs?.length ? customTabs.map((tab) => (
           <button
             key={tab.key}
@@ -11236,6 +11910,195 @@ function Header({ currentMarketingPage, specialCreateTab, onTopActionClick, cust
         ))}
       </div>
     </header>
+  );
+}
+
+function SupplierContractManagementPage({ initialTab = "合同管理", tabRequestId = 0 }) {
+  const [activeTab, setActiveTab] = useState(initialTab);
+  const [showCertificateEmpty, setShowCertificateEmpty] = useState(false);
+  const [certificateNoticeOpen, setCertificateNoticeOpen] = useState(false);
+  const [filters, setFilters] = useState({ contractNo: "", status: "" });
+  const [appliedFilters, setAppliedFilters] = useState({ contractNo: "", status: "" });
+  const isCertificateTab = activeTab === "CA证书管理";
+  const isCertificateApplyDisabled = (item) => item.status === "生效中";
+  const displayedRows = useMemo(() => supplierContractRows.filter((item) => {
+    const contractNo = appliedFilters.contractNo.trim();
+    if (contractNo && !item.contractNo.includes(contractNo)) return false;
+    if (appliedFilters.status && item.status !== appliedFilters.status) return false;
+    return true;
+  }), [appliedFilters]);
+  const tableRows = isCertificateTab ? supplierCertificateRows : displayedRows;
+  const hasActiveCertificate = isCertificateTab && supplierCertificateRows.some((item) => item.status === "生效中");
+
+  const handleReset = () => {
+    const emptyFilters = { contractNo: "", status: "" };
+    setFilters(emptyFilters);
+    setAppliedFilters(emptyFilters);
+  };
+  const handleApplyCertificate = () => {
+    if (hasActiveCertificate) {
+      setCertificateNoticeOpen(true);
+    }
+  };
+
+  useEffect(() => {
+    if (!supplierContractTabs.includes(initialTab)) return;
+    setActiveTab(initialTab);
+  }, [initialTab, tabRequestId]);
+
+  return (
+    <div className="supplier-contract-page">
+      <section className="supplier-contract-tabs-card">
+        <div className="supplier-contract-tabs">
+          {supplierContractTabs.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={`supplier-contract-tab ${activeTab === tab ? "is-active" : ""}`}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+        {isCertificateTab ? (
+          <button
+            className="supplier-certificate-switch-btn"
+            type="button"
+            onClick={() => setShowCertificateEmpty((current) => !current)}
+          >
+            切换
+          </button>
+        ) : null}
+      </section>
+
+      {!isCertificateTab ? (
+        <section className="supplier-contract-filter-card">
+          <div className="supplier-contract-filter-grid">
+            <label className="supplier-contract-field">
+              <span>合同编号</span>
+              <input
+                value={filters.contractNo}
+                onChange={(event) => setFilters((current) => ({ ...current, contractNo: event.target.value }))}
+              />
+            </label>
+            <label className="supplier-contract-field">
+              <span>状态</span>
+              <select
+                value={filters.status}
+                onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value }))}
+              >
+                {supplierContractStatusOptions.map((option) => (
+                  <option key={option || "empty"} value={option}>{option || "请选择"}</option>
+                ))}
+              </select>
+            </label>
+            <div className="supplier-contract-filter-actions">
+              <button className="btn btn-reset" type="button" onClick={handleReset}>重置</button>
+              <button className="btn btn-dark" type="button" onClick={() => setAppliedFilters(filters)}>查询</button>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {isCertificateTab && showCertificateEmpty ? (
+        <section className="supplier-certificate-empty-card">
+          <p>您的店铺未申请CA证书，暂时无法签署相关合同/协议~点击下方「申请CA证书」即可申请</p>
+          <button type="button">申请CA证书</button>
+        </section>
+      ) : (
+      <section className="supplier-contract-table-card">
+        {isCertificateTab ? (
+          <div className="supplier-certificate-toolbar">
+            <button className="supplier-certificate-apply-btn" type="button" onClick={handleApplyCertificate}>申请CA证书</button>
+          </div>
+        ) : null}
+        <div className="supplier-contract-table-shell">
+          <table className={`supplier-contract-table ${isCertificateTab ? "is-certificate" : ""}`}>
+            <thead>
+              {isCertificateTab ? (
+                <tr>
+                  <th>证书编号</th>
+                  <th>状态</th>
+                  <th>证书有效期起止时间</th>
+                  <th>证书签发时间</th>
+                  <th>主体名称</th>
+                  <th>主体证件号</th>
+                </tr>
+              ) : (
+                <tr>
+                  <th>合同编号</th>
+                  <th>状态 <span className="supplier-contract-help">?</span></th>
+                  <th>创建时间</th>
+                  <th>过期时间</th>
+                  <th>操作</th>
+                </tr>
+              )}
+            </thead>
+            <tbody>
+              {tableRows.map((item) => (
+                isCertificateTab ? (
+                  <tr key={item.certificateNo}>
+                    <td>{item.certificateNo}</td>
+                    <td>{item.status}</td>
+                    <td>{item.validRange}</td>
+                    <td>{item.issuedAt}</td>
+                    <td>{item.subjectName}</td>
+                    <td>{item.subjectId}</td>
+                  </tr>
+                ) : (
+                  <tr key={item.contractNo}>
+                    <td>{item.contractNo}</td>
+                    <td>{item.status}</td>
+                    <td>{item.createdAt}</td>
+                    <td>{item.expiredAt}</td>
+                    <td>
+                      <div className="supplier-contract-actions">
+                        {item.actions.map((action) => (
+                          <button key={action} type="button">{action}</button>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                )
+              ))}
+              {tableRows.length === 0 ? (
+                <tr>
+                  <td className="supplier-contract-empty" colSpan={isCertificateTab ? 6 : 5}>暂无数据</td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="supplier-contract-pagination">
+          <span>共 {tableRows.length} 条</span>
+          <select value="20" onChange={() => undefined}>
+            <option value="20">20 条/页</option>
+          </select>
+          <button type="button" disabled>‹</button>
+          <button className="is-active" type="button">1</button>
+          <button type="button" disabled>›</button>
+          <span>到第</span>
+          <input placeholder="请输入" />
+          <span>页</span>
+          <button className="btn btn-reset" type="button">跳转</button>
+        </div>
+      </section>
+      )}
+      {certificateNoticeOpen ? (
+        <BuyerPcMallInvoiceActionModal
+          title="申请CA证书"
+          message="当前已有生效中的证书，无需重复申请"
+          confirmText="确定"
+          showCancel={false}
+          showClose
+          className="ca-certificate-notice-dialog"
+          onClose={() => setCertificateNoticeOpen(false)}
+          onConfirm={() => setCertificateNoticeOpen(false)}
+        />
+      ) : null}
+    </div>
   );
 }
 
@@ -11987,6 +12850,225 @@ function PlatformTradeSettingsPage() {
   );
 }
 
+function PlatformContractManagementPage() {
+  const [activeTab, setActiveTab] = useState("合同设置");
+  const [showCertificateEmpty, setShowCertificateEmpty] = useState(false);
+  const [certificateFilters, setCertificateFilters] = useState({
+    certificateNo: "",
+    subjectName: "",
+    subjectId: "",
+    status: "",
+    startTime: "",
+    endTime: ""
+  });
+  const [appliedCertificateFilters, setAppliedCertificateFilters] = useState(certificateFilters);
+  const isCertificateQueryTab = activeTab === "CA证书查询";
+  const displayedCertificateRows = useMemo(() => supplierCertificateRows.filter((item) => {
+    if (appliedCertificateFilters.certificateNo && !item.certificateNo.includes(appliedCertificateFilters.certificateNo.trim())) return false;
+    if (appliedCertificateFilters.subjectName && !item.subjectName.includes(appliedCertificateFilters.subjectName.trim())) return false;
+    if (appliedCertificateFilters.subjectId && !item.subjectId.includes(appliedCertificateFilters.subjectId.trim())) return false;
+    if (appliedCertificateFilters.status && item.status !== appliedCertificateFilters.status) return false;
+    if (appliedCertificateFilters.startTime && item.issuedAt < appliedCertificateFilters.startTime) return false;
+    if (appliedCertificateFilters.endTime && item.issuedAt > appliedCertificateFilters.endTime) return false;
+    return true;
+  }), [appliedCertificateFilters]);
+  const handleResetCertificateFilters = () => {
+    const nextFilters = {
+      certificateNo: "",
+      subjectName: "",
+      subjectId: "",
+      status: "",
+      startTime: "",
+      endTime: ""
+    };
+    setCertificateFilters(nextFilters);
+    setAppliedCertificateFilters(nextFilters);
+  };
+
+  return (
+    <div className="platform-contract-page">
+      <section className="content-card platform-contract-tabs-card">
+        <div className="platform-contract-tabs">
+          {platformContractTabs.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={`platform-contract-tab ${activeTab === tab ? "is-active" : ""}`}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+        {isCertificateQueryTab ? (
+          <button
+            className="platform-contract-switch-btn"
+            type="button"
+            onClick={() => setShowCertificateEmpty((current) => !current)}
+          >
+            切换
+          </button>
+        ) : null}
+      </section>
+
+      {isCertificateQueryTab ? (
+        showCertificateEmpty ? (
+          <section className="content-card platform-contract-certificate-empty">
+            <p>您的店铺未申请CA证书，暂时无法签署相关合同/协议~点击下方「申请CA证书」即可申请</p>
+            <button type="button">申请CA证书</button>
+          </section>
+        ) : (
+          <section className="content-card platform-contract-certificate-card">
+            <div className="platform-contract-certificate-filter">
+              <label>
+                <span>证书编号</span>
+                <input
+                  value={certificateFilters.certificateNo}
+                  onChange={(event) => setCertificateFilters((current) => ({ ...current, certificateNo: event.target.value }))}
+                />
+              </label>
+              <label>
+                <span>主体名称</span>
+                <input
+                  value={certificateFilters.subjectName}
+                  onChange={(event) => setCertificateFilters((current) => ({ ...current, subjectName: event.target.value }))}
+                />
+              </label>
+              <label>
+                <span>主体证件号</span>
+                <input
+                  value={certificateFilters.subjectId}
+                  onChange={(event) => setCertificateFilters((current) => ({ ...current, subjectId: event.target.value }))}
+                />
+              </label>
+              <label>
+                <span>证书状态</span>
+                <select
+                  value={certificateFilters.status}
+                  onChange={(event) => setCertificateFilters((current) => ({ ...current, status: event.target.value }))}
+                >
+                  <option value="">请选择</option>
+                  <option value="生效中">生效中</option>
+                  <option value="已过期">已过期</option>
+                  <option value="已吊销">已吊销</option>
+                </select>
+              </label>
+              <label>
+                <span>申请时间</span>
+                <div className="platform-contract-certificate-time-range">
+                  <input
+                    placeholder="开始时间"
+                    value={certificateFilters.startTime}
+                    onChange={(event) => setCertificateFilters((current) => ({ ...current, startTime: event.target.value }))}
+                  />
+                  <em>-</em>
+                  <input
+                    placeholder="结束时间"
+                    value={certificateFilters.endTime}
+                    onChange={(event) => setCertificateFilters((current) => ({ ...current, endTime: event.target.value }))}
+                  />
+                  <span />
+                </div>
+              </label>
+              <div className="platform-contract-certificate-filter-actions">
+                <button className="btn btn-reset" type="button" onClick={handleResetCertificateFilters}>重置</button>
+                <button className="btn btn-dark" type="button" onClick={() => setAppliedCertificateFilters(certificateFilters)}>查询</button>
+              </div>
+            </div>
+            <div className="platform-contract-certificate-table-wrap">
+              <table className="platform-contract-certificate-table">
+                <thead>
+                  <tr>
+                    <th>证书编号</th>
+                    <th>状态</th>
+                    <th>证书有效期起止时间</th>
+                    <th>证书签发时间</th>
+                    <th>主体名称</th>
+                    <th>主体证件号</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayedCertificateRows.map((item) => (
+                    <tr key={item.certificateNo}>
+                      <td>{item.certificateNo}</td>
+                      <td>{item.status}</td>
+                      <td>{item.validRange}</td>
+                      <td>{item.issuedAt}</td>
+                      <td>{item.subjectName}</td>
+                      <td>{item.subjectId}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="platform-contract-certificate-pagination">
+              <span>共 {displayedCertificateRows.length} 条</span>
+              <select value="20" onChange={() => undefined}>
+                <option value="20">20 条/页</option>
+              </select>
+              <button type="button" disabled>‹</button>
+              <button className="is-active" type="button">1</button>
+              <button type="button" disabled>›</button>
+              <span>到第</span>
+              <input placeholder="请输入" />
+              <span>页</span>
+              <button className="btn btn-reset" type="button">跳转</button>
+            </div>
+          </section>
+        )
+      ) : (
+        <section className="content-card platform-contract-settings-card">
+        <div className="platform-contract-form-row">
+          <label><i>*</i> 合同名称:</label>
+          <input className="platform-contract-name-input" value="先货后款合同更新" readOnly />
+        </div>
+
+        <div className="platform-contract-form-row is-template">
+          <label><i>*</i> 合同模板:</label>
+          <div className="platform-contract-template-field">
+            <button className="platform-contract-upload-btn" type="button">选择文件</button>
+            <div className="platform-contract-file-line">
+              <span className="platform-contract-file-icon" />
+              <span>HSServiceContract_searchable_keywords_1780823054482.ftl</span>
+              <button className="platform-contract-delete-btn" type="button" aria-label="删除合同模板" />
+            </div>
+          </div>
+        </div>
+
+        <div className="platform-contract-table-row">
+          <label>补充协议:</label>
+          <div className="platform-contract-supplement-table-wrap">
+            <table className="platform-contract-supplement-table">
+              <thead>
+                <tr>
+                  <th>协议名称</th>
+                  <th>协议模板</th>
+                </tr>
+              </thead>
+              <tbody>
+                {platformContractSupplementRows.map((item) => (
+                  <tr key={item.name}>
+                    <td>{item.name}</td>
+                    <td>
+                      <button className="platform-contract-upload-btn" type="button">选择文件</button>
+                      <div className="platform-contract-file-line">
+                        <span className="platform-contract-file-icon" />
+                        <span>{item.fileName}</span>
+                        <button className="platform-contract-delete-btn" type="button" aria-label={`删除${item.name}模板`} />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+      )}
+    </div>
+  );
+}
+
 function PlatformFlashSaleDetailPage({ activity, onBack }) {
   const rows = (detailActivityConfigs.限时购1?.["1111"]?.rows || []).map((row) => ({
     ...row,
@@ -12005,7 +13087,7 @@ function PlatformFlashSaleDetailPage({ activity, onBack }) {
         <div className="platform-flash-sale-detail-line"><span>店铺:</span><strong>{activity.shop}</strong></div>
         <div className="platform-flash-sale-detail-line"><span>开始时间:</span><strong>{activity.startTime}</strong></div>
         <div className="platform-flash-sale-detail-line"><span>结束时间:</span><strong>{activity.endTime}</strong></div>
-        <div className="platform-flash-sale-detail-line platform-flash-sale-detail-buyer-line"><span>参与活动买家:</span><BuyerScopeReadonly activity={activity} /></div>
+        <div className="platform-flash-sale-detail-line platform-flash-sale-detail-buyer-line"><span>活动买家范围:</span><BuyerScopeReadonly activity={activity} /></div>
       </div>
 
       <div className="platform-flash-sale-detail-goods-label">商品详情:</div>
@@ -12044,6 +13126,201 @@ function PlatformFlashSaleDetailPage({ activity, onBack }) {
         </table>
       </div>
     </section>
+  );
+}
+
+function PlatformFullReductionPage() {
+  const [activeDetail, setActiveDetail] = useState(null);
+  const [pageInput, setPageInput] = useState("");
+  const [draftFilters, setDraftFilters] = useState({
+    shopId: "",
+    shopName: "",
+    name: "订单满1000立减100",
+    status: "",
+    startTime: "",
+    endTime: "",
+    activityId: ""
+  });
+  const [appliedFilters, setAppliedFilters] = useState(draftFilters);
+
+  const handleDraftFilterChange = (field, value) => {
+    setDraftFilters((current) => ({ ...current, [field]: value }));
+  };
+
+  const handleReset = () => {
+    const nextFilters = {
+      shopId: "",
+      shopName: "",
+      name: "",
+      status: "",
+      startTime: "",
+      endTime: "",
+      activityId: ""
+    };
+    setDraftFilters(nextFilters);
+    setAppliedFilters(nextFilters);
+    setPageInput("");
+  };
+
+  const filteredRows = useMemo(() => platformFullReductionRows.filter((item) => {
+    if (appliedFilters.shopId.trim() && !item.shopId.includes(appliedFilters.shopId.trim())) return false;
+    if (appliedFilters.shopName.trim() && !item.shopName.includes(appliedFilters.shopName.trim())) return false;
+    if (appliedFilters.name.trim() && !item.name.includes(appliedFilters.name.trim())) return false;
+    if (appliedFilters.status && item.status !== appliedFilters.status) return false;
+    if (appliedFilters.startTime.trim() && item.startTime < appliedFilters.startTime.trim()) return false;
+    if (appliedFilters.endTime.trim() && item.endTime > appliedFilters.endTime.trim()) return false;
+    if (appliedFilters.activityId.trim() && !item.id.includes(appliedFilters.activityId.trim())) return false;
+    return true;
+  }), [appliedFilters]);
+
+  const detailActivity = activeDetail || filteredRows[0] || platformFullReductionRows[0];
+
+  return (
+    <div className="platform-full-reduction-page">
+      <section className="content-card platform-full-reduction-tabs-card">
+        <div className="platform-full-reduction-tabs">
+          <button
+            type="button"
+            className={`platform-full-reduction-tab ${!activeDetail ? "is-active" : ""}`}
+            onClick={() => setActiveDetail(null)}
+          >
+            满减列表
+          </button>
+          <button
+            type="button"
+            className={`platform-full-reduction-tab ${activeDetail ? "is-active" : ""}`}
+            onClick={() => setActiveDetail(detailActivity)}
+          >
+            满减详情
+          </button>
+        </div>
+      </section>
+
+      {activeDetail ? (
+        <section className="content-card platform-full-reduction-detail-card">
+          <div className="platform-full-reduction-detail-list">
+            <div><span>活动名称：</span>{detailActivity.name}</div>
+            <div><span>是否叠加：</span>{detailActivity.stacked}</div>
+            <div><span>使用条件：</span>{detailActivity.condition.replace("1000减10", "1000减 10")}</div>
+            <div><span>开始时间：</span>{detailActivity.startTime}</div>
+            <div><span>结束时间：</span>{detailActivity.endTime}</div>
+            <div><span>店铺名称：</span>{detailActivity.shopName}</div>
+          </div>
+        </section>
+      ) : (
+        <>
+          <section className="content-card platform-full-reduction-filter-card">
+            <div className="platform-full-reduction-filter-grid">
+              <label className="platform-full-reduction-field">
+                <span>店铺ID</span>
+                <input value={draftFilters.shopId} onChange={(event) => handleDraftFilterChange("shopId", event.target.value)} />
+              </label>
+              <label className="platform-full-reduction-field">
+                <span>店铺名称</span>
+                <input value={draftFilters.shopName} onChange={(event) => handleDraftFilterChange("shopName", event.target.value)} />
+              </label>
+              <label className="platform-full-reduction-field">
+                <span>满减名称</span>
+                <span className="platform-full-reduction-input-wrap">
+                  <input value={draftFilters.name} onChange={(event) => handleDraftFilterChange("name", event.target.value)} />
+                  {draftFilters.name ? (
+                    <button type="button" onClick={() => handleDraftFilterChange("name", "")}>×</button>
+                  ) : null}
+                </span>
+              </label>
+              <label className="platform-full-reduction-field">
+                <span>活动状态</span>
+                <span className="platform-full-reduction-select-wrap">
+                  <select value={draftFilters.status} onChange={(event) => handleDraftFilterChange("status", event.target.value)}>
+                    <option value="">请选择</option>
+                    <option value="未开始">未开始</option>
+                    <option value="进行中">进行中</option>
+                    <option value="已结束">已结束</option>
+                  </select>
+                </span>
+              </label>
+              <label className="platform-full-reduction-field">
+                <span>开始时间</span>
+                <span className="platform-full-reduction-date-wrap">
+                  <input placeholder="请选择时间" value={draftFilters.startTime} onChange={(event) => handleDraftFilterChange("startTime", event.target.value)} />
+                  <i>□</i>
+                </span>
+              </label>
+              <label className="platform-full-reduction-field">
+                <span>结束时间</span>
+                <span className="platform-full-reduction-date-wrap">
+                  <input placeholder="请选择时间" value={draftFilters.endTime} onChange={(event) => handleDraftFilterChange("endTime", event.target.value)} />
+                  <i>□</i>
+                </span>
+              </label>
+              <label className="platform-full-reduction-field">
+                <span>活动ID</span>
+                <input value={draftFilters.activityId} onChange={(event) => handleDraftFilterChange("activityId", event.target.value)} />
+              </label>
+              <div className="platform-full-reduction-filter-actions">
+                <button className="btn btn-reset" type="button" onClick={handleReset}>重置</button>
+                <button className="btn btn-dark" type="button" onClick={() => setAppliedFilters(draftFilters)}>查询</button>
+              </div>
+            </div>
+          </section>
+
+          <section className="content-card platform-full-reduction-table-card">
+            <div className="platform-full-reduction-table-wrap">
+              <table className="platform-full-reduction-table">
+                <thead>
+                  <tr>
+                    <th>活动ID</th>
+                    <th>活动名称</th>
+                    <th>店铺ID</th>
+                    <th>店铺名称</th>
+                    <th>使用条件</th>
+                    <th>开始时间 <span className="platform-full-reduction-sort">◆</span></th>
+                    <th>结束时间 <span className="platform-full-reduction-sort">◆</span></th>
+                    <th>是否叠加</th>
+                    <th>活动状态</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRows.length ? filteredRows.map((item) => (
+                    <tr key={item.id}>
+                      <td>{item.id}</td>
+                      <td>{item.name}</td>
+                      <td>{item.shopId}</td>
+                      <td>{item.shopName}</td>
+                      <td>{item.condition}</td>
+                      <td>{item.startTime}</td>
+                      <td>{item.endTime}</td>
+                      <td>{item.stacked}</td>
+                      <td>{item.status}</td>
+                      <td><button className="platform-full-reduction-view" type="button" onClick={() => setActiveDetail(item)}>查看</button></td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td className="platform-full-reduction-empty" colSpan={10}>暂无数据</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="platform-full-reduction-pagination">
+              <span>共 {filteredRows.length} 条</span>
+              <select defaultValue="20">
+                <option value="20">20 条/页</option>
+                <option value="50">50 条/页</option>
+              </select>
+              <button type="button" disabled>‹</button>
+              <button className="is-active" type="button">1</button>
+              <button type="button" disabled>›</button>
+              <span>到第</span>
+              <input value={pageInput} placeholder="请输入" onChange={(event) => setPageInput(event.target.value.replace(/[^\d]/g, ""))} />
+              <span>页</span>
+              <button type="button">跳转</button>
+            </div>
+          </section>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -12182,7 +13459,7 @@ function PlatformFlashSalePage() {
                     <th>活动ID</th>
                     <th>活动名称</th>
                     <th>店铺</th>
-                    <th>买家分组</th>
+                    <th>活动买家范围</th>
                     <th>开始时间 <span className="platform-flash-sale-sort">◆</span></th>
                     <th>结束时间 <span className="platform-flash-sale-sort">◆</span></th>
                     <th>状态</th>
@@ -13100,6 +14377,238 @@ function TabSection({ creating, editing, detailing, onSwitchToList, currentMarke
   );
 }
 
+function FullReductionListPage({ filters, setFilters, page, setPage, pageSize, setPageSize, onCreate, onDetail, activities }) {
+  const filteredActivities = useMemo(() => activities.filter((item) => {
+    if (filters.status && item.status !== filters.status) return false;
+    if (filters.activityId && !item.id.includes(filters.activityId.trim())) return false;
+    if (filters.activityName && !item.name.includes(filters.activityName.trim())) return false;
+    if (filters.buyerGroup && item.buyerGroup !== filters.buyerGroup) return false;
+    if (filters.buyerId && !String(item.buyerId || "").includes(filters.buyerId.trim())) return false;
+    if (filters.startTime && item.startTime < filters.startTime) return false;
+    if (filters.endTime && item.endTime > filters.endTime) return false;
+    return true;
+  }), [activities, filters]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredActivities.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const rows = filteredActivities.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const resetFilters = () => {
+    setFilters({ ...marketingPageConfigs.满减.initialFilters, activityName: "" });
+    setPage(1);
+  };
+
+  return (
+    <div className="full-reduction-page">
+      <section className="full-reduction-tip">
+        <div className="full-reduction-tip-title">温馨提示:</div>
+        <ol>
+          <li>一个店铺同一个时间段内同一买家只能设置一个满减活动;</li>
+          <li>满减不可与优惠券叠加使用。</li>
+        </ol>
+      </section>
+
+      <section className="full-reduction-filter-card">
+        <div className="full-reduction-filter-grid">
+          <label className="full-reduction-field">
+            <span>活动名称</span>
+            <div className="full-reduction-input-wrap has-clear">
+              <input value={filters.activityName || ""} onChange={(event) => setFilters({ ...filters, activityName: event.target.value })} />
+              {filters.activityName ? <button type="button" onClick={() => setFilters({ ...filters, activityName: "" })}>×</button> : null}
+            </div>
+          </label>
+          <label className="full-reduction-field">
+            <span>活动状态</span>
+            <div className="full-reduction-select-wrap">
+              <select value={filters.status || ""} onChange={(event) => setFilters({ ...filters, status: event.target.value })}>
+                <option value="">请选择</option>
+                <option value="未开始">未开始</option>
+                <option value="进行中">进行中</option>
+                <option value="已结束">已结束</option>
+              </select>
+            </div>
+          </label>
+          <label className="full-reduction-field">
+            <span>开始时间</span>
+            <div className="full-reduction-date-wrap"><input placeholder="请选择时间" value={filters.startTime || ""} onChange={(event) => setFilters({ ...filters, startTime: event.target.value })} /><i>▣</i></div>
+          </label>
+          <label className="full-reduction-field">
+            <span>结束时间</span>
+            <div className="full-reduction-date-wrap"><input placeholder="请选择时间" value={filters.endTime || ""} onChange={(event) => setFilters({ ...filters, endTime: event.target.value })} /><i>▣</i></div>
+          </label>
+          <label className="full-reduction-field">
+            <span>活动ID</span>
+            <input value={filters.activityId || ""} onChange={(event) => setFilters({ ...filters, activityId: event.target.value })} />
+          </label>
+          <label className="full-reduction-field">
+            <span>活动买家范围</span>
+            <div className={`filter-select-wrap full-reduction-buyer-filter ${filters.buyerGroup ? "has-clear" : ""}`}>
+              <select value={filters.buyerGroup || ""} onChange={(event) => setFilters({ ...filters, buyerGroup: event.target.value })}>
+                <option value="" disabled hidden>请选择</option>
+                <option value="全部买家">全部买家</option>
+                {buyerGroups.map((group) => <option key={group.id} value={group.name}>{group.name}</option>)}
+              </select>
+              {filters.buyerGroup ? (
+                <button className="filter-select-clear" type="button" aria-label="清除活动买家范围" onClick={() => setFilters({ ...filters, buyerGroup: "" })}>×</button>
+              ) : null}
+            </div>
+          </label>
+          <label className="full-reduction-field">
+            <span>买家ID</span>
+            <input inputMode="numeric" pattern="[0-9]*" value={filters.buyerId || ""} onChange={(event) => setFilters({ ...filters, buyerId: event.target.value.replace(/\D/g, "") })} />
+          </label>
+          <div className="full-reduction-filter-actions">
+            <button className="btn btn-reset" type="button" onClick={resetFilters}>重置</button>
+            <button className="btn btn-dark" type="button" onClick={() => setPage(1)}>查询</button>
+          </div>
+        </div>
+      </section>
+
+      <section className="full-reduction-table-card">
+        <div className="full-reduction-toolbar"><button className="btn btn-create" type="button" onClick={onCreate}>新增满减</button></div>
+        <div className="full-reduction-table-wrap">
+          <table className="full-reduction-table">
+            <thead>
+              <tr><th>活动ID</th><th>活动名称</th><th>活动买家范围</th><th>使用条件</th><th>开始时间</th><th>结束时间</th><th>是否叠加</th><th>活动状态</th><th>操作</th></tr>
+            </thead>
+            <tbody>
+              {rows.map((item) => (
+                <tr key={item.id}>
+                  <td>{item.id}</td>
+                  <td>{item.name}</td>
+                  <td><span className={`flash-sale-one-buyer-group-cell ${item.buyerGroup === "全部买家" ? "is-all-buyers" : ""}`}>{item.buyerGroup}</span></td>
+                  <td>{item.condition}</td>
+                  <td>{item.startTime}</td>
+                  <td>{item.endTime}</td>
+                  <td>{item.stacked}</td>
+                  <td>{item.status}</td>
+                  <td>
+                    <div className="full-reduction-actions">
+                      {item.actions.map((action) => (
+                        <button type="button" key={action} onClick={action === "查看" ? () => onDetail(item) : undefined}>{action}</button>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="full-reduction-pagination">
+          <span>共{filteredActivities.length}条</span>
+          <select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1); }}><option value={20}>20 条/页</option><option value={50}>50 条/页</option></select>
+          <button type="button" disabled={currentPage <= 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>‹</button>
+          <button className="is-current" type="button">{currentPage}</button>
+          <button type="button" disabled={currentPage >= pageCount} onClick={() => setPage((value) => Math.min(pageCount, value + 1))}>›</button>
+          <span>到第</span>
+          <input placeholder="请输入" />
+          <span>页</span>
+          <button className="btn btn-jump" type="button">跳转</button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function FullReductionDetailPage({ activity }) {
+  if (!activity) return null;
+
+  return (
+    <section className="full-reduction-detail-card">
+      <div className="full-reduction-detail-list">
+        <div><span>活动名称:</span><strong>{activity.name}</strong></div>
+        <div><span>使用条件:</span><strong>{activity.condition}</strong></div>
+        <div className="full-reduction-detail-buyer-line"><span>活动买家范围:</span><BuyerScopeReadonly activity={activity} /></div>
+        <div><span>是否叠加:</span><strong>{activity.stacked}</strong></div>
+        <div><span>开始时间:</span><strong>{activity.startTime}</strong></div>
+        <div><span>结束时间:</span><strong>{activity.endTime}</strong></div>
+        <div><span>店铺名称:</span><strong>农妇三拳</strong></div>
+      </div>
+    </section>
+  );
+}
+
+function FullReductionCreatePage({ form, onFormChange }) {
+  const name = form.fullReductionName || "";
+  const isStacked = form.fullReductionStacked || "否";
+  const participantBuyerType = form.participantBuyerType || "all";
+
+  return (
+    <div className="full-reduction-page full-reduction-create-page">
+      <section className="full-reduction-tip full-reduction-create-tip">
+        <div className="full-reduction-tip-title">说明:</div>
+        <p>您可在此设置单笔订单满一定金额所减少的金额，设置相关规则，订单金额不能小于满减金额，可选择是否叠加，选择后单笔订单金额每满足一定金额 会叠加满减的金额，如：设置订单满100减5元，则订单金额满200减小10，满300减15元。</p>
+      </section>
+
+      <section className="full-reduction-create-card">
+        <div className="full-reduction-create-form">
+          <label className="full-reduction-create-field">
+            <span><em>*</em> 活动名称:</span>
+            <div className="full-reduction-create-input has-counter">
+              <input placeholder="请填写活动名称" maxLength={20} value={name} onChange={(event) => onFormChange("fullReductionName", event.target.value)} />
+              <strong>{name.length}/20</strong>
+            </div>
+          </label>
+          <div className="full-reduction-create-field full-reduction-condition-field">
+            <span>使用条件:</span>
+            <div className="full-reduction-condition-line">
+              <label><em>*</em> 订单满:</label>
+              <input placeholder="请输入" value={form.fullReductionThreshold || ""} onChange={(event) => onFormChange("fullReductionThreshold", event.target.value.replace(/[^\d.]/g, ""))} />
+              <label><em>*</em> 减:</label>
+              <input placeholder="请输入" value={form.fullReductionDiscount || ""} onChange={(event) => onFormChange("fullReductionDiscount", event.target.value.replace(/[^\d.]/g, ""))} />
+            </div>
+          </div>
+          <label className="full-reduction-create-field">
+            <span><em>*</em> 开始时间:</span>
+            <div className="full-reduction-create-input with-icon"><input placeholder="请选择时间" value={form.fullReductionStartTime || ""} onChange={(event) => onFormChange("fullReductionStartTime", event.target.value)} /><i>▣</i></div>
+          </label>
+          <label className="full-reduction-create-field">
+            <span><em>*</em> 结束时间:</span>
+            <div className="full-reduction-create-input with-icon"><input placeholder="请选择时间" value={form.fullReductionEndTime || ""} onChange={(event) => onFormChange("fullReductionEndTime", event.target.value)} /><i>▣</i></div>
+          </label>
+          <div className="full-reduction-create-field full-reduction-buyer-scope-field">
+            <span><em>*</em> 活动买家范围:</span>
+            <div className="create-buyer-scope-control">
+              <div className="create-buyer-scope-radios">
+                <label className="create-radio"><input type="radio" name="full-reduction-participant-buyer-type" value="all" checked={participantBuyerType === "all"} onChange={() => onFormChange("participantBuyerType", "all")} /><i />全部买家</label>
+                <label className="create-radio"><input type="radio" name="full-reduction-participant-buyer-type" value="group" checked={participantBuyerType === "group"} onChange={() => onFormChange("participantBuyerType", "group")} /><i />指定买家分组</label>
+              </div>
+              {participantBuyerType === "group" ? (
+                <div className="create-buyer-group-row">
+                  <div className={`create-input-wrap create-buyer-group-select ${form.participantBuyerGroup ? "has-clear" : ""}`}>
+                    <select value={form.participantBuyerGroup || ""} onChange={(event) => onFormChange("participantBuyerGroup", event.target.value)}>
+                      <option value="" disabled hidden>请选择</option>
+                      {buyerGroups.map((item) => <option key={item.id} value={item.name}>{item.name}</option>)}
+                    </select>
+                    {form.participantBuyerGroup ? (
+                      <button className="create-buyer-group-clear" type="button" aria-label="清除买家分组" onClick={() => onFormChange("participantBuyerGroup", "")}>×</button>
+                    ) : null}
+                  </div>
+                  <button className={`create-buyer-group-view ${form.participantBuyerGroup ? "is-active" : ""}`} type="button">查看</button>
+                </div>
+              ) : null}
+            </div>
+          </div>
+          <div className="full-reduction-create-field">
+            <span><em>*</em> 是否叠加:</span>
+            <div className="full-reduction-radio-row">
+              {["是", "否"].map((item) => (
+                <label className="create-radio" key={item}>
+                  <input type="radio" name="full-reduction-stacked" value={item} checked={isStacked === item} onChange={() => onFormChange("fullReductionStacked", item)} />
+                  <i />
+                  {item}
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className="full-reduction-create-actions">
+            <button className="btn btn-create" type="button">保存</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function SpecialPriceListLayout({ pageConfig, filters, setFilters, page, setPage, pageSize, setPageSize, onCreate, onAction, activities, onOpenBuyerGroupDetail }) {
   const filteredActivities = useMemo(() => activities.filter((item) => {
     if (filters.status && item.status !== filters.status) return false;
@@ -13228,7 +14737,19 @@ function ListPage({ pageName, filters, setFilters, page, setPage, pageSize, setP
           <label className="filter-field"><span>规格ID</span><input value={filters.specId} onChange={(e) => setFilters({ ...filters, specId: e.target.value })} /></label>
           {showFlashSaleOneBuyerFields ? (
             <>
-              <label className="filter-field"><span>买家分组</span><select value={filters.buyerGroup || ""} onChange={(e) => setFilters({ ...filters, buyerGroup: e.target.value })}><option value="">请选择</option>{buyerGroups.map((group) => <option key={group.id} value={group.name}>{group.name}</option>)}</select></label>
+              <label className="filter-field">
+                <span>活动买家范围</span>
+                <div className={`filter-select-wrap flash-sale-one-buyer-filter ${filters.buyerGroup ? "has-clear" : ""}`}>
+                  <select value={filters.buyerGroup || ""} onChange={(e) => setFilters({ ...filters, buyerGroup: e.target.value })}>
+                    <option value="" disabled hidden>请选择</option>
+                    <option value="全部买家">全部买家</option>
+                    {buyerGroups.map((group) => <option key={group.id} value={group.name}>{group.name}</option>)}
+                  </select>
+                  {filters.buyerGroup ? (
+                    <button className="filter-select-clear" type="button" aria-label="清除活动买家范围" onClick={() => setFilters({ ...filters, buyerGroup: "" })}>×</button>
+                  ) : null}
+                </div>
+              </label>
               <label className="filter-field"><span>买家ID</span><input inputMode="numeric" pattern="[0-9]*" value={filters.buyerId || ""} onChange={(e) => setFilters({ ...filters, buyerId: e.target.value.replace(/\D/g, "") })} /></label>
             </>
           ) : null}
@@ -13245,7 +14766,7 @@ function ListPage({ pageName, filters, setFilters, page, setPage, pageSize, setP
         <div className="table-toolbar"><button className="btn btn-create" type="button" onClick={onCreate}>{marketingPageConfigs[pageName]?.createLabel || "新增活动"}</button></div>
         <div className="table-shell">
           <table className={`data-table ${showFlashSaleOneBuyerFields ? "flash-sale-one-data-table" : ""}`}>
-            <thead><tr><th>活动ID</th><th>活动名称</th>{showFlashSaleOneBuyerFields ? <th>买家分组</th> : null}<th>活动商品数</th><th>开始时间</th><th>结束时间</th><th>状态</th><th>操作</th></tr></thead>
+            <thead><tr><th>活动ID</th><th>活动名称</th>{showFlashSaleOneBuyerFields ? <th>活动买家范围</th> : null}<th>活动商品数</th><th>开始时间</th><th>结束时间</th><th>状态</th><th>操作</th></tr></thead>
             <tbody>{rows.map((item) => <tr key={item.id}><td>{item.id}</td><td>{item.name}</td>{showFlashSaleOneBuyerFields ? <td><span className={`flash-sale-one-buyer-group-cell ${item.buyerGroup === "全部买家" ? "is-all-buyers" : ""}`}>{item.buyerGroup}</span></td> : null}<td>{item.goodsCount}</td><td>{item.startTime}</td><td>{item.endTime}</td><td className={`status-cell status-${item.status}`}>{item.status}</td><td><div className="action-links">{item.actions.map((action) => <button key={action} type="button" onClick={() => onAction(action, item)}>{action}</button>)}</div></td></tr>)}</tbody>
           </table>
         </div>
@@ -13332,7 +14853,7 @@ function DetailPage({ detailActivity, page, setPage, pageSize, setPageSize, onSh
         <div className="detail-line"><span>活动分类:</span><strong>{detailActivity.category}</strong></div>
         <div className="detail-line"><span>开始时间:</span><strong>{detailActivity.startTime}</strong></div>
         <div className="detail-line"><span>结束时间:</span><strong>{detailActivity.endTime}</strong></div>
-        <div className="detail-line detail-buyer-scope-line"><span>参与活动买家:</span><BuyerScopeReadonly activity={detailActivity} /></div>
+        <div className="detail-line detail-buyer-scope-line"><span>活动买家范围:</span><BuyerScopeReadonly activity={detailActivity} /></div>
       </div>
 
       <div className="detail-goods-label">商品详情:</div>
@@ -18361,7 +19882,7 @@ function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, 
           <label className="create-field"><span><em>*</em> 结束时间:</span><div className="create-input-wrap with-icon"><input placeholder="请选择结束时间" value={form.endTime} onChange={(e) => onFormChange("endTime", e.target.value)} /><i>◴</i></div></label>
           {showFlashSaleOneBuyerScope ? (
             <div className="create-field create-buyer-scope-field">
-              <span><em>*</em> 参与活动买家:</span>
+              <span><em>*</em> 活动买家范围:</span>
               <div className="create-buyer-scope-control">
                 <div className="create-buyer-scope-radios">
                   <label className="create-radio"><input type="radio" name="participant-buyer-type" value="all" checked={(form.participantBuyerType || "all") === "all"} onChange={() => onFormChange("participantBuyerType", "all")} /><i />全部买家</label>
@@ -18369,11 +19890,21 @@ function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, 
                 </div>
                 {form.participantBuyerType === "group" ? (
                   <div className="create-buyer-group-row">
-                    <div className="create-input-wrap create-buyer-group-select">
+                    <div className={`create-input-wrap create-buyer-group-select ${form.participantBuyerGroup ? "has-clear" : ""}`}>
                       <select value={form.participantBuyerGroup || ""} onChange={(e) => onFormChange("participantBuyerGroup", e.target.value)}>
-                        <option value="">请选择买家分组</option>
+                        <option value="" disabled hidden>请选择</option>
                         {buyerGroups.map((item) => <option key={item.id} value={item.name}>{item.name}</option>)}
                       </select>
+                      {form.participantBuyerGroup ? (
+                        <button
+                          className="create-buyer-group-clear"
+                          type="button"
+                          aria-label="清除买家分组"
+                          onClick={() => onFormChange("participantBuyerGroup", "")}
+                        >
+                          ×
+                        </button>
+                      ) : null}
                     </div>
                     <button className={`create-buyer-group-view ${form.participantBuyerGroup ? "is-active" : ""}`} type="button">查看</button>
                   </div>
@@ -18728,6 +20259,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   const [miniappCreatedInvoiceTitleItems, setMiniappCreatedInvoiceTitleItems] = useState([]);
   const [miniappInvoiceTitleCreateForm, setMiniappInvoiceTitleCreateForm] = useState(initialMiniappInvoiceTitleCreateForm);
   const [miniappInvoiceTitleCreateErrors, setMiniappInvoiceTitleCreateErrors] = useState(initialMiniappInvoiceTitleCreateErrors);
+  const [isMiniappDefaultBillingTypePickerOpen, setIsMiniappDefaultBillingTypePickerOpen] = useState(false);
   const [miniappInvoiceOrderDetailNo, setMiniappInvoiceOrderDetailNo] = useState("");
   const [miniappServiceOrderId, setMiniappServiceOrderId] = useState("");
   const [miniappBatchSuccessToast, setMiniappBatchSuccessToast] = useState("");
@@ -18736,6 +20268,12 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   const [expandedMiniappAppliedRecordIds, setExpandedMiniappAppliedRecordIds] = useState([]);
   const [expandedMiniappInvoicedRecordIds, setExpandedMiniappInvoicedRecordIds] = useState([]);
   const [isMiniappAppliedCancelConfirmOpen, setIsMiniappAppliedCancelConfirmOpen] = useState(false);
+  const [miniappAppliedModifyOrderTab, setMiniappAppliedModifyOrderTab] = useState("all");
+  const [isMiniappAppliedModifyEditMode, setIsMiniappAppliedModifyEditMode] = useState(false);
+  const [selectedMiniappAppliedModifyEditRowIds, setSelectedMiniappAppliedModifyEditRowIds] = useState([]);
+  const [expandedMiniappAppliedModifyRowIds, setExpandedMiniappAppliedModifyRowIds] = useState([]);
+  const [miniappAppliedModifyInvoiceTypeSelections, setMiniappAppliedModifyInvoiceTypeSelections] = useState({});
+  const [miniappAppliedModifyInvoiceTypePickerOrderId, setMiniappAppliedModifyInvoiceTypePickerOrderId] = useState("");
   const [miniappAppliedModifyForm, setMiniappAppliedModifyForm] = useState({
     title: "",
     invoiceContent: "",
@@ -18792,6 +20330,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       title: "美团",
       isDefault: true,
       tags: ["企业", "电子普通发票", "电子增值税专用发票"],
+      defaultBillingType: "normal",
       taxNo: "123456789",
       store: "配送移动端众包商家_陈苏燕702",
       storeHint: "(ID:展开)"
@@ -18806,7 +20345,8 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
     {
       id: "paper",
       title: "总部日用品连锁营业执照纸质签约客户12421754_快送_供",
-      tags: ["企业", "电子普通发票"],
+      tags: ["企业", "电子普通发票", "电子增值税专用发票"],
+      defaultBillingType: "normal",
       taxNo: "360794",
       store: "总部日用品连锁营业执照纸签约",
       storeHint: "展开"
@@ -18827,6 +20367,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       id: "zd-special",
       title: "zd增值税专用发票抬头",
       tags: ["企业", "电子增值税专用发票", "电子普通发票"],
+      defaultBillingType: "special",
       taxNo: "91310000MA1K3N8X5L"
     }
   ];
@@ -18841,6 +20382,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
     const invoiceTypes = item.tags.filter((tag) => tag === "电子普通发票" || tag === "电子增值税专用发票");
     result[item.title] = {
       taxNo: item.taxNo || "",
+      defaultBillingType: item.defaultBillingType || "",
       invoiceType: getBuyerPcMallInvoiceTypeFromBillingType(item.defaultBillingType) || invoiceTypes[0] || "",
       invoiceTypes
     };
@@ -19002,6 +20544,36 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       invoiceContent: "商品类别",
       invoiceRemark: "",
       images: ["tea", "ice"]
+    },
+    {
+      id: "invoice-record-dual-sample-1",
+      storeName: "双类型样本店A",
+      orderNo: "2026022600100837",
+      orderedAt: "2026-02-26 10:08:37",
+      paymentMethod: "先款后货",
+      pickupStore: "北京朝阳门店(102325)",
+      status: "待开票",
+      amount: 86.35,
+      title: "总部日用品连锁营业执照纸质签约客户12421754_快送_供",
+      separateInvoiceRequired: "否",
+      invoiceContent: "商品类别",
+      invoiceRemark: "",
+      images: ["cola", "ice"]
+    },
+    {
+      id: "invoice-record-dual-sample-2",
+      storeName: "双类型样本店B",
+      orderNo: "2026022700100838",
+      orderedAt: "2026-02-27 10:08:38",
+      paymentMethod: "先款后货",
+      pickupStore: "北京朝阳门店(102325)",
+      status: "待开票",
+      amount: 128.9,
+      title: "总部日用品连锁营业执照纸质签约客户12421754_快送_供",
+      separateInvoiceRequired: "否",
+      invoiceContent: "商品明细",
+      invoiceRemark: "",
+      images: ["tea", "milk"]
     },
     {
       id: "invoice-record-4",
@@ -19264,7 +20836,6 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   const isInvoiceEditView = isMineTab && miniappView === "invoice-edit";
   const isInvoiceTitleManagementView = isMineTab && miniappView === "invoice-titles";
   const isInvoiceTitleCreateView = isMineTab && miniappView === "invoice-title-create";
-  const isMiniappBatchInvoiceTypePickerView = isMineTab && miniappView === "invoice-batch-invoice-type-picker";
   const miniappInvoiceTitleCreateSupportedTypes = normalizeBuyerPcMallSupportedInvoiceTypes(
     miniappInvoiceTitleCreateForm.titleType,
     miniappInvoiceTitleCreateForm.invoiceTypes || miniappInvoiceTitleCreateForm.invoiceType
@@ -19758,6 +21329,57 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   const hasSelectedMiniappAppliedRecords = selectedMiniappAppliedRecordIds.length > 0;
   const isMiniappAppliedPageAllSelected = displayedMiniappAppliedInvoiceOrderCards.length > 0
     && displayedMiniappAppliedInvoiceOrderCards.every((item) => selectedMiniappAppliedRecordIds.includes(item.id));
+  const selectedMiniappAppliedModifyRows = useMemo(() => (
+    miniappAppliedInvoiceOrderCards.filter((item) => selectedMiniappAppliedRecordIds.includes(item.id))
+  ), [miniappAppliedInvoiceOrderCards, selectedMiniappAppliedRecordIds]);
+  const hasMiniappAppliedModifyTitleChange = Boolean(miniappAppliedModifyForm.title);
+  const miniappAppliedModifyValidationById = useMemo(() => {
+    const selectedTitle = miniappAppliedModifyForm.title;
+    if (!selectedTitle) return {};
+
+    const selectedTitleMeta = miniappInvoiceTitleMetaByTitle[selectedTitle] || {};
+    const titleInvoiceTypes = selectedTitleMeta.invoiceTypes || (selectedTitleMeta.invoiceType ? [selectedTitleMeta.invoiceType] : []);
+
+    return selectedMiniappAppliedModifyRows.reduce((result, item) => {
+      const storeInvoiceTypes = getMiniappSupportedInvoiceTypes(item);
+      const matchedTypes = titleInvoiceTypes.filter((invoiceType) => storeInvoiceTypes.includes(invoiceType));
+      result[item.id] = titleInvoiceTypes.length > 0 && matchedTypes.length === 0
+        ? getInvoiceTypeMismatchMessage(storeInvoiceTypes)
+        : "";
+      return result;
+    }, {});
+  }, [miniappAppliedModifyForm.title, miniappInvoiceTitleMetaByTitle, selectedMiniappAppliedModifyRows]);
+  const miniappAppliedModifyErrorRows = useMemo(() => (
+    selectedMiniappAppliedModifyRows.filter((item) => miniappAppliedModifyValidationById[item.id])
+  ), [miniappAppliedModifyValidationById, selectedMiniappAppliedModifyRows]);
+  const displayedMiniappAppliedModifyRows = useMemo(() => (
+    miniappAppliedModifyOrderTab === "error" ? miniappAppliedModifyErrorRows : selectedMiniappAppliedModifyRows
+  ), [miniappAppliedModifyErrorRows, miniappAppliedModifyOrderTab, selectedMiniappAppliedModifyRows]);
+  const isMiniappAppliedModifyPageAllSelected = displayedMiniappAppliedModifyRows.length > 0
+    && displayedMiniappAppliedModifyRows.every((item) => selectedMiniappAppliedModifyEditRowIds.includes(item.id));
+  const getMiniappAppliedModifyInvoiceTypeOptions = useCallback((row) => {
+    const nextTitle = miniappAppliedModifyForm.title || row?.title || "";
+    const titleMeta = miniappInvoiceTitleMetaByTitle[nextTitle] || {};
+    const titleInvoiceTypes = titleMeta.invoiceTypes || (titleMeta.invoiceType ? [titleMeta.invoiceType] : []);
+    const storeInvoiceTypes = getMiniappSupportedInvoiceTypes(row);
+    const matchedTypes = titleInvoiceTypes.filter((invoiceType) => storeInvoiceTypes.includes(invoiceType));
+    return matchedTypes.length > 0 ? matchedTypes : titleInvoiceTypes;
+  }, [miniappAppliedModifyForm.title, miniappInvoiceTitleMetaByTitle]);
+  const getMiniappAppliedModifyDefaultInvoiceType = useCallback((row) => {
+    const invoiceTypeOptions = getMiniappAppliedModifyInvoiceTypeOptions(row);
+    if (invoiceTypeOptions.length === 0) return "";
+
+    const nextTitle = miniappAppliedModifyForm.title || row?.title || "";
+    const titleMeta = miniappInvoiceTitleMetaByTitle[nextTitle] || {};
+    const defaultInvoiceType = getBuyerPcMallInvoiceTypeFromBillingType(titleMeta.defaultBillingType);
+    if (invoiceTypeOptions.includes(defaultInvoiceType)) return defaultInvoiceType;
+    if (invoiceTypeOptions.includes(row?.invoiceType)) return row.invoiceType;
+    return invoiceTypeOptions[0] || "";
+  }, [getMiniappAppliedModifyInvoiceTypeOptions, miniappAppliedModifyForm.title, miniappInvoiceTitleMetaByTitle]);
+  const activeMiniappAppliedModifyInvoiceTypePickerRow = selectedMiniappAppliedModifyRows.find((row) => row.id === miniappAppliedModifyInvoiceTypePickerOrderId) || null;
+  const activeMiniappAppliedModifyInvoiceTypeOptions = hasMiniappAppliedModifyTitleChange && activeMiniappAppliedModifyInvoiceTypePickerRow
+    ? getMiniappAppliedModifyInvoiceTypeOptions(activeMiniappAppliedModifyInvoiceTypePickerRow)
+    : [];
   const selectedMiniappInvoiceSummary = useMemo(() => {
     const selectedSet = new Set(selectedMiniappInvoiceOrderIds);
     return selectableDisplayedMiniappPendingOrders.reduce((summary, item) => {
@@ -19824,36 +21446,39 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       const selectedTitle = miniappBatchTitleSelections[row.id];
       const selectedTitleMeta = miniappInvoiceTitleMetaByTitle[selectedTitle] || {};
       const titleInvoiceTypes = selectedTitleMeta.invoiceTypes || (selectedTitleMeta.invoiceType ? [selectedTitleMeta.invoiceType] : []);
-      const selectedInvoiceType = titleInvoiceTypes.length > 1
-        ? (miniappBatchInvoiceTypeSelections[row.id] || "")
-        : (titleInvoiceTypes[0] || "");
-      const supportedInvoiceType = row.supportedInvoiceType || "";
+      const defaultInvoiceType = getMiniappBatchDefaultInvoiceType(row, selectedTitleMeta);
+      const selectedInvoiceType = defaultInvoiceType || (
+        titleInvoiceTypes.length > 1
+          ? (miniappBatchInvoiceTypeSelections[row.id] || "")
+          : (titleInvoiceTypes[0] || "")
+      );
+      const supportedInvoiceTypes = getMiniappSupportedInvoiceTypes(row);
       if (!selectedTitle) {
         result[row.id] = "发票抬头不能为空";
         return result;
       }
 
       if (titleInvoiceTypes.length > 1 && !selectedInvoiceType) {
-        result[row.id] = "请选择发票类型";
+        result[row.id] = "请选择开票类型";
         return result;
       }
 
-      if (!selectedInvoiceType || !supportedInvoiceType || selectedInvoiceType === supportedInvoiceType) {
+      if (!selectedInvoiceType || supportedInvoiceTypes.includes(selectedInvoiceType)) {
         result[row.id] = "";
         return result;
       }
 
       if (row.orderNo === "20260212022895774") {
-        result[row.id] = getInvoiceTypeMismatchMessage(supportedInvoiceType);
+        result[row.id] = getInvoiceTypeMismatchMessage(supportedInvoiceTypes);
         return result;
       }
 
       if (row.orderNo === "20260212022895773") {
-        result[row.id] = getInvoiceTypeMismatchMessage(supportedInvoiceType);
+        result[row.id] = getInvoiceTypeMismatchMessage(supportedInvoiceTypes);
         return result;
       }
 
-      result[row.id] = getInvoiceTypeMismatchMessage(supportedInvoiceType);
+      result[row.id] = getInvoiceTypeMismatchMessage(supportedInvoiceTypes);
       return result;
     }, {})
   ), [miniappBatchInvoiceRows, miniappBatchInvoiceTypeSelections, miniappBatchTitleSelections, miniappInvoiceTitleMetaByTitle]);
@@ -19877,8 +21502,6 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
     : [];
   const isMiniappBatchPageAllSelected = displayedMiniappBatchInvoiceRows.length > 0
     && displayedMiniappBatchInvoiceRows.every((row) => selectedMiniappBatchEditRowIds.includes(row.id));
-  const isMiniappBatchPageAllExpanded = displayedMiniappBatchInvoiceRows.length > 0
-    && displayedMiniappBatchInvoiceRows.every((row) => expandedMiniappBatchRowIds.includes(row.id));
 
   useEffect(() => {
     setMiniappBatchTitleSelections((current) => {
@@ -19907,6 +21530,14 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   useEffect(() => {
     setExpandedMiniappAppliedRecordIds((current) => current.filter((id) => miniappAppliedInvoiceOrderCards.some((item) => item.id === id)));
   }, [miniappAppliedInvoiceOrderCards]);
+
+  useEffect(() => {
+    setSelectedMiniappAppliedModifyEditRowIds((current) => current.filter((id) => selectedMiniappAppliedRecordIds.includes(id)));
+    setExpandedMiniappAppliedModifyRowIds((current) => current.filter((id) => selectedMiniappAppliedRecordIds.includes(id)));
+    if (selectedMiniappAppliedRecordIds.length === 0 && isInvoiceAppliedModifyView) {
+      setMiniappView("invoice-helper");
+    }
+  }, [isInvoiceAppliedModifyView, selectedMiniappAppliedRecordIds]);
 
   useEffect(() => {
     setExpandedMiniappInvoicedRecordIds((current) => current.filter((id) => miniappInvoicedInvoiceOrderCards.some((item) => item.id === id)));
@@ -20195,6 +21826,12 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       separateInvoiceRequired: "",
       remark: ""
     });
+    setMiniappAppliedModifyOrderTab("all");
+    setIsMiniappAppliedModifyEditMode(false);
+    setSelectedMiniappAppliedModifyEditRowIds([]);
+    setExpandedMiniappAppliedModifyRowIds([]);
+    setMiniappAppliedModifyInvoiceTypeSelections({});
+    setMiniappAppliedModifyInvoiceTypePickerOrderId("");
     setMiniappView("invoice-applied-modify");
   };
   const handleOpenMiniappAppliedModifyPicker = (field) => {
@@ -20204,22 +21841,85 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   const handleConfirmMiniappAppliedModifyPicker = () => {
     if (!miniappAppliedModifyPickerField) return;
     setMiniappAppliedModifyForm((current) => ({ ...current, [miniappAppliedModifyPickerField]: miniappAppliedModifyPickerValue }));
+    if (miniappAppliedModifyPickerField === "title") {
+      setMiniappAppliedModifyInvoiceTypeSelections({});
+      setMiniappAppliedModifyInvoiceTypePickerOrderId("");
+    }
     setMiniappAppliedModifyPickerField("");
     setMiniappAppliedModifyPickerValue("");
   };
   const handleConfirmMiniappAppliedModify = () => {
+    const hasInvalidOrder = Object.values(miniappAppliedModifyValidationById).some(Boolean);
+    if (hasInvalidOrder) {
+      setMiniappAppliedModifyOrderTab("error");
+      setMiniappBatchErrorToast("部分订单存在异常，请检查后重试");
+      return;
+    }
+
     const remarkValue = miniappAppliedModifyForm.remark.trim();
     setMiniappInvoiceRecordItems((current) => current.map((item) => {
       if (!selectedMiniappAppliedRecordIds.includes(item.id)) return item;
+      const orderRow = selectedMiniappAppliedModifyRows.find((row) => row.id === item.id) || item;
+      const invoiceTypeOptions = getMiniappAppliedModifyInvoiceTypeOptions(orderRow);
+      const selectedInvoiceType = miniappAppliedModifyInvoiceTypeSelections[item.id] || getMiniappAppliedModifyDefaultInvoiceType(orderRow);
       return {
         ...item,
         title: miniappAppliedModifyForm.title || item.title,
+        invoiceType: invoiceTypeOptions.includes(selectedInvoiceType) ? selectedInvoiceType : item.invoiceType,
         invoiceContent: miniappAppliedModifyForm.invoiceContent || item.invoiceContent || "商品类别",
         separateInvoiceRequired: miniappAppliedModifyForm.separateInvoiceRequired || item.separateInvoiceRequired || "否",
         invoiceRemark: remarkValue || item.invoiceRemark || ""
       };
     }));
     setMiniappView("invoice-helper");
+  };
+  const handleOpenMiniappAppliedModifyInvoiceTypePicker = (orderId) => {
+    if (!hasMiniappAppliedModifyTitleChange) return;
+    setMiniappAppliedModifyInvoiceTypePickerOrderId(orderId);
+  };
+  const handleSelectMiniappAppliedModifyInvoiceType = (invoiceType) => {
+    if (!miniappAppliedModifyInvoiceTypePickerOrderId) return;
+    setMiniappAppliedModifyInvoiceTypeSelections((current) => ({
+      ...current,
+      [miniappAppliedModifyInvoiceTypePickerOrderId]: invoiceType
+    }));
+    setMiniappAppliedModifyInvoiceTypePickerOrderId("");
+  };
+  const handleToggleMiniappAppliedModifyEditMode = () => {
+    setIsMiniappAppliedModifyEditMode((current) => {
+      if (current) {
+        setSelectedMiniappAppliedModifyEditRowIds([]);
+      }
+      return !current;
+    });
+  };
+  const handleToggleMiniappAppliedModifyEditRow = (orderId) => {
+    setSelectedMiniappAppliedModifyEditRowIds((current) => (
+      current.includes(orderId)
+        ? current.filter((item) => item !== orderId)
+        : [...current, orderId]
+    ));
+  };
+  const handleToggleMiniappAppliedModifyEditPage = () => {
+    const displayedIds = displayedMiniappAppliedModifyRows.map((item) => item.id);
+    setSelectedMiniappAppliedModifyEditRowIds((current) => (
+      isMiniappAppliedModifyPageAllSelected
+        ? current.filter((id) => !displayedIds.includes(id))
+        : Array.from(new Set([...current, ...displayedIds]))
+    ));
+  };
+  const handleRemoveMiniappAppliedModifySelectedRows = () => {
+    if (selectedMiniappAppliedModifyEditRowIds.length <= 0) return;
+    setSelectedMiniappAppliedRecordIds((current) => current.filter((id) => !selectedMiniappAppliedModifyEditRowIds.includes(id)));
+    setSelectedMiniappAppliedModifyEditRowIds([]);
+    setMiniappAppliedModifyOrderTab("all");
+  };
+  const handleToggleMiniappAppliedModifyRowExpanded = (orderId) => {
+    setExpandedMiniappAppliedModifyRowIds((current) => (
+      current.includes(orderId)
+        ? current.filter((item) => item !== orderId)
+        : [...current, orderId]
+    ));
   };
   const miniappAppliedModifyPickerOptions = miniappAppliedModifyPickerField === "title"
     ? miniappInvoiceTitleItems.map((item) => item.title)
@@ -20232,6 +21932,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   const resetMiniappInvoiceTitleCreateForm = () => {
     setMiniappInvoiceTitleCreateForm(initialMiniappInvoiceTitleCreateForm);
     setMiniappInvoiceTitleCreateErrors(initialMiniappInvoiceTitleCreateErrors);
+    setIsMiniappDefaultBillingTypePickerOpen(false);
   };
 
   const handleOpenMiniappInvoiceTitleCreate = () => {
@@ -20289,6 +21990,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
     }
 
     if (field === "titleType" || field === "invoiceTypes") {
+      setIsMiniappDefaultBillingTypePickerOpen(false);
       setMiniappInvoiceTitleCreateErrors((current) => ({
         ...current,
         invoiceTypes: false,
@@ -20300,6 +22002,11 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
         bankAccount: false
       }));
     }
+  };
+
+  const handleSelectMiniappDefaultBillingType = (invoiceType) => {
+    handleChangeMiniappInvoiceTitleCreate("defaultBillingType", getBuyerPcMallBillingTypeFromInvoiceType(invoiceType));
+    setIsMiniappDefaultBillingTypePickerOpen(false);
   };
 
   const handleSaveMiniappInvoiceTitleCreate = () => {
@@ -20410,7 +22117,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   const validateMiniappPreviewInvoiceType = () => {
     if (hasMiniappPreviewInvoiceTypePicker && !miniappPreviewInvoiceType) {
       setIsMiniappPreviewInvoiceTypeError(true);
-      setMiniappInvoicePreviewNotice("请选择发票类型");
+      setMiniappInvoicePreviewNotice("请选择开票类型");
       return false;
     }
     return true;
@@ -20434,7 +22141,6 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   };
   const handleOpenMiniappBatchInvoiceTypePicker = (orderId) => {
     setMiniappBatchInvoiceTypePickerOrderId(orderId);
-    setMiniappView("invoice-batch-invoice-type-picker");
   };
   const handleOpenMiniappServiceChat = (orderId) => {
     setMiniappServiceOrderId(orderId);
@@ -20467,7 +22173,6 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
     if (!miniappBatchInvoiceTypePickerOrderId) return;
     setMiniappBatchInvoiceTypeSelections((current) => ({ ...current, [miniappBatchInvoiceTypePickerOrderId]: invoiceType }));
     setMiniappBatchInvoiceTypePickerOrderId("");
-    setMiniappView("invoice-batch-apply");
   };
 
   const handleRemoveMiniappBatchRow = (orderId) => {
@@ -20502,15 +22207,6 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       current.includes(orderId)
         ? current.filter((item) => item !== orderId)
         : [...current, orderId]
-    ));
-  };
-
-  const handleToggleMiniappBatchExpandAll = () => {
-    const displayedIds = displayedMiniappBatchInvoiceRows.map((row) => row.id);
-    setExpandedMiniappBatchRowIds((current) => (
-      isMiniappBatchPageAllExpanded
-        ? current.filter((id) => !displayedIds.includes(id))
-        : Array.from(new Set([...current, ...displayedIds]))
     ));
   };
 
@@ -20556,11 +22252,11 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
         <div className="miniapp-phone">
           <div className={`miniapp-phone-inner${isWholesaleDetailView && isFeaturedWholesaleFlashDetail ? " is-flash-detail" : ""}`}>
             <div className="miniapp-statusbar">
-              <span>{isInvoiceAssistantView ? "17:30:57" : isInvoiceAppliedModifyView ? "17:30:57" : isInvoiceServiceChatView ? "17:31:18" : isInvoiceTitleCreateView ? "09:39:54" : isInvoiceTitleManagementView || isMiniappBatchInvoiceTypePickerView ? "09:44:04" : isInvoiceEditView ? "16:31" : isInvoiceDetailView ? "16:29" : isOrderListView ? "00:07:15" : isMineTab ? "00:03:58" : "00:02:06"}</span>
+              <span>{isInvoiceAssistantView ? "17:30:57" : isInvoiceAppliedModifyView ? "17:30:57" : isInvoiceServiceChatView ? "17:31:18" : isInvoiceTitleCreateView ? "09:39:54" : isInvoiceTitleManagementView ? "09:44:04" : isInvoiceEditView ? "16:31" : isInvoiceDetailView ? "16:29" : isOrderListView ? "00:07:15" : isMineTab ? "00:03:58" : "00:02:06"}</span>
               <div className="miniapp-status-icons">
                 <span>5G</span>
                 <span>▂▄▆█</span>
-                <span>{isInvoiceAssistantView ? "96" : isInvoiceAppliedModifyView ? "96" : isInvoiceServiceChatView ? "97" : isInvoiceTitleCreateView ? "62" : isInvoiceTitleManagementView || isMiniappBatchInvoiceTypePickerView ? "61" : isInvoiceEditView ? "83" : isInvoiceDetailView ? "84" : isMineTab ? "100" : "98"}</span>
+                <span>{isInvoiceAssistantView ? "96" : isInvoiceAppliedModifyView ? "96" : isInvoiceServiceChatView ? "97" : isInvoiceTitleCreateView ? "62" : isInvoiceTitleManagementView ? "61" : isInvoiceEditView ? "83" : isInvoiceDetailView ? "84" : isMineTab ? "100" : "98"}</span>
               </div>
             </div>
 
@@ -20571,9 +22267,6 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                 <header className="miniapp-order-header miniapp-batch-header">
                   <button className="miniapp-order-back" type="button" onClick={() => setMiniappView("invoice-helper")} aria-label="返回">
                     <span />
-                  </button>
-                  <button className="miniapp-batch-edit-toggle" type="button" onClick={handleToggleMiniappBatchEditMode}>
-                    {isMiniappBatchEditMode ? "完成" : "编辑"}
                   </button>
                   <div className="miniapp-order-title">批量申请开票</div>
                   <div className="miniapp-order-header-actions">
@@ -20646,15 +22339,13 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                           {`异常订单（${miniappBatchErrorRows.length}）`}
                         </button>
                       </div>
-                      {displayedMiniappBatchInvoiceRows.length > 0 ? (
-                        <button
-                          className="miniapp-batch-toolbar-toggle"
-                          type="button"
-                          onClick={handleToggleMiniappBatchExpandAll}
-                        >
-                          {isMiniappBatchPageAllExpanded ? "折叠" : "展开"}
-                        </button>
-                      ) : null}
+                      <button
+                        className={`miniapp-batch-toolbar-toggle ${isMiniappBatchEditMode ? "is-active" : ""}`}
+                        type="button"
+                        onClick={handleToggleMiniappBatchEditMode}
+                      >
+                        {isMiniappBatchEditMode ? "完成" : "编辑"}
+                      </button>
                     </div>
                     {displayedMiniappBatchInvoiceRows.length === 0 ? (
                       <div className="miniapp-batch-empty-state">当前暂无异常订单</div>
@@ -20664,11 +22355,14 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                       const selectedTitle = miniappBatchTitleSelections[row.id] || "";
                       const selectedTitleMeta = miniappInvoiceTitleMetaByTitle[selectedTitle] || {};
                       const selectedTitleInvoiceTypes = selectedTitleMeta.invoiceTypes || (selectedTitleMeta.invoiceType ? [selectedTitleMeta.invoiceType] : []);
-                      const shouldManuallySelectInvoiceType = selectedTitleInvoiceTypes.length > 1;
+                      const defaultBatchInvoiceType = getMiniappBatchDefaultInvoiceType(row, selectedTitleMeta);
+                      const shouldManuallySelectInvoiceType = selectedTitleInvoiceTypes.length > 1 && !defaultBatchInvoiceType;
                       const selectedBatchInvoiceType = miniappBatchInvoiceTypeSelections[row.id] || "";
-                      const displayedBatchInvoiceType = shouldManuallySelectInvoiceType
-                        ? (selectedBatchInvoiceType || "请选择发票类型")
-                        : (selectedTitle ? (selectedTitleMeta.invoiceType || "-") : (row.invoiceType || "-"));
+                      const displayedBatchInvoiceType = defaultBatchInvoiceType || (
+                        shouldManuallySelectInvoiceType
+                          ? (selectedBatchInvoiceType || "请选择开票类型")
+                          : (selectedTitle ? (selectedTitleMeta.invoiceType || "-") : "-")
+                      );
                       const shouldShowAfterSaleField = row.afterSaleAmount > 0 || (row.afterSaleStatus && row.afterSaleStatus !== "-");
                       return (
                         <section className={`miniapp-batch-edit-row ${isMiniappBatchEditMode ? "is-editing" : ""}`} key={row.id}>
@@ -20712,11 +22406,20 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                                 ) : null}
                               </div>
                               <div className="miniapp-batch-field is-title-select">
-                                <span>发票类型</span>
-                                <strong>{displayedBatchInvoiceType}</strong>
+                                <span>申请开票类型</span>
                                 {shouldManuallySelectInvoiceType ? (
-                                  <button className="miniapp-batch-picker-btn" type="button" onClick={() => handleOpenMiniappBatchInvoiceTypePicker(row.id)}>选择</button>
-                                ) : null}
+                                  <button
+                                    className="miniapp-batch-invoice-type-trigger"
+                                    type="button"
+                                    aria-label={`选择开票类型，当前${selectedBatchInvoiceType || "未选择"}`}
+                                    onClick={() => handleOpenMiniappBatchInvoiceTypePicker(row.id)}
+                                  >
+                                    <strong className={selectedBatchInvoiceType ? "" : "is-placeholder"}>{displayedBatchInvoiceType}</strong>
+                                    <em aria-hidden="true">›</em>
+                                  </button>
+                                ) : (
+                                  <strong>{displayedBatchInvoiceType}</strong>
+                                )}
                               </div>
                             </div>
                             {isExpanded ? (
@@ -20816,53 +22519,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                     )}
                   </div>
                 ) : null}
-              </div>
-            ) : isMiniappBatchInvoiceTypePickerView ? (
-              <div className="miniapp-title-page miniapp-invoice-type-picker-page">
-                <header className="miniapp-order-header miniapp-title-header">
-                  <button className="miniapp-order-back" type="button" onClick={() => {
-                    setMiniappBatchInvoiceTypePickerOrderId("");
-                    setMiniappView("invoice-batch-apply");
-                  }} aria-label="返回">
-                    <span />
-                  </button>
-                  <div className="miniapp-order-title">选择发票类型</div>
-                  <div className="miniapp-order-header-actions">
-                    <span>•••</span>
-                    <button type="button" aria-label="返回买家PC商城" onClick={() => onBackToPcMall?.()}>◎</button>
-                  </div>
-                </header>
 
-                <main className="miniapp-title-content">
-                  {activeMiniappBatchInvoiceTypeOptions.length === 0 ? (
-                    <div className="miniapp-batch-empty-state">当前暂无可选发票类型</div>
-                  ) : activeMiniappBatchInvoiceTypeOptions.map((item) => {
-                    const isSelected = miniappBatchInvoiceTypeSelections[miniappBatchInvoiceTypePickerOrderId] === item;
-                    return (
-                      <section
-                        className={`miniapp-title-card miniapp-invoice-type-option-card is-selectable ${isSelected ? "is-selected" : ""}`}
-                        key={item}
-                        onClick={() => handleSelectMiniappBatchInvoiceType(item)}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter" || event.key === " ") {
-                            event.preventDefault();
-                            handleSelectMiniappBatchInvoiceType(item);
-                          }
-                        }}
-                      >
-                        <div className="miniapp-title-card-head">
-                          <h3>{item}</h3>
-                          {isSelected ? <span className="miniapp-invoice-type-selected-mark">✓</span> : null}
-                        </div>
-                        <div className="miniapp-title-tags">
-                          <span className={item.includes("专用") ? "is-special" : ""}>可申请</span>
-                        </div>
-                      </section>
-                    );
-                  })}
-                </main>
               </div>
             ) : isInvoiceAppliedModifyView ? (
               <div className="miniapp-applied-modify-page">
@@ -20917,6 +22574,165 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                       />
                     </div>
                   </div>
+                  <section className="miniapp-batch-list miniapp-applied-modify-order-list">
+                    <div className="miniapp-batch-order-toolbar">
+                      <div className="miniapp-batch-order-tabs" role="tablist" aria-label="批量修改订单筛选">
+                        <button
+                          className={`miniapp-batch-order-tab ${miniappAppliedModifyOrderTab === "all" ? "is-active" : ""}`}
+                          type="button"
+                          role="tab"
+                          aria-selected={miniappAppliedModifyOrderTab === "all"}
+                          onClick={() => setMiniappAppliedModifyOrderTab("all")}
+                        >
+                          全部订单
+                        </button>
+                        <button
+                          className={`miniapp-batch-order-tab ${miniappAppliedModifyOrderTab === "error" ? "is-active" : ""}`}
+                          type="button"
+                          role="tab"
+                          aria-selected={miniappAppliedModifyOrderTab === "error"}
+                          onClick={() => setMiniappAppliedModifyOrderTab("error")}
+                        >
+                          {`异常订单（${miniappAppliedModifyErrorRows.length}）`}
+                        </button>
+                      </div>
+                      <button
+                        className={`miniapp-batch-toolbar-toggle ${isMiniappAppliedModifyEditMode ? "is-active" : ""}`}
+                        type="button"
+                        onClick={handleToggleMiniappAppliedModifyEditMode}
+                      >
+                        {isMiniappAppliedModifyEditMode ? "完成" : "编辑"}
+                      </button>
+                    </div>
+                    {displayedMiniappAppliedModifyRows.length === 0 ? (
+                      <div className="miniapp-batch-empty-state">当前暂无异常订单</div>
+                    ) : displayedMiniappAppliedModifyRows.map((row) => {
+                      const isSelected = selectedMiniappAppliedModifyEditRowIds.includes(row.id);
+                      const isExpanded = expandedMiniappAppliedModifyRowIds.includes(row.id);
+                      const nextTitle = miniappAppliedModifyForm.title || row.title || "-";
+                      const nextTitleMeta = miniappInvoiceTitleMetaByTitle[nextTitle] || {};
+                      const nextInvoiceContent = miniappAppliedModifyForm.invoiceContent || row.invoiceContent || "商品类别";
+                      const nextSeparateInvoiceRequired = miniappAppliedModifyForm.separateInvoiceRequired || row.separateInvoiceRequired || "否";
+                      const nextInvoiceRemark = miniappAppliedModifyForm.remark || row.invoiceRemark || "-";
+                      const invoiceTypeOptions = getMiniappAppliedModifyInvoiceTypeOptions(row);
+                      const defaultInvoiceType = getMiniappAppliedModifyDefaultInvoiceType(row);
+                      const selectedInvoiceType = miniappAppliedModifyInvoiceTypeSelections[row.id] || defaultInvoiceType;
+                      const nextInvoiceType = invoiceTypeOptions.includes(selectedInvoiceType)
+                        ? selectedInvoiceType
+                        : (defaultInvoiceType || "-");
+                      const shouldSelectInvoiceType = hasMiniappAppliedModifyTitleChange && invoiceTypeOptions.length > 1;
+                      const validationMessage = miniappAppliedModifyValidationById[row.id] || "";
+
+                      return (
+                        <section className={`miniapp-batch-edit-row ${isMiniappAppliedModifyEditMode ? "is-editing" : ""}`} key={row.id}>
+                          {isMiniappAppliedModifyEditMode ? (
+                            <button
+                              className={`miniapp-assistant-record-check miniapp-batch-edit-check ${isSelected ? "is-selected" : ""}`}
+                              type="button"
+                              onClick={() => handleToggleMiniappAppliedModifyEditRow(row.id)}
+                              aria-label={`${row.orderNo}选择框`}
+                            >
+                              <span>✓</span>
+                            </button>
+                          ) : null}
+                          <article className={`miniapp-batch-card ${validationMessage ? "has-error" : ""}`}>
+                            <div className="miniapp-batch-card-head">
+                              <strong>{row.orderNo}</strong>
+                              <span className="miniapp-batch-after-sale-tag is-muted">已申请开票</span>
+                            </div>
+                            <div className="miniapp-batch-grid">
+                              <div className="miniapp-batch-field is-store is-contact-entry">
+                                <span>店铺名称</span>
+                                <strong>{row.storeName}</strong>
+                                <button className="miniapp-assistant-contact-link" type="button" onClick={() => handleOpenMiniappServiceChat(row.id)}>联系客服</button>
+                              </div>
+                              <div className="miniapp-batch-field is-store">
+                                <span>店铺可开</span>
+                                <strong>{getMiniappSupportedInvoiceTypeText(row)}</strong>
+                              </div>
+                              <div className="miniapp-batch-field is-amount-inline">
+                                <span>申请开票金额</span>
+                                <strong className="is-accent">{`¥${row.applyAmount.toFixed(2)}`}</strong>
+                              </div>
+                              <div className="miniapp-batch-field is-title-select">
+                                <span>发票抬头</span>
+                                <strong>{nextTitle}</strong>
+                              </div>
+                              <div className="miniapp-batch-field is-title-select">
+                                <span>申请开票类型</span>
+                                {shouldSelectInvoiceType ? (
+                                  <button
+                                    className="miniapp-batch-invoice-type-trigger"
+                                    type="button"
+                                    aria-label={`选择开票类型，当前${nextInvoiceType}`}
+                                    onClick={() => handleOpenMiniappAppliedModifyInvoiceTypePicker(row.id)}
+                                  >
+                                    <strong>{nextInvoiceType}</strong>
+                                    <em aria-hidden="true">›</em>
+                                  </button>
+                                ) : (
+                                  <strong>{nextInvoiceType}</strong>
+                                )}
+                              </div>
+                            </div>
+                            {isExpanded ? (
+                              <div className="miniapp-batch-extra-grid">
+                                <div className="miniapp-batch-field is-amount-inline">
+                                  <span>订单总额</span>
+                                  <strong>{`¥${row.orderAmount.toFixed(2)}`}</strong>
+                                </div>
+                                <div className="miniapp-batch-field is-store">
+                                  <span>闪购门店</span>
+                                  <strong>{row.pickupStore}</strong>
+                                </div>
+                                <div className="miniapp-batch-field is-store">
+                                  <span>发票内容</span>
+                                  <strong>{nextInvoiceContent}</strong>
+                                </div>
+                                <div className="miniapp-batch-field is-store">
+                                  <span>需要单独开票</span>
+                                  <strong>{nextSeparateInvoiceRequired}</strong>
+                                </div>
+                                <div className="miniapp-batch-field is-store">
+                                  <span>纳税人识别号</span>
+                                  <strong>{nextTitleMeta.taxNo || row.taxNo || "-"}</strong>
+                                </div>
+                                  <div className="miniapp-batch-field is-contact">
+                                    <div className="miniapp-batch-contact-row">
+                                      <label>收票人手机</label>
+                                      <strong>{row.receiverPhone}</strong>
+                                    </div>
+                                  <div className="miniapp-batch-contact-row">
+                                    <label>收票人邮箱</label>
+                                      <strong>{row.receiverEmail}</strong>
+                                    </div>
+                                  </div>
+                                  <div className="miniapp-batch-field is-store">
+                                    <span>开票备注</span>
+                                    <strong>{nextInvoiceRemark}</strong>
+                                  </div>
+                                </div>
+                              ) : null}
+                            <button
+                              className={`miniapp-batch-expand-toggle ${isExpanded ? "is-expanded" : ""}`}
+                              type="button"
+                              onClick={() => handleToggleMiniappAppliedModifyRowExpanded(row.id)}
+                              aria-expanded={isExpanded}
+                            >
+                              <span>{isExpanded ? "折叠" : "展开"}</span>
+                              <i aria-hidden="true" />
+                            </button>
+                            {validationMessage ? (
+                              <div className="miniapp-batch-card-notice">
+                                <span>{validationMessage}</span>
+                                <button className="miniapp-batch-card-adjust-btn" type="button" onClick={() => handleOpenMiniappAppliedModifyPicker("title")}>去调整</button>
+                              </div>
+                            ) : null}
+                          </article>
+                        </section>
+                      );
+                    })}
+                  </section>
                 </main>
                 {miniappAppliedModifyPickerField ? (
                   <div className="miniapp-order-overlay" onClick={() => setMiniappAppliedModifyPickerField("")}>
@@ -21290,6 +23106,10 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                                     <span>收票人邮箱</span>
                                     <strong>{item.receiverEmail}</strong>
                                   </div>
+                                  <div className="miniapp-batch-field is-store">
+                                    <span>开票备注</span>
+                                    <strong>{item.invoiceRemark || "-"}</strong>
+                                  </div>
                                 </div>
                               ) : null}
                               <button
@@ -21402,6 +23222,10 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                                   <div className="miniapp-batch-field is-store">
                                     <span>需要单独开票</span>
                                     <strong>{item.separateInvoiceRequired}</strong>
+                                  </div>
+                                  <div className="miniapp-batch-field is-store">
+                                    <span>开票备注</span>
+                                    <strong>{item.invoiceRemark || "-"}</strong>
                                   </div>
                                 </div>
                               ) : null}
@@ -21830,16 +23654,15 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                     {shouldShowMiniappDefaultBillingType ? (
                       <label className={`miniapp-title-form-row is-select ${miniappInvoiceTitleCreateErrors.defaultBillingType ? "is-error" : ""}`}>
                         <span className="is-required">默认开票类型</span>
-                        <select
-                          className={miniappInvoiceTitleCreateForm.defaultBillingType ? "" : "is-placeholder"}
-                          value={miniappInvoiceTitleCreateForm.defaultBillingType}
-                          onChange={(event) => handleChangeMiniappInvoiceTitleCreate("defaultBillingType", event.target.value)}
+                        <button
+                          className={`miniapp-title-form-select-trigger ${miniappInvoiceTitleCreateForm.defaultBillingType ? "" : "is-placeholder"}`}
+                          type="button"
+                          onClick={() => setIsMiniappDefaultBillingTypePickerOpen(true)}
                         >
-                          <option value="">请选择</option>
-                          {miniappInvoiceTitleCreateSupportedTypes.map((invoiceType) => (
-                            <option key={`miniapp-default-billing-${invoiceType}`} value={getBuyerPcMallBillingTypeFromInvoiceType(invoiceType)}>{invoiceType}</option>
-                          ))}
-                        </select>
+                          {miniappInvoiceTitleCreateForm.defaultBillingType
+                            ? getBuyerPcMallInvoiceTypeFromBillingType(miniappInvoiceTitleCreateForm.defaultBillingType)
+                            : "请选择"}
+                        </button>
                       </label>
                     ) : null}
 
@@ -21959,6 +23782,27 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                 <div className="miniapp-title-footer">
                   <button className="miniapp-title-create-btn" type="button" onClick={handleSaveMiniappInvoiceTitleCreate}>保存</button>
                 </div>
+
+                {isMiniappDefaultBillingTypePickerOpen ? (
+                  <div className="miniapp-order-overlay miniapp-title-default-billing-overlay" onClick={() => setIsMiniappDefaultBillingTypePickerOpen(false)}>
+                    <div className="miniapp-order-sheet miniapp-title-default-billing-sheet" onClick={(event) => event.stopPropagation()}>
+                      <div className="miniapp-order-sheet-body">
+                        <div className="miniapp-title-default-billing-options">
+                          {miniappInvoiceTitleCreateSupportedTypes.map((invoiceType) => (
+                            <button
+                              className={`miniapp-title-default-billing-option ${miniappInvoiceTitleCreateForm.defaultBillingType === getBuyerPcMallBillingTypeFromInvoiceType(invoiceType) ? "is-active" : ""}`}
+                              key={`miniapp-default-billing-option-${invoiceType}`}
+                              type="button"
+                              onClick={() => handleSelectMiniappDefaultBillingType(invoiceType)}
+                            >
+                              {invoiceType}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             ) : isInvoiceTitleManagementView ? (
               <div className="miniapp-title-page">
@@ -22338,14 +24182,14 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                         <section className="miniapp-order-preview-section">
                           <h4>发票信息</h4>
                           <div className={`miniapp-order-preview-row miniapp-order-preview-select-row ${isMiniappPreviewInvoiceTypeError ? "is-error" : ""}`}>
-                            <span>发票类型</span>
+                            <span>申请开票类型</span>
                             {hasMiniappPreviewInvoiceTypePicker ? (
                               <div className="miniapp-order-preview-select-cell">
                                 <button className="miniapp-order-preview-select-trigger" type="button" onClick={() => setIsMiniappPreviewInvoiceTypePickerOpen(true)}>
-                                  <strong className={displayedMiniappPreviewInvoiceType ? "" : "is-placeholder"}>{displayedMiniappPreviewInvoiceType || "请选择发票类型"}</strong>
+                                  <strong className={displayedMiniappPreviewInvoiceType ? "" : "is-placeholder"}>{displayedMiniappPreviewInvoiceType || "请选择开票类型"}</strong>
                                   <em>›</em>
                                 </button>
-                                {isMiniappPreviewInvoiceTypeError ? <p>请选择发票类型</p> : null}
+                                {isMiniappPreviewInvoiceTypeError ? <p>请选择开票类型</p> : null}
                               </div>
                             ) : (
                               <strong>{displayedMiniappPreviewInvoiceType}</strong>
@@ -22588,14 +24432,14 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                         <section className="miniapp-order-preview-section">
                           <h4>发票信息</h4>
                           <div className={`miniapp-order-preview-row miniapp-order-preview-select-row ${isMiniappPreviewInvoiceTypeError ? "is-error" : ""}`}>
-                            <span>发票类型</span>
+                            <span>申请开票类型</span>
                             {hasMiniappPreviewInvoiceTypePicker ? (
                               <div className="miniapp-order-preview-select-cell">
                                 <button className="miniapp-order-preview-select-trigger" type="button" onClick={() => setIsMiniappPreviewInvoiceTypePickerOpen(true)}>
-                                  <strong className={displayedMiniappPreviewInvoiceType ? "" : "is-placeholder"}>{displayedMiniappPreviewInvoiceType || "请选择发票类型"}</strong>
+                                  <strong className={displayedMiniappPreviewInvoiceType ? "" : "is-placeholder"}>{displayedMiniappPreviewInvoiceType || "请选择开票类型"}</strong>
                                   <em>›</em>
                                 </button>
-                                {isMiniappPreviewInvoiceTypeError ? <p>请选择发票类型</p> : null}
+                                {isMiniappPreviewInvoiceTypeError ? <p>请选择开票类型</p> : null}
                               </div>
                             ) : (
                               <strong>{displayedMiniappPreviewInvoiceType}</strong>
@@ -23186,9 +25030,30 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
             )}
 
             {isInvoiceAppliedModifyView && !miniappAppliedModifyPickerField ? (
-              <div className="miniapp-applied-modify-page-footer">
-                <button className="miniapp-batch-cancel-btn" type="button" onClick={() => setMiniappView("invoice-helper")}>取消</button>
-                <button className="miniapp-batch-submit-btn" type="button" onClick={handleConfirmMiniappAppliedModify}>确定</button>
+              <div className={`miniapp-applied-modify-page-footer ${isMiniappAppliedModifyEditMode ? "is-editing" : ""}`}>
+                {isMiniappAppliedModifyEditMode ? (
+                  <>
+                    <button className="miniapp-assistant-footer-toggle miniapp-batch-footer-toggle" type="button" onClick={handleToggleMiniappAppliedModifyEditPage}>
+                      <span className={`miniapp-assistant-footer-check ${isMiniappAppliedModifyPageAllSelected ? "is-selected" : ""}`}>
+                        <span>✓</span>
+                      </span>
+                      <span className="miniapp-assistant-footer-label">本页全选</span>
+                    </button>
+                    <button
+                      className={`miniapp-batch-submit-btn ${selectedMiniappAppliedModifyEditRowIds.length > 0 ? "is-enabled" : "is-disabled"}`}
+                      type="button"
+                      disabled={selectedMiniappAppliedModifyEditRowIds.length <= 0}
+                      onClick={handleRemoveMiniappAppliedModifySelectedRows}
+                    >
+                      移除
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button className="miniapp-batch-cancel-btn" type="button" onClick={() => setMiniappView("invoice-helper")}>取消</button>
+                    <button className="miniapp-batch-submit-btn" type="button" onClick={handleConfirmMiniappAppliedModify}>确定</button>
+                  </>
+                )}
               </div>
               ) : !isOrderListView && !isInvoiceAssistantView && !isInvoiceBatchApplyView && !isInvoiceAppliedModifyView && !isMiniappInvoiceOrderDetailView && !isMiniappStorePickerView && !isInvoiceServiceChatView && !isMiniappInvoicePreviewPageView && !isMiniappInvoiceMorePageView && !isInvoiceDetailView && !isInvoiceEditView && !isInvoiceTitleManagementView && !isInvoiceTitleCreateView && !isWholesaleDetailView && !isWholesaleCheckoutView ? (
                 <nav className="miniapp-tabbar">
@@ -23201,6 +25066,72 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
               </nav>
             ) : null}
           </div>
+          {miniappBatchInvoiceTypePickerOrderId ? (
+            <div
+              className="miniapp-batch-invoice-type-dialog"
+              role="dialog"
+              aria-modal="true"
+              aria-label="请选择开票类型"
+            >
+              <button
+                className="miniapp-batch-invoice-type-backdrop"
+                type="button"
+                aria-label="关闭开票类型选择"
+                onClick={() => setMiniappBatchInvoiceTypePickerOrderId("")}
+              />
+              <div className="miniapp-batch-invoice-type-sheet">
+                {activeMiniappBatchInvoiceTypeOptions.length === 0 ? (
+                  <div className="miniapp-batch-invoice-type-empty">当前暂无可选开票类型</div>
+                ) : activeMiniappBatchInvoiceTypeOptions.map((item) => (
+                  <button
+                    className={`miniapp-batch-invoice-type-option ${
+                      miniappBatchInvoiceTypeSelections[miniappBatchInvoiceTypePickerOrderId] === item ? "is-selected" : ""
+                    }`}
+                    type="button"
+                    key={item}
+                    aria-pressed={miniappBatchInvoiceTypeSelections[miniappBatchInvoiceTypePickerOrderId] === item}
+                    onClick={() => handleSelectMiniappBatchInvoiceType(item)}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {miniappAppliedModifyInvoiceTypePickerOrderId ? (
+            <div
+              className="miniapp-batch-invoice-type-dialog"
+              role="dialog"
+              aria-modal="true"
+              aria-label="请选择开票类型"
+            >
+              <button
+                className="miniapp-batch-invoice-type-backdrop"
+                type="button"
+                aria-label="关闭开票类型选择"
+                onClick={() => setMiniappAppliedModifyInvoiceTypePickerOrderId("")}
+              />
+              <div className="miniapp-batch-invoice-type-sheet">
+                {activeMiniappAppliedModifyInvoiceTypeOptions.length === 0 ? (
+                  <div className="miniapp-batch-invoice-type-empty">当前暂无可选开票类型</div>
+                ) : activeMiniappAppliedModifyInvoiceTypeOptions.map((item) => {
+                  const selectedInvoiceType = miniappAppliedModifyInvoiceTypeSelections[miniappAppliedModifyInvoiceTypePickerOrderId]
+                    || getMiniappAppliedModifyDefaultInvoiceType(activeMiniappAppliedModifyInvoiceTypePickerRow);
+                  return (
+                    <button
+                      className={`miniapp-batch-invoice-type-option ${selectedInvoiceType === item ? "is-selected" : ""}`}
+                      type="button"
+                      key={item}
+                      aria-pressed={selectedInvoiceType === item}
+                      onClick={() => handleSelectMiniappAppliedModifyInvoiceType(item)}
+                    >
+                      {item}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
     </div>
@@ -23242,6 +25173,7 @@ export default function App() {
   ));
   const [activeServiceBuyerAccount, setActiveServiceBuyerAccount] = useState("");
   const [activeShopTab, setActiveShopTab] = useState("发票管理");
+  const [supplierContractEntry, setSupplierContractEntry] = useState({ tab: "合同管理", requestId: 0 });
   const [goodsRows, setGoodsRows] = useState(supplierGoodsRows);
   const [shopWholesaleRule, setShopWholesaleRule] = useState(initialShopWholesaleRule);
   const [platformCenterPage, setPlatformCenterPage] = useState("home");
@@ -23310,7 +25242,7 @@ export default function App() {
   const isServiceSection = activeSection === "service";
   const isMarketingSection = activeSection === "marketing";
   const isTodoPage = activeUtilityPage === "todo";
-  const currentPageTitle = isTodoPage ? "待办事项" : isHomeSection ? "首页-控制台" : isGoodsSection ? activeGoodsPage : isTradeSection ? activeTradePage : isBuyerSection ? activeBuyerPage : isShopSection ? activeShopTab : isServiceSection ? activeServicePage : currentMarketingPage;
+  const currentPageTitle = isTodoPage ? "待办事项" : isHomeSection ? "首页-控制台" : isGoodsSection ? activeGoodsPage : isTradeSection ? activeTradePage : isBuyerSection ? activeBuyerPage : isShopSection ? (activeShopPage === "合同管理" ? "合同管理" : activeShopTab) : isServiceSection ? activeServicePage : currentMarketingPage;
   const platformTopActions = useMemo(() => ([
     { key: "supplier-admin", label: "供应商后台", icon: "supplier-admin" },
     { key: "pc-mall", label: "买家PC商城", icon: "pc-mall" },
@@ -23341,7 +25273,6 @@ export default function App() {
     detailActivity,
     activities
   } = currentPageState;
-
   const activeSpecProduct = selectedProducts.find((item) => item.id === activeSpecProductId) || selectedProducts[0];
   const activeSpecSelectedIds = selectedSpecIdsByProduct[activeSpecProductId] || [];
   const activeSpecProductFieldEditModes = productFieldEditModesByProduct?.[activeSpecProductId] || initialProductFieldEditModes;
@@ -24134,7 +26065,13 @@ export default function App() {
     setActiveSection("shop");
     setActiveUtilityPage("");
     setActiveShopPage(pageName);
-    setActiveShopTab("发票管理");
+    setActiveShopTab(pageName === "合同管理" ? "合同管理" : "发票管理");
+    if (pageName === "合同管理") {
+      setSupplierContractEntry((current) => ({
+        tab: "合同管理",
+        requestId: current.requestId + 1
+      }));
+    }
     setShopInvoiceEntryPreset({
       statusTab: "全部",
       markerFilter: "全部",
@@ -24637,6 +26574,14 @@ export default function App() {
   }
 
   if (activePortalPage === "platform-center") {
+    const isPlatformFullReductionPage = platformCenterPage === "marketing-full-reduction";
+    const activePlatformTopActions = isPlatformFullReductionPage
+      || platformCenterPage === "shop-contract-management"
+      ? [
+        { key: "export", label: "导出记录", icon: "export" },
+        { key: "logout", label: "退出登录", icon: "logout" }
+      ]
+      : platformTopActions;
     const isPlatformSidebarItemActive = (item) => {
       if (item.key === "home") return platformCenterPage === "home";
       return platformCenterPage === item.key || item.children?.some((child) => child.key === platformCenterPage);
@@ -24656,8 +26601,12 @@ export default function App() {
       ? "交易设置"
       : platformCenterPage === "shop-todo-management"
         ? "待办管理"
+      : platformCenterPage === "shop-contract-management"
+        ? "合同管理"
       : platformCenterPage === "marketing-flash-sale"
         ? "限时购"
+      : platformCenterPage === "marketing-full-reduction"
+        ? "满减"
       : platformCenterPage === "shop-invoice-management"
         ? platformShopTab
         : "控制台";
@@ -24715,21 +26664,28 @@ export default function App() {
       closable: false,
       onClick: () => handleSwitchPlatformCenterPage("shop-todo-management"),
       onClose: undefined
-    }] : platformCenterPage === "marketing-flash-sale" ? [
+    }] : platformCenterPage === "shop-contract-management" ? [{
+      key: "platform-shop-contract-management",
+      label: "合同管理",
+      isCurrent: true,
+      closable: false,
+      onClick: () => handleSwitchPlatformCenterPage("shop-contract-management"),
+      onClose: undefined
+    }] : platformCenterPage === "marketing-flash-sale" || platformCenterPage === "marketing-full-reduction" ? [
       {
         key: "platform-marketing-center",
         label: "营销中心",
         isCurrent: false,
         closable: true,
-        onClick: () => handleSwitchPlatformCenterPage("marketing-flash-sale"),
+        onClick: () => handleSwitchPlatformCenterPage(platformCenterPage),
         onClose: () => handleSwitchPlatformCenterPage("home")
       },
       {
-        key: "platform-marketing-flash-sale",
-        label: "限时购",
+        key: `platform-${platformCenterPage}`,
+        label: platformCenterPage === "marketing-full-reduction" ? "满减" : "限时购",
         isCurrent: true,
         closable: true,
-        onClick: () => handleSwitchPlatformCenterPage("marketing-flash-sale"),
+        onClick: () => handleSwitchPlatformCenterPage(platformCenterPage),
         onClose: () => handleSwitchPlatformCenterPage("home")
       }
     ] : null;
@@ -24786,8 +26742,9 @@ export default function App() {
             currentMarketingPage={platformCurrentPageLabel}
             homeTabLabel="控制台"
             onTopActionClick={handleTopActionClick}
-            topActionItems={platformTopActions}
+            topActionItems={activePlatformTopActions}
             customTabs={platformCustomTabs}
+            showHomeTab={!isPlatformFullReductionPage}
           />
           <main className="workspace-main platform-workspace-main">
             {platformCenterPage === "trade-settings" ? <PlatformTradeSettingsPage /> : platformCenterPage === "shop-invoice-management" ? (
@@ -24804,6 +26761,8 @@ export default function App() {
                 onCloseBulkUploadTab={() => setPlatformShopTab("发票管理")}
                 onContactBuyer={(buyerAccount) => handleSwitchServicePage("在线客服", buyerAccount)}
               />
+            ) : platformCenterPage === "shop-contract-management" ? (
+              <PlatformContractManagementPage />
             ) : platformCenterPage === "shop-todo-management" ? (
               <PlatformShopTodoManagementPage
                 filters={platformTodoFilters}
@@ -24833,6 +26792,8 @@ export default function App() {
                 activeDetailItem={activePlatformTodoDetail}
                 onCloseDetail={() => setPlatformTodoDetailId("")}
               />
+            ) : platformCenterPage === "marketing-full-reduction" ? (
+              <PlatformFullReductionPage />
             ) : platformCenterPage === "marketing-flash-sale" ? (
               <PlatformFlashSalePage />
             ) : <PlatformCenterPage />}
@@ -24842,46 +26803,70 @@ export default function App() {
     );
   }
 
-  const shopHeaderTabs = isShopSection ? [
+  const shopHeaderTabs = isShopSection ? (
+    activeShopPage === "合同管理" ? [
+      {
+        key: "shop-contract-management",
+        label: "合同管理",
+        isCurrent: true,
+        onClick: () => handleSwitchShopPage("合同管理")
+      }
+    ] : [
+      {
+        key: "shop-invoice-management",
+        label: "发票管理",
+        isCurrent: activeShopTab === "发票管理",
+        onClick: () => setActiveShopTab("发票管理")
+      },
+      ...(activeShopTab === "订单信息" ? [{
+        key: "shop-order-info",
+        label: "订单信息",
+        isCurrent: true,
+        closable: true,
+        onClick: () => setActiveShopTab("订单信息"),
+        onClose: () => setActiveShopTab("发票管理")
+      }] : []),
+      ...(activeShopTab === "发票信息" ? [{
+        key: "shop-invoice-info",
+        label: "发票详情",
+        isCurrent: true,
+        closable: true,
+        onClick: () => setActiveShopTab("发票信息"),
+        onClose: () => setActiveShopTab("发票管理")
+      }] : []),
+      ...(activeShopTab === "历史操作" ? [{
+        key: "shop-invoice-history",
+        label: "历史操作",
+        isCurrent: true,
+        closable: true,
+        onClick: () => setActiveShopTab("历史操作"),
+        onClose: () => setActiveShopTab("发票管理")
+      }] : []),
+      ...(activeShopTab === "批量上传发票" ? [{
+        key: "shop-invoice-bulk-upload",
+        label: "批量导入发票",
+        isCurrent: true,
+        closable: true,
+        onClick: () => setActiveShopTab("批量上传发票"),
+        onClose: () => setActiveShopTab("发票管理")
+      }] : []),
+    ]
+  ) : null;
+  const marketingHeaderTabs = isMarketingSection && isFullReductionPage(currentMarketingPage) && detailActivity ? [
     {
-      key: "shop-invoice-management",
-      label: "发票管理",
-      isCurrent: activeShopTab === "发票管理",
-      onClick: () => setActiveShopTab("发票管理")
+      key: "full-reduction-list",
+      label: "满减",
+      isCurrent: false,
+      closable: true,
+      onClick: () => updateCurrentField("detailActivity", null)
     },
-    ...(activeShopTab === "订单信息" ? [{
-      key: "shop-order-info",
-      label: "订单信息",
+    {
+      key: "full-reduction-detail",
+      label: "满减详情",
       isCurrent: true,
-      closable: true,
-      onClick: () => setActiveShopTab("订单信息"),
-      onClose: () => setActiveShopTab("发票管理")
-    }] : []),
-    ...(activeShopTab === "发票信息" ? [{
-      key: "shop-invoice-info",
-      label: "发票详情",
-      isCurrent: true,
-      closable: true,
-      onClick: () => setActiveShopTab("发票信息"),
-      onClose: () => setActiveShopTab("发票管理")
-    }] : []),
-    ...(activeShopTab === "历史操作" ? [{
-      key: "shop-invoice-history",
-      label: "历史操作",
-      isCurrent: true,
-      closable: true,
-      onClick: () => setActiveShopTab("历史操作"),
-      onClose: () => setActiveShopTab("发票管理")
-    }] : []),
-    ...(activeShopTab === "批量上传发票" ? [{
-      key: "shop-invoice-bulk-upload",
-      label: "批量导入发票",
-      isCurrent: true,
-      closable: true,
-      onClick: () => setActiveShopTab("批量上传发票"),
-      onClose: () => setActiveShopTab("发票管理")
-    }] : []),
-  ] : null;
+      closable: true
+    }
+  ] : shopHeaderTabs;
 
   return (
     <div className="admin-shell">
@@ -24983,7 +26968,7 @@ export default function App() {
       </aside>
 
       <section className="workspace">
-        <Header currentMarketingPage={currentPageTitle} specialCreateTab={isMarketingSection && isCreating && (isPrimarySpecialPricePage(currentMarketingPage) || isSecondarySpecialPricePage(currentMarketingPage)) ? "新增专享价" : ""} onTopActionClick={handleTopActionClick} customTabs={shopHeaderTabs} />
+        <Header currentMarketingPage={currentPageTitle} specialCreateTab={isMarketingSection && isCreating && (isPrimarySpecialPricePage(currentMarketingPage) || isSecondarySpecialPricePage(currentMarketingPage) || isFullReductionPage(currentMarketingPage)) ? `新增${currentMarketingPage}` : ""} onTopActionClick={handleTopActionClick} customTabs={marketingHeaderTabs} />
         <main className="workspace-main">
           {isTodoPage ? (
             <SupplierTodoPage
@@ -25051,27 +27036,39 @@ export default function App() {
               />
             )
           ) : isShopSection ? (
-            <ShopInvoicePage
-              activeShopTab={activeShopTab}
-              initialInvoiceStatusTab={shopInvoiceEntryPreset.statusTab}
-              initialMarkerFilter={shopInvoiceEntryPreset.markerFilter}
-              invoiceEntryRequestId={shopInvoiceEntryPreset.requestId}
-              onOpenOrderInfoTab={() => setActiveShopTab("订单信息")}
-              onCloseOrderInfoTab={() => setActiveShopTab("发票管理")}
-              onOpenInvoiceInfoTab={() => setActiveShopTab("发票信息")}
-              onCloseInvoiceInfoTab={() => setActiveShopTab("发票管理")}
-              onOpenInvoiceHistoryTab={() => setActiveShopTab("历史操作")}
-              onCloseInvoiceHistoryTab={() => setActiveShopTab("发票管理")}
-              onOpenBulkUploadTab={() => setActiveShopTab("批量上传发票")}
-              onCloseBulkUploadTab={() => setActiveShopTab("发票管理")}
-              onContactBuyer={(buyerAccount) => handleSwitchServicePage("在线客服", buyerAccount)}
-            />
+            activeShopPage === "合同管理" ? (
+              <SupplierContractManagementPage initialTab={supplierContractEntry.tab} tabRequestId={supplierContractEntry.requestId} />
+            ) : (
+              <ShopInvoicePage
+                activeShopTab={activeShopTab}
+                initialInvoiceStatusTab={shopInvoiceEntryPreset.statusTab}
+                initialMarkerFilter={shopInvoiceEntryPreset.markerFilter}
+                invoiceEntryRequestId={shopInvoiceEntryPreset.requestId}
+                onOpenOrderInfoTab={() => setActiveShopTab("订单信息")}
+                onCloseOrderInfoTab={() => setActiveShopTab("发票管理")}
+                onOpenInvoiceInfoTab={() => setActiveShopTab("发票信息")}
+                onCloseInvoiceInfoTab={() => setActiveShopTab("发票管理")}
+                onOpenInvoiceHistoryTab={() => setActiveShopTab("历史操作")}
+                onCloseInvoiceHistoryTab={() => setActiveShopTab("发票管理")}
+                onOpenBulkUploadTab={() => setActiveShopTab("批量上传发票")}
+                onCloseBulkUploadTab={() => setActiveShopTab("发票管理")}
+                onContactBuyer={(buyerAccount) => handleSwitchServicePage("在线客服", buyerAccount)}
+              />
+            )
           ) : isServiceSection ? (
             <OnlineCustomerServicePage activeBuyerAccount={activeServiceBuyerAccount} />
           ) : (
             <>
-              {!(isPrimarySpecialPricePage(currentMarketingPage) || isSecondarySpecialPricePage(currentMarketingPage)) ? <TabSection creating={isCreating} editing={isEditMode} detailing={!isCreating && !!detailActivity} currentMarketingPage={currentMarketingPage} onSwitchToList={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); updateCurrentField("detailActivity", null); }} /> : null}
-              {isCreating ? (isPrimarySpecialPricePage(currentMarketingPage) ? <SpecialPriceCreatePage form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} productFieldEditModesByProduct={productFieldEditModesByProduct || {}} productFieldErrorsByProduct={productFieldErrorsByProduct || {}} onToggleProductFieldEditMode={handleToggleProductFieldEditMode} onToggleGoodsSelection={handleToggleGoodsSelection} onRemoveProduct={handleRemoveProduct} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onShowSpecDetail={setDetailSpecProduct} onTerminateProduct={handleTerminateProduct} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} /> : isSecondarySpecialPricePage(currentMarketingPage) ? <SpecialPrice2CreatePage form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} productFieldEditModesByProduct={productFieldEditModesByProduct || {}} productFieldErrorsByProduct={productFieldErrorsByProduct || {}} onToggleProductFieldEditMode={handleToggleProductFieldEditMode} onToggleGoodsSelection={handleToggleGoodsSelection} onRemoveProduct={handleRemoveProduct} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onShowSpecDetail={setDetailSpecProduct} onTerminateProduct={handleTerminateProduct} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} /> : <CreatePage pageName={currentMarketingPage} form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} productFieldEditModesByProduct={productFieldEditModesByProduct || {}} productFieldErrorsByProduct={productFieldErrorsByProduct || {}} onToggleProductFieldEditMode={handleToggleProductFieldEditMode} onToggleGoodsSelection={handleToggleGoodsSelection} onRemoveProduct={handleRemoveProduct} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onShowSpecDetail={setDetailSpecProduct} onTerminateProduct={handleTerminateProduct} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} />) : detailActivity ? <DetailPage detailActivity={detailActivity} page={detailPage} setPage={(value) => updateCurrentField("detailPage", typeof value === "function" ? value(detailPage) : value)} pageSize={detailPageSize} setPageSize={(value) => updateCurrentField("detailPageSize", value)} onShowSpecDetail={setDetailSpecProduct} /> : <ListPage pageName={currentMarketingPage} filters={filters} setFilters={(value) => updateCurrentField("filters", value)} page={page} setPage={(value) => updateCurrentField("page", typeof value === "function" ? value(page) : value)} pageSize={pageSize} setPageSize={(value) => updateCurrentField("pageSize", value)} onCreate={() => { resetCreateState(); setIsCreating(true); updateCurrentField("detailActivity", null); }} onAction={handleActivityAction} activities={activities} onOpenBuyerGroupDetail={handleOpenBuyerGroupDetail} />}
+              {!(isPrimarySpecialPricePage(currentMarketingPage) || isSecondarySpecialPricePage(currentMarketingPage) || isFullReductionPage(currentMarketingPage)) ? <TabSection creating={isCreating} editing={isEditMode} detailing={!isCreating && !!detailActivity} currentMarketingPage={currentMarketingPage} onSwitchToList={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); updateCurrentField("detailActivity", null); }} /> : null}
+              {isFullReductionPage(currentMarketingPage) ? (
+                isCreating ? (
+                  <FullReductionCreatePage form={createForm} onFormChange={handleFormChange} />
+                ) : detailActivity ? (
+                  <FullReductionDetailPage activity={detailActivity} />
+                ) : (
+                  <FullReductionListPage filters={filters} setFilters={(value) => updateCurrentField("filters", value)} page={page} setPage={(value) => updateCurrentField("page", typeof value === "function" ? value(page) : value)} pageSize={pageSize} setPageSize={(value) => updateCurrentField("pageSize", value)} onCreate={() => { resetCreateState(); setIsCreating(true); updateCurrentField("detailActivity", null); }} onDetail={(activity) => updateCurrentField("detailActivity", activity)} activities={activities} />
+                )
+              ) : isCreating ? (isPrimarySpecialPricePage(currentMarketingPage) ? <SpecialPriceCreatePage form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} productFieldEditModesByProduct={productFieldEditModesByProduct || {}} productFieldErrorsByProduct={productFieldErrorsByProduct || {}} onToggleProductFieldEditMode={handleToggleProductFieldEditMode} onToggleGoodsSelection={handleToggleGoodsSelection} onRemoveProduct={handleRemoveProduct} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onShowSpecDetail={setDetailSpecProduct} onTerminateProduct={handleTerminateProduct} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} /> : isSecondarySpecialPricePage(currentMarketingPage) ? <SpecialPrice2CreatePage form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} productFieldEditModesByProduct={productFieldEditModesByProduct || {}} productFieldErrorsByProduct={productFieldErrorsByProduct || {}} onToggleProductFieldEditMode={handleToggleProductFieldEditMode} onToggleGoodsSelection={handleToggleGoodsSelection} onRemoveProduct={handleRemoveProduct} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onShowSpecDetail={setDetailSpecProduct} onTerminateProduct={handleTerminateProduct} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} /> : <CreatePage pageName={currentMarketingPage} form={createForm} isEditMode={isEditMode} onFormChange={handleFormChange} onResetFilters={handleResetCreateFilters} selectedProducts={selectedProducts} selectedGoodsIds={selectedGoodsIds} productFieldEditModesByProduct={productFieldEditModesByProduct || {}} productFieldErrorsByProduct={productFieldErrorsByProduct || {}} onToggleProductFieldEditMode={handleToggleProductFieldEditMode} onToggleGoodsSelection={handleToggleGoodsSelection} onRemoveProduct={handleRemoveProduct} onBatchRemoveProducts={handleBatchRemoveProducts} onBack={() => { setIsCreating(false); setIsEditMode(false); closeAllCreateOverlays(); }} onOpenPicker={handleOpenPicker} onOpenSpecPicker={handleOpenSpecPicker} onShowSpecDetail={setDetailSpecProduct} onTerminateProduct={handleTerminateProduct} onUpdateProductFlashPrice={handleUpdateProductFlashPrice} onUpdateProductLimit={handleUpdateProductLimit} onUpdateProductActivityStock={handleUpdateProductActivityStock} onSave={handleCreateSave} modalOpen={isPickerOpen || isSpecOpen || isBatchSpecOpen} />) : detailActivity ? <DetailPage detailActivity={detailActivity} page={detailPage} setPage={(value) => updateCurrentField("detailPage", typeof value === "function" ? value(detailPage) : value)} pageSize={detailPageSize} setPageSize={(value) => updateCurrentField("detailPageSize", value)} onShowSpecDetail={setDetailSpecProduct} /> : <ListPage pageName={currentMarketingPage} filters={filters} setFilters={(value) => updateCurrentField("filters", value)} page={page} setPage={(value) => updateCurrentField("page", typeof value === "function" ? value(page) : value)} pageSize={pageSize} setPageSize={(value) => updateCurrentField("pageSize", value)} onCreate={() => { resetCreateState(); setIsCreating(true); updateCurrentField("detailActivity", null); }} onAction={handleActivityAction} activities={activities} onOpenBuyerGroupDetail={handleOpenBuyerGroupDetail} />}
             </>
           )}
         </main>
