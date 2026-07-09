@@ -1473,12 +1473,114 @@ const platformCenterSidebarItems = [
   { key: "miniapp", label: "小程序", icon: "miniapp" }
 ];
 const platformTradeSettingsTabs = ["交易参数", "发票参数", "售后原因设置"];
-const platformContractTabs = ["合同管理", "补充协议管理", "买家先货后款协议", "店铺先货后款协议", "CA证书查询", "合同设置"];
+const platformContractTabs = ["合同管理", "补充协议管理", "买家先货后款协议", "店铺先货后款协议", "合同设置"];
+const platformContractManagementRows = [
+  {
+    id: "platform-contract-001",
+    storeId: "7870",
+    storeName: "超级个体工商户店铺66",
+    companyName: "超级个体工商户66",
+    contractNo: "CGPTCO202607091487",
+    status: "已签署",
+    createdAt: "2026-07-09 15:44:11",
+    expiredAt: "2099-12-31 23:59:59",
+    actions: ["预览合同", "下载合同", "查看", "补充协议"]
+  },
+  {
+    id: "platform-contract-002",
+    storeId: "7870",
+    storeName: "超级个体工商户店铺66",
+    companyName: "超级个体工商户66",
+    contractNo: "CGPTCO202606291870",
+    status: "签署失败",
+    createdAt: "2026-06-29 14:59:02",
+    expiredAt: "2099-12-31 23:59:59",
+    actions: ["预览合同", "下载合同", "查看"]
+  },
+  {
+    id: "platform-contract-003",
+    storeId: "7870",
+    storeName: "超级个体工商户店铺66",
+    companyName: "超级个体工商户66",
+    contractNo: "CGPTCO202606267319",
+    status: "已终止",
+    createdAt: "2026-06-26 18:50:27",
+    expiredAt: "2026-07-02 09:20:20",
+    actions: ["预览合同", "下载合同", "查看", "补充协议"]
+  }
+];
 const platformContractSupplementRows = [
   { name: "新增类目补充协议", fileName: "c2efb4082bb6fd8e942153284a1ee001_1768469898479.ftl" },
   { name: "佣金变更补充协议", fileName: "4148fea224f4ec84253cbb0a5b283e32_1768469904334.ftl" },
   { name: "卖家先货后款协议", fileName: "4148fea224f4ec84253cbb0a5b283e32_1768469904334.ftl" },
   { name: "买家先货后款协议", fileName: "0ddaafb28085266108810920de2df5ff_1781522366019.ftl" }
+];
+const platformBuyerPayLaterContractRows = [
+  {
+    id: "buyer-paylater-001",
+    buyerAccount: "Shawnee005",
+    signSubject: "测试夷初",
+    companyName: "测试夷初",
+    contractNo: "17834712191000003",
+    auditStatus: "审核通过",
+    contractStatus: "已签署",
+    appliedAt: "2026-07-07\n17:41:36",
+    signedAt: "2026-07-08\n08:40:30",
+    endedAt: "-",
+    actions: ["查看详情", "预览合同", "下载合同", "终止合同"]
+  },
+  {
+    id: "buyer-paylater-002",
+    buyerAccount: "Shawnee005",
+    signSubject: "测试夷初",
+    companyName: "测试夷初",
+    contractNo: "17829717201000003",
+    auditStatus: "审核通过",
+    contractStatus: "已终止",
+    appliedAt: "2026-07-02\n13:55:26",
+    signedAt: "2026-07-02\n13:56:48",
+    endedAt: "2026-07-08\n08:40:30",
+    actions: ["查看详情", "预览合同", "下载合同"]
+  },
+  {
+    id: "buyer-paylater-003",
+    buyerAccount: "Shawnee005",
+    signSubject: "测试夷初",
+    companyName: "测试夷初",
+    contractNo: "17810761421000001",
+    auditStatus: "审核通过",
+    contractStatus: "已终止",
+    appliedAt: "2026-06-10\n15:22:30",
+    signedAt: "2026-06-10\n15:23:03",
+    endedAt: "2026-06-16\n09:50:44",
+    actions: ["查看详情", "预览合同", "下载合同"]
+  },
+  {
+    id: "buyer-paylater-004",
+    buyerAccount: "Shawnee005",
+    signSubject: "测试夷初",
+    companyName: "测试夷初",
+    contractNo: "17810757011000001",
+    auditStatus: "审核通过",
+    contractStatus: "已终止",
+    appliedAt: "2026-06-10\n13:59:37",
+    signedAt: "2026-06-10\n15:15:09",
+    endedAt: "2026-06-10\n15:15:33",
+    actions: ["查看详情", "预览合同", "下载合同"]
+  },
+  {
+    id: "buyer-paylater-005",
+    buyerAccount: "Shawnee005",
+    signSubject: "测试夷初",
+    companyName: "测试夷初",
+    contractNo: "17810567571000001",
+    auditStatus: "审核通过",
+    contractStatus: "已终止",
+    appliedAt: "2026-06-10\n09:59:20",
+    signedAt: "2026-06-10\n10:40:37",
+    endedAt: "2026-06-10\n15:15:09",
+    actions: ["查看详情", "预览合同", "下载合同"]
+  }
 ];
 const platformFlashSaleTabs = ["限时购列表", "页面设置", "活动商品分类", "参数设置"];
 const platformFlashSaleRows = [
@@ -6534,7 +6636,7 @@ function PcMallExportProcessingModal({ onClose, onViewProgress }) {
   );
 }
 
-function BuyerPcMallInvoiceActionModal({ title, message, confirmText = "确定", onClose, onConfirm, showCancel = true, className = "", showClose = false }) {
+function BuyerPcMallInvoiceActionModal({ title, message, confirmText = "确定", cancelText = "取消", onClose, onConfirm, showCancel = true, className = "", showClose = false }) {
   return (
     <div className="home-invoice-alert-overlay" onClick={onClose} role="presentation">
       <div className={`home-invoice-alert-dialog pc-mall-invoice-action-dialog ${className}`} onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="pc-mall-invoice-action-title">
@@ -6544,7 +6646,7 @@ function BuyerPcMallInvoiceActionModal({ title, message, confirmText = "确定",
           <p className="home-invoice-alert-message pc-mall-invoice-action-message">{message}</p>
         </div>
         <div className="pc-mall-invoice-action-foot">
-          {showCancel ? <button className="pc-mall-btn" type="button" onClick={onClose}>取消</button> : null}
+          {showCancel ? <button className="pc-mall-btn" type="button" onClick={onClose}>{cancelText}</button> : null}
           <button className="home-invoice-alert-action" type="button" onClick={onConfirm}>{confirmText}</button>
         </div>
       </div>
@@ -8995,7 +9097,13 @@ function BuyerPcMallPayLaterServicePage({ onOpenCertificateManagement, onSignAgr
   );
 }
 
-function BuyerPcMallPayLaterSignPage() {
+function BuyerPcMallPayLaterSignPage({ onOpenCertificateManagement }) {
+  const [isCertificateMissingNoticeOpen, setIsCertificateMissingNoticeOpen] = useState(false);
+  const handleGoApplyCertificate = () => {
+    setIsCertificateMissingNoticeOpen(false);
+    onOpenCertificateManagement?.();
+  };
+
   return (
     <>
       <div className="pc-mall-breadcrumb">商家中心 <span>››</span> 先货后款服务 <span>››</span> 签署先货后款协议</div>
@@ -9077,16 +9185,53 @@ function BuyerPcMallPayLaterSignPage() {
           </div>
 
           <div className="pc-paylater-form-actions">
-            <button className="pc-paylater-primary-btn" type="button">下一步，查看协议</button>
+            <button className="pc-paylater-primary-btn" type="button" onClick={() => setIsCertificateMissingNoticeOpen(true)}>下一步，查看协议</button>
           </div>
         </section>
+        {isCertificateMissingNoticeOpen ? (
+          <div className="modal-overlay pc-paylater-ca-modal-overlay" role="presentation">
+            <div className="modal-mask" onClick={() => setIsCertificateMissingNoticeOpen(false)} />
+            <div className="pc-paylater-ca-modal" role="dialog" aria-modal="true" aria-labelledby="pc-paylater-ca-title">
+              <div className="pc-paylater-ca-modal-head">
+                <h3 id="pc-paylater-ca-title">温馨提示</h3>
+                <button type="button" aria-label="关闭" onClick={() => setIsCertificateMissingNoticeOpen(false)}>×</button>
+              </div>
+              <div className="pc-paylater-ca-modal-body">
+                <p>当前不存在有效的CA证书，无法提交先货后款协议。</p>
+              </div>
+              <div className="pc-paylater-ca-modal-foot">
+                <button className="btn btn-reset" type="button" onClick={handleGoApplyCertificate}>去申请CA证书</button>
+                <button className="btn btn-dark" type="button" onClick={() => setIsCertificateMissingNoticeOpen(false)}>关闭</button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     </>
   );
 }
 
+function CaCertificateWarmTip() {
+  return (
+    <div className="ca-certificate-warm-tip">
+      <div className="ca-certificate-warm-tip-main">
+        <strong><span>!</span> 温馨提示:</strong>
+        <p>CA证书仅用于在线签署相关合同/协议文件，未申请CA证书或CA证书已过期的将无法正常在线签署合同/协议文件。</p>
+      </div>
+      <button type="button">展开⌄</button>
+    </div>
+  );
+}
+
 function BuyerPcMallPayLaterCertificatePage() {
-  const [certificateNoticeOpen, setCertificateNoticeOpen] = useState(false);
+  const [showCertificateApplyForm, setShowCertificateApplyForm] = useState(false);
+  const [certificateApplyStep, setCertificateApplyStep] = useState("form");
+  const [certificateSignMethod, setCertificateSignMethod] = useState("legal");
+  const [certificateSmsCode, setCertificateSmsCode] = useState("");
+  const [isCertificateSubmitting, setIsCertificateSubmitting] = useState(false);
+  const [certificateSubmitToast, setCertificateSubmitToast] = useState("");
+  const [certificateSubmitErrorOpen, setCertificateSubmitErrorOpen] = useState(false);
+  const certificateSubmitTimerRef = useRef(null);
   const certificateRows = [
     {
       certificateNo: "CGPTCO202607077857",
@@ -9113,69 +9258,234 @@ function BuyerPcMallPayLaterCertificatePage() {
       subjectId: "91330106MA2CGPT004"
     }
   ];
-  const hasActiveCertificate = certificateRows.some((item) => item.status === "生效中");
   const handleApplyCertificate = () => {
-    if (hasActiveCertificate) {
-      setCertificateNoticeOpen(true);
-    }
+    setShowCertificateApplyForm(true);
+    setCertificateApplyStep("form");
+    setCertificateSignMethod("legal");
+    setCertificateSmsCode("");
+    setCertificateSubmitToast("");
+    setCertificateSubmitErrorOpen(false);
   };
+  const handleCompleteCertificateVerification = () => {
+    if (isCertificateSubmitting) return;
+    setCertificateSubmitToast("");
+    setCertificateSubmitErrorOpen(false);
+    setIsCertificateSubmitting(true);
+    if (certificateSubmitTimerRef.current) {
+      clearTimeout(certificateSubmitTimerRef.current);
+    }
+    certificateSubmitTimerRef.current = setTimeout(() => {
+      setIsCertificateSubmitting(false);
+      certificateSubmitTimerRef.current = null;
+      if (certificateSmsCode.trim()) {
+        setCertificateSubmitToast("CA证书申请成功");
+        setShowCertificateApplyForm(false);
+        setCertificateApplyStep("form");
+        setCertificateSignMethod("legal");
+        setCertificateSmsCode("");
+        return;
+      }
+      setCertificateSubmitErrorOpen(true);
+    }, 2000);
+  };
+
+  useEffect(() => () => {
+    if (certificateSubmitTimerRef.current) {
+      clearTimeout(certificateSubmitTimerRef.current);
+    }
+  }, []);
+  useEffect(() => {
+    if (!certificateSubmitToast) return undefined;
+    const timer = setTimeout(() => setCertificateSubmitToast(""), 3000);
+    return () => clearTimeout(timer);
+  }, [certificateSubmitToast]);
 
   return (
     <>
       <div className="pc-mall-breadcrumb">商家中心 <span>››</span> 先货后款服务 <span>››</span> CA证书管理</div>
-      <div className="pc-paylater-certificate-page">
-        <div className="pc-paylater-certificate-toolbar">
-          <button type="button" onClick={handleApplyCertificate}>申请CA证书</button>
+      {showCertificateApplyForm && certificateApplyStep === "verify" ? (
+        <div className="pc-paylater-certificate-verify-page">
+          <div className="pc-paylater-certificate-verify-head">身份验证</div>
+          <div className="pc-paylater-certificate-verify-body">
+            <div className="pc-paylater-certificate-verify-grid">
+              <div><span>账号类型</span><strong>个人</strong></div>
+              <div><span>证书等级</span><strong>基础证书</strong></div>
+              <div><span>姓名</span><strong>李澳</strong></div>
+              <div><span>证件类型</span><strong>身份证</strong></div>
+              <div><span>证件号码</span><strong>4307*********3837</strong></div>
+              <div><span>手机号码</span><strong>177****3712</strong></div>
+            </div>
+            <hr />
+            <label className="pc-paylater-certificate-verify-sms">
+              <span><em>*</em> 短信验证码:</span>
+              <input
+                value={certificateSmsCode}
+                onChange={(event) => setCertificateSmsCode(event.target.value)}
+                placeholder="请输入短信验证码"
+              />
+            </label>
+            <button className="pc-paylater-certificate-verify-blue" type="button">发送验证码</button>
+            <button className="pc-paylater-certificate-verify-blue" type="button">提交验证</button>
+          </div>
+          <div className="pc-paylater-certificate-verify-actions">
+            <button className="pc-paylater-secondary-btn" type="button" onClick={() => setCertificateApplyStep("form")}>上一步</button>
+            <button className="pc-paylater-primary-btn" type="button" onClick={handleCompleteCertificateVerification}>我已完成身份验证</button>
+          </div>
         </div>
-        <div className="pc-paylater-certificate-table-wrap">
-          <table className="pc-paylater-certificate-table">
-            <thead>
-              <tr>
-                <th>证书编号</th>
-                <th>状态</th>
-                <th>证书有效期起止时间</th>
-                <th>证书签发时间</th>
-                <th>主体名称</th>
-                <th>主体证件号</th>
-              </tr>
-            </thead>
-            <tbody>
-              {certificateRows.map((item) => (
-                <tr key={item.certificateNo}>
-                  <td>{item.certificateNo}</td>
-                  <td>{item.status}</td>
-                  <td>{item.validRange}</td>
-                  <td>{item.issuedAt}</td>
-                  <td>{item.subjectName}</td>
-                  <td>{item.subjectId}</td>
+      ) : showCertificateApplyForm ? (
+        <div className="pc-paylater-certificate-apply-page">
+          <div className="pc-paylater-form-section">
+            <h2><span>1</span> 签约主体</h2>
+            <div className="pc-paylater-form-row">
+              <label><em>*</em> 签约主体:</label>
+              <div className="pc-paylater-select-field">
+                <input value="测试较迷" readOnly />
+              </div>
+            </div>
+            <p className="pc-paylater-form-tip">如未找到对应主体，请前往 <button type="button">【商家中心-账户管理-身份认证】</button> 添加</p>
+            <div className="pc-paylater-form-row">
+              <label><em>*</em> 企业名称:</label>
+              <input className="pc-paylater-disabled-input" value="测试较迷" readOnly />
+            </div>
+            <div className="pc-paylater-form-row">
+              <label><em>*</em> 统一社会信用代码:</label>
+              <input className="pc-paylater-disabled-input" value="913261547448178456" readOnly />
+            </div>
+          </div>
+
+          <div className="pc-paylater-form-section">
+            <h2><span>2</span> 协议签署人</h2>
+            <div className="pc-paylater-form-row pc-paylater-sign-method-row">
+              <label><em>*</em> 签署方式:</label>
+              <button
+                className={`pc-paylater-method-card ${certificateSignMethod === "legal" ? "is-active" : ""}`}
+                type="button"
+                onClick={() => setCertificateSignMethod("legal")}
+              >
+                <strong>法定代表人签署 <b>推荐</b></strong>
+                <p>由法人本人完成电子签章</p>
+              </button>
+              <button
+                className={`pc-paylater-method-card ${certificateSignMethod === "delegate" ? "is-active" : ""}`}
+                type="button"
+                onClick={() => setCertificateSignMethod("delegate")}
+              >
+                <strong>委托授权人签署</strong>
+                <p>由经办人代签，需填写授权人实名信息</p>
+              </button>
+            </div>
+            {certificateSignMethod === "legal" ? (
+              <>
+                <div className="pc-paylater-form-row">
+                  <label><em>*</em> 法定代表人:</label>
+                  <input placeholder="请输入法定代表人姓名" />
+                </div>
+                <div className="pc-paylater-form-row">
+                  <label><em>*</em> 法人身份证号:</label>
+                  <input placeholder="请输入法人 18 位居民身份证号" />
+                </div>
+                <div className="pc-paylater-form-row">
+                  <label><em>*</em> 法人手机号:</label>
+                  <input placeholder="请输入法人本人手机号" />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="pc-paylater-form-row">
+                  <label><em>*</em> 授权人姓名:</label>
+                  <input placeholder="请输入授权人的真实姓名" />
+                </div>
+                <div className="pc-paylater-form-row">
+                  <label><em>*</em> 授权人身份证号:</label>
+                  <input placeholder="请输入授权人 18 位居民身份证号" />
+                </div>
+                <div className="pc-paylater-form-row">
+                  <label><em>*</em> 授权人手机号:</label>
+                  <input placeholder="请输入授权人本人手机号" />
+                </div>
+                <div className="pc-paylater-form-row pc-paylater-certificate-upload-row">
+                  <label><em>*</em> 授权文件:</label>
+                  <button className="pc-paylater-certificate-upload-box" type="button">
+                    <span aria-hidden="true">↥</span>
+                    支持 doc、docx、pdf、jpg、jpeg、png格式，文件大小上限 5M
+                  </button>
+                </div>
+                <p className="pc-paylater-certificate-upload-hint">需法人签字并加盖公章，<button type="button">下载授权文件模板</button></p>
+              </>
+            )}
+          </div>
+          <div className="pc-paylater-form-actions">
+            <button className="pc-paylater-primary-btn" type="button" onClick={() => setCertificateApplyStep("verify")}>下一步</button>
+          </div>
+        </div>
+      ) : (
+        <div className="pc-paylater-certificate-page">
+          <CaCertificateWarmTip />
+          <div className="pc-paylater-certificate-toolbar">
+            <button type="button" onClick={handleApplyCertificate}>申请CA证书</button>
+          </div>
+          <div className="pc-paylater-certificate-table-wrap">
+            <table className="pc-paylater-certificate-table">
+              <thead>
+                <tr>
+                  <th>证书编号</th>
+                  <th>状态</th>
+                  <th>证书有效期起止时间</th>
+                  <th>证书签发时间</th>
+                  <th>主体名称</th>
+                  <th>主体证件号</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {certificateRows.map((item) => (
+                  <tr key={item.certificateNo}>
+                    <td>{item.certificateNo}</td>
+                    <td>{item.status}</td>
+                    <td>{item.validRange}</td>
+                    <td>{item.issuedAt}</td>
+                    <td>{item.subjectName}</td>
+                    <td>{item.subjectId}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="pc-paylater-certificate-pagination">
+            <span>{`共${certificateRows.length}条`}</span>
+            <button className="pc-paylater-page-size" type="button">20 条/页</button>
+            <button className="pc-paylater-page-arrow" type="button" disabled>‹</button>
+            <button className="pc-paylater-page-current" type="button">1</button>
+            <button className="pc-paylater-page-arrow" type="button" disabled>›</button>
+            <span>到第</span>
+            <input placeholder="请输入" />
+            <span>页</span>
+            <button className="pc-paylater-jump-btn" type="button">跳转</button>
+          </div>
         </div>
-        <div className="pc-paylater-certificate-pagination">
-          <span>{`共${certificateRows.length}条`}</span>
-          <button className="pc-paylater-page-size" type="button">20 条/页</button>
-          <button className="pc-paylater-page-arrow" type="button" disabled>‹</button>
-          <button className="pc-paylater-page-current" type="button">1</button>
-          <button className="pc-paylater-page-arrow" type="button" disabled>›</button>
-          <span>到第</span>
-          <input placeholder="请输入" />
-          <span>页</span>
-          <button className="pc-paylater-jump-btn" type="button">跳转</button>
+      )}
+      {isCertificateSubmitting ? (
+        <div className="supplier-certificate-loading-overlay" role="status" aria-live="polite">
+          <span className="supplier-certificate-loading-spinner" aria-hidden="true" />
+          <strong>正在查询中~</strong>
         </div>
-      </div>
-      {certificateNoticeOpen ? (
-        <BuyerPcMallInvoiceActionModal
-          title="申请CA证书"
-          message="当前已有生效中的证书，无需重复申请"
-          confirmText="确定"
-          showCancel={false}
-          showClose
-          className="ca-certificate-notice-dialog"
-          onClose={() => setCertificateNoticeOpen(false)}
-          onConfirm={() => setCertificateNoticeOpen(false)}
-        />
+      ) : null}
+      {certificateSubmitToast ? <div className="supplier-certificate-submit-toast">{certificateSubmitToast}</div> : null}
+      {certificateSubmitErrorOpen ? (
+        <div className="modal-overlay supplier-certificate-fail-modal-overlay" role="presentation">
+          <div className="modal-mask" />
+          <div className="supplier-certificate-fail-modal" role="dialog" aria-modal="true" aria-labelledby="pc-paylater-certificate-fail-title">
+            <div className="supplier-certificate-fail-modal-head">
+              <h3 id="pc-paylater-certificate-fail-title">温馨提示</h3>
+              <button type="button" aria-label="关闭" onClick={() => setCertificateSubmitErrorOpen(false)}>×</button>
+            </div>
+            <div className="supplier-certificate-fail-modal-body">
+              <p>短信验证码为空原因失败，请尝试重新申请。</p>
+            </div>
+            <div className="supplier-certificate-fail-modal-foot">
+              <button className="btn btn-dark" type="button" onClick={() => setCertificateSubmitErrorOpen(false)}>关闭</button>
+            </div>
+          </div>
+        </div>
       ) : null}
     </>
   );
@@ -11234,7 +11544,7 @@ function BuyerPcMallPage({ onPortalActionClick }) {
               onSignAgreement={handleOpenPayLaterSignPage}
             />
           ) : isPayLaterSignView ? (
-            <BuyerPcMallPayLaterSignPage />
+            <BuyerPcMallPayLaterSignPage onOpenCertificateManagement={handleOpenPayLaterCertificatePage} />
           ) : isPayLaterCertificateView ? (
             <BuyerPcMallPayLaterCertificatePage />
           ) : (
@@ -11915,8 +12225,17 @@ function Header({ currentMarketingPage, specialCreateTab, onTopActionClick, cust
 
 function SupplierContractManagementPage({ initialTab = "合同管理", tabRequestId = 0 }) {
   const [activeTab, setActiveTab] = useState(initialTab);
-  const [showCertificateEmpty, setShowCertificateEmpty] = useState(false);
+  const [showCertificateInfo, setShowCertificateInfo] = useState(false);
+  const [showCertificateApplyForm, setShowCertificateApplyForm] = useState(false);
+  const [certificateApplyStep, setCertificateApplyStep] = useState("form");
+  const [certificateApplyMode, setCertificateApplyMode] = useState("personal");
+  const [certificateAuthorizationFileName, setCertificateAuthorizationFileName] = useState("");
   const [certificateNoticeOpen, setCertificateNoticeOpen] = useState(false);
+  const [certificateSmsCode, setCertificateSmsCode] = useState("");
+  const [isCertificateSubmitting, setIsCertificateSubmitting] = useState(false);
+  const [certificateSubmitToast, setCertificateSubmitToast] = useState("");
+  const [certificateSubmitErrorOpen, setCertificateSubmitErrorOpen] = useState(false);
+  const certificateSubmitTimerRef = useRef(null);
   const [filters, setFilters] = useState({ contractNo: "", status: "" });
   const [appliedFilters, setAppliedFilters] = useState({ contractNo: "", status: "" });
   const isCertificateTab = activeTab === "CA证书管理";
@@ -11935,16 +12254,59 @@ function SupplierContractManagementPage({ initialTab = "合同管理", tabReques
     setFilters(emptyFilters);
     setAppliedFilters(emptyFilters);
   };
+  const enterCertificateApplyForm = () => {
+    setCertificateNoticeOpen(false);
+    setShowCertificateInfo(false);
+    setShowCertificateApplyForm(true);
+    setCertificateApplyStep("form");
+    setCertificateApplyMode("personal");
+  };
   const handleApplyCertificate = () => {
+    if (isCertificateTab && showCertificateInfo) {
+      setCertificateNoticeOpen(true);
+      return;
+    }
+    if (isCertificateTab) {
+      enterCertificateApplyForm();
+      return;
+    }
     if (hasActiveCertificate) {
       setCertificateNoticeOpen(true);
     }
+  };
+  const handleCompleteCertificateVerification = () => {
+    if (isCertificateSubmitting) return;
+    setCertificateSubmitToast("");
+    setCertificateSubmitErrorOpen(false);
+    setIsCertificateSubmitting(true);
+    if (certificateSubmitTimerRef.current) {
+      clearTimeout(certificateSubmitTimerRef.current);
+    }
+    certificateSubmitTimerRef.current = setTimeout(() => {
+      setIsCertificateSubmitting(false);
+      certificateSubmitTimerRef.current = null;
+      if (certificateSmsCode.trim()) {
+        setCertificateSubmitToast("CA证书申请成功");
+        return;
+      }
+      setCertificateSubmitErrorOpen(true);
+    }, 2000);
   };
 
   useEffect(() => {
     if (!supplierContractTabs.includes(initialTab)) return;
     setActiveTab(initialTab);
   }, [initialTab, tabRequestId]);
+  useEffect(() => () => {
+    if (certificateSubmitTimerRef.current) {
+      clearTimeout(certificateSubmitTimerRef.current);
+    }
+  }, []);
+  useEffect(() => {
+    if (!certificateSubmitToast) return undefined;
+    const timer = setTimeout(() => setCertificateSubmitToast(""), 3000);
+    return () => clearTimeout(timer);
+  }, [certificateSubmitToast]);
 
   return (
     <div className="supplier-contract-page">
@@ -11955,7 +12317,13 @@ function SupplierContractManagementPage({ initialTab = "合同管理", tabReques
               key={tab}
               type="button"
               className={`supplier-contract-tab ${activeTab === tab ? "is-active" : ""}`}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => {
+                setActiveTab(tab);
+                setShowCertificateApplyForm(false);
+                setShowCertificateInfo(false);
+                setCertificateApplyStep("form");
+                setCertificateApplyMode("personal");
+              }}
             >
               {tab}
             </button>
@@ -11965,7 +12333,12 @@ function SupplierContractManagementPage({ initialTab = "合同管理", tabReques
           <button
             className="supplier-certificate-switch-btn"
             type="button"
-            onClick={() => setShowCertificateEmpty((current) => !current)}
+            onClick={() => {
+              setShowCertificateInfo((current) => !current);
+              setShowCertificateApplyForm(false);
+              setCertificateApplyStep("form");
+              setCertificateApplyMode("personal");
+            }}
           >
             切换
           </button>
@@ -12001,11 +12374,157 @@ function SupplierContractManagementPage({ initialTab = "合同管理", tabReques
         </section>
       ) : null}
 
-      {isCertificateTab && showCertificateEmpty ? (
-        <section className="supplier-certificate-empty-card">
-          <p>您的店铺未申请CA证书，暂时无法签署相关合同/协议~点击下方「申请CA证书」即可申请</p>
-          <button type="button">申请CA证书</button>
-        </section>
+      {isCertificateTab ? (
+        showCertificateInfo ? (
+          <section className="supplier-certificate-info-card">
+            <div className="supplier-certificate-info-list">
+              <div><span>CA证书编号：</span><strong>CGPTCO202607077857</strong></div>
+              <div><span>证书状态：</span><strong>生效中</strong></div>
+              <div><span>证书有效期起止时间：</span><strong>2026-07-07 14:51:53~2027-07-07 14:51:53</strong></div>
+              <div><span>签发时间：</span><strong>2026-07-07 14:51:53</strong></div>
+              <div><span>店铺名称：</span><strong>AAAA店铺</strong></div>
+              <div><span>统一信用社会代码：</span><strong>91430105MA4L7NLM8W</strong></div>
+              <div><span>纳税人识别号：</span><strong>91510100621710689W</strong></div>
+              <div><span>企业名称：</span><strong>四川鸿昌塑胶工业有限公司</strong></div>
+              <div><span>授权人姓名：</span><strong>吴法无天</strong></div>
+              <div><span>授权人身份证号：</span><strong>666166666661234</strong></div>
+              <div><span>授权人手机号：</span><strong>18011031203</strong></div>
+              <div>
+                <span>授权文件：</span>
+                <a href="/3c0389c671d4ec7e86bfbbb3a45e0d2f_1783608404646.docx" download="3c0389c671d4ec7e86bfbbb3a45e0d2f_1783608404646.docx">
+                  <i className="supplier-certificate-info-file-icon" aria-hidden="true" />
+                  3c0389c671d4ec7e86bfbbb3a45e0d2f_1783608404646.docx
+                </a>
+              </div>
+            </div>
+            <div className="supplier-certificate-info-actions">
+              <button className="btn btn-dark" type="button" onClick={handleApplyCertificate}>重新申请CA证书</button>
+            </div>
+          </section>
+        ) : showCertificateApplyForm ? (
+          certificateApplyStep === "preview" ? (
+            <section className="supplier-certificate-preview-card">
+              <div className="supplier-certificate-preview-head">身份验证</div>
+              <div className="supplier-certificate-preview-scroll">
+                <article className="supplier-certificate-preview-doc">
+                  <div className="supplier-certificate-preview-identity-grid">
+                    <div><span>账号类型</span><strong>个人</strong></div>
+                    <div><span>证书等级</span><strong>基础证书</strong></div>
+                    <div><span>姓名</span><strong>李澳</strong></div>
+                    <div><span>证件类型</span><strong>身份证</strong></div>
+                    <div><span>证件号码</span><strong>4307*********3837</strong></div>
+                    <div><span>手机号码</span><strong>177****3712</strong></div>
+                  </div>
+                  <hr />
+                  <label className="supplier-certificate-preview-sms-row">
+                    <span><i>*</i> 短信验证码:</span>
+                    <input
+                      value={certificateSmsCode}
+                      onChange={(event) => setCertificateSmsCode(event.target.value)}
+                      placeholder="请输入短信验证码"
+                    />
+                  </label>
+                  <button className="supplier-certificate-preview-verify-btn" type="button">发送验证码</button>
+                  <button className="supplier-certificate-preview-verify-btn" type="button">提交验证</button>
+                </article>
+              </div>
+              <div className="supplier-certificate-preview-actions">
+                <button className="btn btn-reset" type="button" onClick={() => setCertificateApplyStep("form")}>上一步</button>
+                <button className="btn btn-dark" type="button" onClick={handleCompleteCertificateVerification}>我已完成身份验证</button>
+              </div>
+            </section>
+          ) : (
+            <section className="supplier-certificate-apply-card">
+              <div className="supplier-certificate-apply-form">
+                <div className="supplier-certificate-apply-toolrow">
+                  <button
+                    className="supplier-certificate-apply-toggle"
+                    type="button"
+                    onClick={() => setCertificateApplyMode((current) => (current === "personal" ? "business" : "personal"))}
+                  >
+                    切换
+                  </button>
+                </div>
+                <label className="supplier-certificate-apply-row">
+                  <span>店铺名称:</span>
+                  <input value="AAAA店铺" readOnly disabled />
+                </label>
+                {certificateApplyMode === "business" ? (
+                  <>
+                    <label className="supplier-certificate-apply-row">
+                      <span><i>*</i> 统一社会代码:</span>
+                      <input value="91430105MA4L7NLM8W" readOnly />
+                    </label>
+                    <label className="supplier-certificate-apply-row">
+                      <span><i>*</i> 企业名称:</span>
+                      <input value="四川鸿昌塑胶工业有限公司" readOnly />
+                    </label>
+                    <label className="supplier-certificate-apply-row">
+                      <span><i>*</i> 授权人姓名:</span>
+                      <input value="陈利萍" readOnly />
+                    </label>
+                    <label className="supplier-certificate-apply-row">
+                      <span><i>*</i> 授权人身份证号码:</span>
+                      <input value="510112198911201864" readOnly />
+                    </label>
+                    <label className="supplier-certificate-apply-row">
+                      <span><i>*</i> 授权人手机号码:</span>
+                      <input value="18178787874" readOnly />
+                    </label>
+                    <label className="supplier-certificate-apply-row">
+                      <span><i>*</i> 纳税人识别号:</span>
+                      <input value="91510100621710689W" readOnly />
+                    </label>
+                    <div className="supplier-certificate-apply-auth-row">
+                      <span><i>*</i> 授权文件:</span>
+                      <div className="supplier-certificate-apply-auth-content">
+                        <label className="supplier-certificate-apply-auth-picker">
+                          <input
+                            type="file"
+                            accept=".doc,.docx,.pdf,.jpg,.jpeg,.png"
+                            onChange={(event) => setCertificateAuthorizationFileName(event.target.files?.[0]?.name || "")}
+                          />
+                          <span className="supplier-certificate-apply-auth-icon" aria-hidden="true" />
+                          <strong className={certificateAuthorizationFileName ? "has-file" : ""}>
+                            {certificateAuthorizationFileName || "支持 doc、docx、pdf、jpg、jpeg、png格式，文件大小上限 5M"}
+                          </strong>
+                        </label>
+                        <p>需法人签字并加盖公章，<a href="/授权文件模板.docx" download="授权文件模板.docx">下载授权文件模板</a></p>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <label className="supplier-certificate-apply-row">
+                      <span><i>*</i> 用户名称:</span>
+                      <input value="皇甫贷" readOnly />
+                    </label>
+                    <label className="supplier-certificate-apply-row">
+                      <span><i>*</i> 身份证号码:</span>
+                      <input value="532332195112024476" readOnly />
+                    </label>
+                    <label className="supplier-certificate-apply-row">
+                      <span><i>*</i> 手机号码:</span>
+                      <input />
+                    </label>
+                  </>
+                )}
+                <div className="supplier-certificate-apply-actions">
+                  <button className="btn btn-reset" type="button" onClick={() => setShowCertificateApplyForm(false)}>上一步</button>
+                  <button className="btn btn-dark" type="button" onClick={() => setCertificateApplyStep("preview")}>下一步</button>
+                </div>
+              </div>
+            </section>
+          )
+        ) : (
+          <>
+            <CaCertificateWarmTip />
+            <section className="supplier-certificate-empty-card">
+              <p>您的店铺未申请CA证书，暂时无法签署相关合同/协议~点击下方「申请CA证书」即可申请</p>
+              <button className="supplier-certificate-empty-apply-btn" type="button" onClick={handleApplyCertificate}>申请CA证书</button>
+            </section>
+          </>
+        )
       ) : (
       <section className="supplier-contract-table-card">
         {isCertificateTab ? (
@@ -12088,15 +12607,40 @@ function SupplierContractManagementPage({ initialTab = "合同管理", tabReques
       )}
       {certificateNoticeOpen ? (
         <BuyerPcMallInvoiceActionModal
-          title="申请CA证书"
-          message="当前已有生效中的证书，无需重复申请"
+          title="温馨提示"
+          message="当前已有生效中的CA证书，确定要重新申请吗？"
+          cancelText="关闭"
           confirmText="确定"
-          showCancel={false}
+          showCancel
           showClose
           className="ca-certificate-notice-dialog"
           onClose={() => setCertificateNoticeOpen(false)}
-          onConfirm={() => setCertificateNoticeOpen(false)}
+          onConfirm={enterCertificateApplyForm}
         />
+      ) : null}
+      {isCertificateSubmitting ? (
+        <div className="supplier-certificate-loading-overlay" role="status" aria-live="polite">
+          <span className="supplier-certificate-loading-spinner" aria-hidden="true" />
+          <strong>正在查询中~</strong>
+        </div>
+      ) : null}
+      {certificateSubmitToast ? <div className="supplier-certificate-submit-toast">{certificateSubmitToast}</div> : null}
+      {certificateSubmitErrorOpen ? (
+        <div className="modal-overlay supplier-certificate-fail-modal-overlay" role="presentation">
+          <div className="modal-mask" />
+          <div className="supplier-certificate-fail-modal" role="dialog" aria-modal="true" aria-labelledby="supplier-certificate-fail-title">
+            <div className="supplier-certificate-fail-modal-head">
+              <h3 id="supplier-certificate-fail-title">温馨提示</h3>
+              <button type="button" aria-label="关闭" onClick={() => setCertificateSubmitErrorOpen(false)}>×</button>
+            </div>
+            <div className="supplier-certificate-fail-modal-body">
+              <p>短信验证码为空原因失败，请尝试重新申请。</p>
+            </div>
+            <div className="supplier-certificate-fail-modal-foot">
+              <button className="btn btn-dark" type="button" onClick={() => setCertificateSubmitErrorOpen(false)}>关闭</button>
+            </div>
+          </div>
+        </div>
       ) : null}
     </div>
   );
@@ -12850,9 +13394,17 @@ function PlatformTradeSettingsPage() {
   );
 }
 
-function PlatformContractManagementPage() {
-  const [activeTab, setActiveTab] = useState("合同设置");
+function PlatformContractManagementPage({ isCreatingContract = false, onCreateContract }) {
+  const [activeTab, setActiveTab] = useState("合同管理");
   const [showCertificateEmpty, setShowCertificateEmpty] = useState(false);
+  const [isBuyerContractCaNoticeOpen, setIsBuyerContractCaNoticeOpen] = useState(false);
+  const [contractFilters, setContractFilters] = useState({
+    storeId: "",
+    storeName: "超级个体工商户店铺66",
+    companyName: "",
+    contractNo: "",
+    status: ""
+  });
   const [certificateFilters, setCertificateFilters] = useState({
     certificateNo: "",
     subjectName: "",
@@ -12861,8 +13413,30 @@ function PlatformContractManagementPage() {
     startTime: "",
     endTime: ""
   });
+  const [buyerContractFilters, setBuyerContractFilters] = useState({
+    buyerAccount: "",
+    signSubject: "测试夷初",
+    companyName: "",
+    contractNo: "",
+    contractStatus: "",
+    auditStatus: "",
+    startTime: "",
+    endTime: ""
+  });
+  const [appliedContractFilters, setAppliedContractFilters] = useState(contractFilters);
   const [appliedCertificateFilters, setAppliedCertificateFilters] = useState(certificateFilters);
+  const [appliedBuyerContractFilters, setAppliedBuyerContractFilters] = useState(buyerContractFilters);
+  const isContractManagementTab = activeTab === "合同管理";
   const isCertificateQueryTab = activeTab === "CA证书查询";
+  const isBuyerPayLaterContractTab = activeTab === "买家先货后款协议";
+  const displayedPlatformContractRows = useMemo(() => platformContractManagementRows.filter((item) => {
+    if (appliedContractFilters.storeId && !item.storeId.includes(appliedContractFilters.storeId.trim())) return false;
+    if (appliedContractFilters.storeName && !item.storeName.includes(appliedContractFilters.storeName.trim())) return false;
+    if (appliedContractFilters.companyName && !item.companyName.includes(appliedContractFilters.companyName.trim())) return false;
+    if (appliedContractFilters.contractNo && !item.contractNo.includes(appliedContractFilters.contractNo.trim())) return false;
+    if (appliedContractFilters.status && item.status !== appliedContractFilters.status) return false;
+    return true;
+  }), [appliedContractFilters]);
   const displayedCertificateRows = useMemo(() => supplierCertificateRows.filter((item) => {
     if (appliedCertificateFilters.certificateNo && !item.certificateNo.includes(appliedCertificateFilters.certificateNo.trim())) return false;
     if (appliedCertificateFilters.subjectName && !item.subjectName.includes(appliedCertificateFilters.subjectName.trim())) return false;
@@ -12872,6 +13446,29 @@ function PlatformContractManagementPage() {
     if (appliedCertificateFilters.endTime && item.issuedAt > appliedCertificateFilters.endTime) return false;
     return true;
   }), [appliedCertificateFilters]);
+  const displayedBuyerContractRows = useMemo(() => platformBuyerPayLaterContractRows.filter((item) => {
+    const normalizedAppliedAt = item.appliedAt.replace(/\n/g, " ");
+    if (appliedBuyerContractFilters.buyerAccount && !item.buyerAccount.includes(appliedBuyerContractFilters.buyerAccount.trim())) return false;
+    if (appliedBuyerContractFilters.signSubject && !item.signSubject.includes(appliedBuyerContractFilters.signSubject.trim())) return false;
+    if (appliedBuyerContractFilters.companyName && !item.companyName.includes(appliedBuyerContractFilters.companyName.trim())) return false;
+    if (appliedBuyerContractFilters.contractNo && !item.contractNo.includes(appliedBuyerContractFilters.contractNo.trim())) return false;
+    if (appliedBuyerContractFilters.contractStatus && item.contractStatus !== appliedBuyerContractFilters.contractStatus) return false;
+    if (appliedBuyerContractFilters.auditStatus && item.auditStatus !== appliedBuyerContractFilters.auditStatus) return false;
+    if (appliedBuyerContractFilters.startTime && normalizedAppliedAt < appliedBuyerContractFilters.startTime) return false;
+    if (appliedBuyerContractFilters.endTime && normalizedAppliedAt > appliedBuyerContractFilters.endTime) return false;
+    return true;
+  }), [appliedBuyerContractFilters]);
+  const handleResetContractFilters = () => {
+    const nextFilters = {
+      storeId: "",
+      storeName: "",
+      companyName: "",
+      contractNo: "",
+      status: ""
+    };
+    setContractFilters(nextFilters);
+    setAppliedContractFilters(nextFilters);
+  };
   const handleResetCertificateFilters = () => {
     const nextFilters = {
       certificateNo: "",
@@ -12884,6 +13481,90 @@ function PlatformContractManagementPage() {
     setCertificateFilters(nextFilters);
     setAppliedCertificateFilters(nextFilters);
   };
+  const handleResetBuyerContractFilters = () => {
+    const nextFilters = {
+      buyerAccount: "",
+      signSubject: "",
+      companyName: "",
+      contractNo: "",
+      contractStatus: "",
+      auditStatus: "",
+      startTime: "",
+      endTime: ""
+    };
+    setBuyerContractFilters(nextFilters);
+    setAppliedBuyerContractFilters(nextFilters);
+  };
+  if (isCreatingContract) {
+    return (
+      <div className="platform-contract-page">
+        <section className="content-card platform-contract-create-card">
+          <div className="platform-contract-create-form">
+            <label className="platform-contract-create-row">
+              <span>合同名称:</span>
+              <input value="先货后款合同更新" disabled />
+            </label>
+            <div className="platform-contract-create-row platform-contract-create-supplier-row">
+              <span><i>*</i> 供应商:</span>
+              <button className="btn btn-dark" type="button">选择供应商</button>
+              <em>已选择：</em>
+              <strong>（优秀店铺（台湾企业））</strong>
+            </div>
+            <label className="platform-contract-create-row">
+              <span><i>*</i> 统一社会代码:</span>
+              <input value="91430105MA4L7NLM8W" readOnly />
+            </label>
+            <label className="platform-contract-create-row">
+              <span><i>*</i> 企业名称:</span>
+              <input value="四川鸿昌塑胶工业有限公司" readOnly />
+            </label>
+            <label className="platform-contract-create-row">
+              <span><i>*</i> 授权人姓名:</span>
+              <input value="陈利萍" readOnly />
+            </label>
+            <label className="platform-contract-create-row">
+              <span><i>*</i> 授权人身份证号码:</span>
+              <input value="510112198911201864" readOnly />
+            </label>
+            <label className="platform-contract-create-row">
+              <span><i>*</i> 授权人手机号码:</span>
+              <input value="18178787874" readOnly />
+            </label>
+            <label className="platform-contract-create-row">
+              <span><i>*</i> 联系人手机号码:</span>
+              <input value="" readOnly />
+            </label>
+            <label className="platform-contract-create-row">
+              <span><i>*</i> 联系人姓名:</span>
+              <input value="优秀" readOnly />
+            </label>
+            <label className="platform-contract-create-row">
+              <span><i>*</i> 联系人地址:</span>
+              <input value="台湾省" readOnly />
+            </label>
+            <label className="platform-contract-create-row">
+              <span><i>*</i> 联系人邮箱:</span>
+              <input value="" readOnly />
+            </label>
+            <label className="platform-contract-create-row">
+              <span><i>*</i> 纳税人识别号:</span>
+              <input value="91510100621710689W" readOnly />
+            </label>
+            <div className="platform-contract-create-row platform-contract-create-deposit-row">
+              <span>需缴纳保证金:</span>
+              <div className="platform-contract-create-deposit">
+                <input value="9000" disabled />
+                <b>元</b>
+              </div>
+            </div>
+            <div className="platform-contract-create-actions">
+              <button className="btn btn-dark" type="button">提交</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="platform-contract-page">
@@ -12911,7 +13592,124 @@ function PlatformContractManagementPage() {
         ) : null}
       </section>
 
-      {isCertificateQueryTab ? (
+      {isContractManagementTab ? (
+        <>
+          <section className="content-card platform-contract-list-filter-card">
+            <div className="platform-contract-list-filter">
+              <label>
+                <span>店铺ID</span>
+                <input
+                  value={contractFilters.storeId}
+                  onChange={(event) => setContractFilters((current) => ({ ...current, storeId: event.target.value }))}
+                />
+              </label>
+              <label>
+                <span>店铺名称</span>
+                <div className="platform-contract-list-input-clear">
+                  <input
+                    value={contractFilters.storeName}
+                    onChange={(event) => setContractFilters((current) => ({ ...current, storeName: event.target.value }))}
+                  />
+                  {contractFilters.storeName ? (
+                    <button
+                      type="button"
+                      aria-label="清空店铺名称"
+                      onClick={() => setContractFilters((current) => ({ ...current, storeName: "" }))}
+                    >
+                      ×
+                    </button>
+                  ) : null}
+                </div>
+              </label>
+              <label>
+                <span>公司/商户名称</span>
+                <input
+                  value={contractFilters.companyName}
+                  onChange={(event) => setContractFilters((current) => ({ ...current, companyName: event.target.value }))}
+                />
+              </label>
+              <label>
+                <span>合同编号</span>
+                <input
+                  value={contractFilters.contractNo}
+                  onChange={(event) => setContractFilters((current) => ({ ...current, contractNo: event.target.value }))}
+                />
+              </label>
+              <label>
+                <span>状态</span>
+                <select
+                  value={contractFilters.status}
+                  onChange={(event) => setContractFilters((current) => ({ ...current, status: event.target.value }))}
+                >
+                  <option value="">请选择</option>
+                  <option value="已签署">已签署</option>
+                  <option value="签署失败">签署失败</option>
+                  <option value="已终止">已终止</option>
+                </select>
+              </label>
+              <div className="platform-contract-list-filter-actions">
+                <button className="btn btn-reset" type="button" onClick={handleResetContractFilters}>重置</button>
+                <button className="btn btn-dark" type="button" onClick={() => setAppliedContractFilters(contractFilters)}>查询</button>
+              </div>
+            </div>
+          </section>
+
+          <section className="content-card platform-contract-list-table-card">
+            <div className="platform-contract-list-toolbar">
+              <button className="btn btn-dark" type="button" onClick={onCreateContract}>新建合同</button>
+            </div>
+            <div className="platform-contract-list-table-wrap">
+              <table className="platform-contract-list-table">
+                <thead>
+                  <tr>
+                    <th>店铺ID</th>
+                    <th>店铺名称</th>
+                    <th>公司/商户名称</th>
+                    <th>合同编号</th>
+                    <th>状态</th>
+                    <th>创建时间</th>
+                    <th>到期时间</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayedPlatformContractRows.map((item) => (
+                    <tr key={item.id}>
+                      <td>{item.storeId}</td>
+                      <td>{item.storeName}</td>
+                      <td>{item.companyName}</td>
+                      <td>{item.contractNo}</td>
+                      <td>{item.status}</td>
+                      <td>{item.createdAt}</td>
+                      <td>{item.expiredAt}</td>
+                      <td>
+                        <div className="platform-contract-list-action-links">
+                          {item.actions.map((action) => (
+                            <button key={action} type="button">{action}</button>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="platform-contract-list-pagination">
+              <span>共 {displayedPlatformContractRows.length} 条</span>
+              <select value="20" onChange={() => undefined}>
+                <option value="20">20 条/页</option>
+              </select>
+              <button type="button" disabled>‹</button>
+              <button className="is-active" type="button">1</button>
+              <button type="button" disabled>›</button>
+              <span>到第</span>
+              <input placeholder="请输入" />
+              <span>页</span>
+              <button className="btn btn-reset" type="button">跳转</button>
+            </div>
+          </section>
+        </>
+      ) : isCertificateQueryTab ? (
         showCertificateEmpty ? (
           <section className="content-card platform-contract-certificate-empty">
             <p>您的店铺未申请CA证书，暂时无法签署相关合同/协议~点击下方「申请CA证书」即可申请</p>
@@ -13016,6 +13814,169 @@ function PlatformContractManagementPage() {
             </div>
           </section>
         )
+      ) : isBuyerPayLaterContractTab ? (
+        <>
+          <section className="content-card platform-contract-buyer-filter-card">
+            <div className="platform-contract-buyer-filter">
+              <label>
+                <span>买家账号</span>
+                <input
+                  value={buyerContractFilters.buyerAccount}
+                  onChange={(event) => setBuyerContractFilters((current) => ({ ...current, buyerAccount: event.target.value }))}
+                />
+              </label>
+              <label>
+                <span>签约主体</span>
+                <div className="platform-contract-buyer-input-clear">
+                  <input
+                    value={buyerContractFilters.signSubject}
+                    onChange={(event) => setBuyerContractFilters((current) => ({ ...current, signSubject: event.target.value }))}
+                  />
+                  {buyerContractFilters.signSubject ? (
+                    <button
+                      type="button"
+                      aria-label="清空签约主体"
+                      onClick={() => setBuyerContractFilters((current) => ({ ...current, signSubject: "" }))}
+                    >
+                      ×
+                    </button>
+                  ) : null}
+                </div>
+              </label>
+              <label>
+                <span>企业名称</span>
+                <input
+                  value={buyerContractFilters.companyName}
+                  onChange={(event) => setBuyerContractFilters((current) => ({ ...current, companyName: event.target.value }))}
+                />
+              </label>
+              <label>
+                <span>合同编号</span>
+                <input
+                  value={buyerContractFilters.contractNo}
+                  onChange={(event) => setBuyerContractFilters((current) => ({ ...current, contractNo: event.target.value }))}
+                />
+              </label>
+              <label>
+                <span>合同状态</span>
+                <select
+                  value={buyerContractFilters.contractStatus}
+                  onChange={(event) => setBuyerContractFilters((current) => ({ ...current, contractStatus: event.target.value }))}
+                >
+                  <option value="">请选择</option>
+                  <option value="已签署">已签署</option>
+                  <option value="已终止">已终止</option>
+                </select>
+              </label>
+              <label>
+                <span>申请时间</span>
+                <div className="platform-contract-buyer-time-range">
+                  <input
+                    placeholder="开始时间"
+                    value={buyerContractFilters.startTime}
+                    onChange={(event) => setBuyerContractFilters((current) => ({ ...current, startTime: event.target.value }))}
+                  />
+                  <em>-</em>
+                  <input
+                    placeholder="结束时间"
+                    value={buyerContractFilters.endTime}
+                    onChange={(event) => setBuyerContractFilters((current) => ({ ...current, endTime: event.target.value }))}
+                  />
+                  <span />
+                </div>
+              </label>
+              <label>
+                <span>审核状态</span>
+                <select
+                  value={buyerContractFilters.auditStatus}
+                  onChange={(event) => setBuyerContractFilters((current) => ({ ...current, auditStatus: event.target.value }))}
+                >
+                  <option value="">请选择</option>
+                  <option value="审核通过">审核通过</option>
+                  <option value="审核中">审核中</option>
+                  <option value="审核驳回">审核驳回</option>
+                </select>
+              </label>
+              <div className="platform-contract-buyer-filter-actions">
+                <button className="btn btn-reset" type="button" onClick={handleResetBuyerContractFilters}>重置</button>
+                <button className="btn btn-dark" type="button" onClick={() => setAppliedBuyerContractFilters(buyerContractFilters)}>查询</button>
+              </div>
+            </div>
+          </section>
+
+          <section className="content-card platform-contract-buyer-table-card">
+            <div className="platform-contract-buyer-toolbar">
+              <button className="btn btn-dark" type="button" onClick={() => setIsBuyerContractCaNoticeOpen(true)}>重新签署合同</button>
+            </div>
+            <div className="platform-contract-buyer-table-wrap">
+              <table className="platform-contract-buyer-table">
+                <thead>
+                  <tr>
+                    <th><input type="checkbox" aria-label="全选合同" readOnly /></th>
+                    <th>买家账号</th>
+                    <th>签约主体</th>
+                    <th>企业名称</th>
+                    <th>合同编号</th>
+                    <th>审核状态</th>
+                    <th>合同状态</th>
+                    <th>申请时间</th>
+                    <th>签约时间</th>
+                    <th>终止时间</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayedBuyerContractRows.map((item, index) => (
+                    <tr key={item.id}>
+                      <td>
+                        <input
+                          type="checkbox"
+                          aria-label={`选择合同${item.contractNo}`}
+                          disabled={index > 0}
+                          readOnly
+                        />
+                      </td>
+                      <td>{item.buyerAccount}</td>
+                      <td>{item.signSubject}</td>
+                      <td>{item.companyName}</td>
+                      <td>{item.contractNo}</td>
+                      <td>{item.auditStatus}</td>
+                      <td>{item.contractStatus}</td>
+                      <td>{item.appliedAt}</td>
+                      <td>{item.signedAt}</td>
+                      <td>{item.endedAt}</td>
+                      <td>
+                        <div className="platform-contract-buyer-action-links">
+                          {item.actions.map((action) => (
+                            <button key={action} type="button">{action}</button>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+          {isBuyerContractCaNoticeOpen ? (
+            <div className="modal-overlay platform-contract-buyer-ca-modal-overlay" role="presentation">
+              <div className="modal-mask" onClick={() => setIsBuyerContractCaNoticeOpen(false)} />
+              <div className="platform-contract-buyer-ca-modal" role="dialog" aria-modal="true" aria-labelledby="platform-contract-buyer-ca-title">
+                <div className="platform-contract-buyer-ca-modal-head">
+                  <h3 id="platform-contract-buyer-ca-title">温馨提示</h3>
+                  <button type="button" aria-label="关闭" onClick={() => setIsBuyerContractCaNoticeOpen(false)}>×</button>
+                </div>
+                <div className="platform-contract-buyer-ca-modal-body">
+                  <p>部分买家账号不存在有效的CA证书，提交重新签署合同失败</p>
+                </div>
+                <div className="platform-contract-buyer-ca-modal-foot">
+                  <a className="btn btn-reset" href="/买家先货后款协议提交失败数据.xlsx" download="买家先货后款协议提交失败数据.xlsx">下载失败数据</a>
+                  <button className="btn btn-dark" type="button" onClick={() => setIsBuyerContractCaNoticeOpen(false)}>关闭</button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </>
       ) : (
         <section className="content-card platform-contract-settings-card">
         <div className="platform-contract-form-row">
@@ -25178,6 +26139,7 @@ export default function App() {
   const [shopWholesaleRule, setShopWholesaleRule] = useState(initialShopWholesaleRule);
   const [platformCenterPage, setPlatformCenterPage] = useState("home");
   const [platformShopTab, setPlatformShopTab] = useState("发票管理");
+  const [platformContractView, setPlatformContractView] = useState("list");
   const [buyerRows, setBuyerRows] = useState(buyerSeedRows);
   const [buyerFilters, setBuyerFilters] = useState(initialBuyerFilters);
   const [buyerPage, setBuyerPage] = useState(1);
@@ -26113,6 +27075,10 @@ export default function App() {
       setPlatformTodoConfirmDeleteId("");
     }
 
+    if (pageKey !== "shop-contract-management") {
+      setPlatformContractView("list");
+    }
+
     setPlatformCenterPage(pageKey);
   };
 
@@ -26664,14 +27630,27 @@ export default function App() {
       closable: false,
       onClick: () => handleSwitchPlatformCenterPage("shop-todo-management"),
       onClose: undefined
-    }] : platformCenterPage === "shop-contract-management" ? [{
-      key: "platform-shop-contract-management",
-      label: "合同管理",
-      isCurrent: true,
-      closable: false,
-      onClick: () => handleSwitchPlatformCenterPage("shop-contract-management"),
-      onClose: undefined
-    }] : platformCenterPage === "marketing-flash-sale" || platformCenterPage === "marketing-full-reduction" ? [
+    }] : platformCenterPage === "shop-contract-management" ? [
+      {
+        key: "platform-shop-contract-management",
+        label: "合同管理",
+        isCurrent: platformContractView !== "create",
+        closable: false,
+        onClick: () => {
+          setPlatformContractView("list");
+          handleSwitchPlatformCenterPage("shop-contract-management");
+        },
+        onClose: undefined
+      },
+      ...(platformContractView === "create" ? [{
+        key: "platform-shop-contract-create",
+        label: "创建合同",
+        isCurrent: true,
+        closable: true,
+        onClick: () => setPlatformContractView("create"),
+        onClose: () => setPlatformContractView("list")
+      }] : [])
+    ] : platformCenterPage === "marketing-flash-sale" || platformCenterPage === "marketing-full-reduction" ? [
       {
         key: "platform-marketing-center",
         label: "营销中心",
@@ -26744,7 +27723,7 @@ export default function App() {
             onTopActionClick={handleTopActionClick}
             topActionItems={activePlatformTopActions}
             customTabs={platformCustomTabs}
-            showHomeTab={!isPlatformFullReductionPage}
+            showHomeTab={!isPlatformFullReductionPage && platformCenterPage !== "shop-contract-management"}
           />
           <main className="workspace-main platform-workspace-main">
             {platformCenterPage === "trade-settings" ? <PlatformTradeSettingsPage /> : platformCenterPage === "shop-invoice-management" ? (
@@ -26762,7 +27741,10 @@ export default function App() {
                 onContactBuyer={(buyerAccount) => handleSwitchServicePage("在线客服", buyerAccount)}
               />
             ) : platformCenterPage === "shop-contract-management" ? (
-              <PlatformContractManagementPage />
+              <PlatformContractManagementPage
+                isCreatingContract={platformContractView === "create"}
+                onCreateContract={() => setPlatformContractView("create")}
+              />
             ) : platformCenterPage === "shop-todo-management" ? (
               <PlatformShopTodoManagementPage
                 filters={platformTodoFilters}
