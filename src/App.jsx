@@ -1453,6 +1453,7 @@ const platformCenterSidebarItems = [
     icon: "shop",
     badge: "99+",
     children: [
+      { key: "shop-management", label: "店铺管理" },
       { key: "shop-invoice-management", label: "发票管理" },
       { key: "shop-todo-management", label: "待办管理" },
       { key: "shop-contract-management", label: "合同管理" }
@@ -1882,6 +1883,22 @@ const buyerPcMallViewKeys = ["home", "list", "batch", "title-management", "detai
 const buyerPcMallOrderCenterTabs = ["全部订单", "待付款", "支付中", "待发货", "待收货", "已关闭", "已完成", "待评价"];
 const buyerPcMallOrderCenterSeedRows = [
   {
+    id: "pc-order-002",
+    createdAt: "2026-02-10 10:20:00",
+    orderNo: "2026021010202601",
+    storeName: "办公优选",
+    buyerAccount: "Shawnee003",
+    productName: "联想 ThinkBook 14 笔记本电脑",
+    productSpec: "i5 16GB+512GB 灰色",
+    quantityText: "¥ 4,599*1",
+    paidAmount: "¥ 4,599",
+    orderAmount: "¥ 4,599",
+    orderStatus: "已完成",
+    deliveryStatus: "已发货",
+    imageClassName: "is-order-laptop",
+    actions: ["查看", "申请开票", "再次购买", "加入常购"]
+  },
+  {
     id: "pc-order-001",
     createdAt: "2026-05-18 14:33:03",
     orderNo: "2026051814109538",
@@ -2263,7 +2280,25 @@ const buyerPcMallInvoiceRows = [
   { orderNo: "20260212022895770", product: "美的破壁料理机", spec: "MJ-BL1543A 1.75L", price: "¥899.00", afterSaleStatus: "退款中", afterSaleAmount: "¥899.00", time: "2023-07-02 16:20", shop: "老百姓大药房", store: "成都晨曦路门店", storeId: "(064151)", status: "已驳回", extraStatus: "查看", rejectedAt: "2023-07-03 10:26", rejectReason: "订单存在售后退款处理中，请待售后完成后重新申请开票。", productTone: "appliance", paymentMethod: "先款后货", orderStatus: "已完成" },
   { orderNo: "20260212022895771", product: "海信 75E3F 75英寸电视", spec: "4K超高清 智能语音", price: "¥4,999.00", afterSaleStatus: "-", afterSaleAmount: "¥0.00", time: "2023-07-18 11:15", shop: "老百姓大药房", store: "成都晨曦路门店", storeId: "(064151)", status: "已驳回", extraStatus: "查看", rejectedAt: "2023-07-19 09:12", rejectReason: "抬头信息与订单主体不一致，请核对后重新提交。", productTone: "tv", paymentMethod: "先货后款", orderStatus: "已完成" },
   { orderNo: "20260212022895772", product: "米家空气净化器Pro H", spec: "AC-M7-SC 除甲醛", price: "¥1,699.00", afterSaleStatus: "-", afterSaleAmount: "¥0.00", time: "2023-08-05 13:50", shop: "小米有品", store: "北京朝阳门店", storeId: "(102325)", status: "待申请", productTone: "purifier", paymentMethod: "先货后款", orderStatus: "待发货", applyDisabledReason: "未结算的先货后款订单不允许申请开票" },
-  { orderNo: "20260212022895773", product: "联想 ThinkBook 14 笔记本", spec: "i5 16GB+512GB", price: "¥4,599.00", afterSaleStatus: "-", afterSaleAmount: "¥0.00", time: "2023-08-11 10:20", shop: "办公优选", store: "北京朝阳门店", storeId: "(102325)", status: "待申请", productTone: "laptop", paymentMethod: "先款后货", orderStatus: "待发货" },
+  {
+    orderNo: "20260212022895773",
+    product: "联想 ThinkBook 14 笔记本",
+    spec: "i5 16GB+512GB",
+    price: "¥4,599.00",
+    afterSaleStatus: "-",
+    afterSaleAmount: "¥0.00",
+    time: "2023-08-11 10:20",
+    completedAt: "2026-02-20",
+    shop: "办公优选",
+    store: "北京朝阳门店",
+    storeId: "(102325)",
+    status: "待申请",
+    productTone: "laptop",
+    paymentMethod: "先款后货",
+    orderStatus: "待发货",
+    invoiceApplicationDeadlineDays: 90,
+    applyDisabledReason: "当前订单已超过店铺可申请开票时限，请联系店铺线下开票~"
+  },
   { orderNo: "20260212022895774", product: "格力云逸空调", spec: "1.5匹 新一级能效", price: "¥3,299.00", afterSaleStatus: "-", afterSaleAmount: "¥0.00", time: "2023-08-14 15:08", shop: "格力官方旗舰店", store: "成都晨曦路门店", storeId: "(064151)", status: "待申请", productTone: "appliance", paymentMethod: "先款后货", orderStatus: "待收货" },
   { orderNo: "20260212022895775", product: "华为 MatePad Air", spec: "12GB+256GB 羽砂白", price: "¥2,899.00", afterSaleStatus: "-", afterSaleAmount: "¥0.00", time: "2023-08-20 09:32", shop: "华为企业购", store: "北京朝阳门店", storeId: "(102325)", status: "待申请", productTone: "phone", paymentMethod: "先款后货", orderStatus: "已完成" },
   { orderNo: "20260212022895776", product: "飞利浦商用显示器", spec: "27英寸 4K", price: "¥2,260.00", afterSaleStatus: "退款中", afterSaleAmount: "¥300.00", time: "2023-08-25 11:46", shop: "显示设备专营店", store: "-", storeId: "", status: "已驳回", extraStatus: "查看", rejectedAt: "2023-08-26 13:20", rejectReason: "订单存在部分退款，请确认最终开票金额后重新申请。", productTone: "tv", paymentMethod: "先款后货", orderStatus: "待收货" },
@@ -2621,6 +2656,10 @@ const shopInvoiceManagementRows = [
     modifiedAt: "2026-04-01 19:35:18",
     applicationStatus: "已完成",
     invoicedAt: "2026-04-06 15:11:00",
+    invoiceHistorySummary: "发票张数合计：5 张；开票金额（含税）合计：¥8000",
+    secondInvoicedAt: "2026-04-06 15:12:00",
+    secondInvoiceHistoryLabel: "修改发票",
+    secondInvoiceHistorySummary: "发票张数合计：5 张；开票金额（含税）合计：¥7736",
     invoiceNo: "13216486611",
     invoiceItems: [
       { invoiceNo: "13216486611", invoiceAmountWithTax: "¥920.00", invoiceAmountWithoutTax: "¥919.96", invoicedAt: "2026-04-06 15:11:00" },
@@ -3249,9 +3288,29 @@ const buildShopInvoiceHistoryRecords = (row) => {
     records.push({
       key: `${row.orderNo}-invoiced-${row.invoicedAt}`,
       type: "complete",
-      label: "开票完成",
+      label: "开票",
       time: row.invoicedAt,
-      description: `已完成开票，发票号码 ${row.invoiceNo || "-" }。`
+      description: row.invoiceHistorySummary || "开票"
+    });
+  }
+
+  if (row.secondInvoicedAt && row.secondInvoicedAt !== "-") {
+    records.push({
+      key: `${row.orderNo}-invoiced-second-${row.secondInvoicedAt}`,
+      type: "complete",
+      label: row.secondInvoiceHistoryLabel || "开票",
+      time: row.secondInvoicedAt,
+      description: row.secondInvoiceHistorySummary || "开票"
+    });
+  }
+
+  if (row.invoiceModifiedAt && row.invoiceModifiedAt !== "-") {
+    records.push({
+      key: `${row.orderNo}-modify-invoice-${row.invoiceModifiedAt}`,
+      type: "modify_invoice",
+      label: "修改开票",
+      time: row.invoiceModifiedAt,
+      description: "修改开票"
     });
   }
 
@@ -7150,7 +7209,16 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
 
         <div className="pc-mall-title-modal-body">
           <div className="pc-mall-title-modal-row">
-            <span>抬头类型 <em>*</em></span>
+            <span>
+              抬头类型 <em>*</em>
+              <span className="pc-mall-title-type-help">
+                <button type="button" aria-label="查看抬头类型说明">?</button>
+                <span className="pc-mall-title-type-help-tooltip">
+                  <span>企业：营业执照类型为公司、企业、个体工商户或其他组织的，抬头类型请选择“企业”。</span>
+                  <span>个人：无营业执照，需要以个人姓名申请开票的，抬头类型请选择“个人”。</span>
+                </span>
+              </span>
+            </span>
             <div className="pc-mall-chip-row">
               {["企业", "个人"].map((option) => (
                 <button className={`pc-mall-chip pc-mall-title-modal-chip pc-mall-title-modal-chip-small ${form.titleType === option ? "is-active" : ""}`} key={option} type="button" onClick={() => handleChange("titleType", option)}>
@@ -7163,11 +7231,9 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
           <div className="pc-mall-title-modal-row">
             <span>发票类型 <em>*</em></span>
             <div className="pc-mall-title-modal-checkbox-group">
-              {buyerPcMallInvoiceTypeOptions
-                .filter((option) => option !== buyerPcMallSpecialInvoiceType || isEnterpriseTitle)
-                .map((option) => {
+              {buyerPcMallInvoiceTypeOptions.map((option) => {
                   const checked = supportedInvoiceTypes.includes(option);
-                  const disabled = !isEnterpriseTitle;
+                  const disabled = !isEnterpriseTitle && option === buyerPcMallSpecialInvoiceType;
                   return (
                     <label className={`pc-mall-title-modal-checkbox ${checked ? "is-checked" : ""} ${disabled ? "is-disabled" : ""}`} key={option}>
                       <input
@@ -7294,11 +7360,6 @@ const BuyerPcMallInvoiceTitleModal = memo(function BuyerPcMallInvoiceTitleModal(
             </div>
           </label>
 
-          <label className="pc-mall-title-modal-default">
-            <input type="checkbox" checked={form.isDefault} onChange={(event) => handleChange("isDefault", event.target.checked)} />
-            <span>设为默认抬头</span>
-            <p>设置为默认抬头后，后续下单优先使用以上发票信息</p>
-          </label>
         </div>
 
         <div className="pc-mall-title-modal-foot">
@@ -9099,6 +9160,8 @@ function BuyerPcMallPayLaterServicePage({ onOpenCertificateManagement, onSignAgr
 
 function BuyerPcMallPayLaterSignPage({ onOpenCertificateManagement }) {
   const [isCertificateMissingNoticeOpen, setIsCertificateMissingNoticeOpen] = useState(false);
+  const [signMethod, setSignMethod] = useState("legal");
+  const [signingSubject, setSigningSubject] = useState("未申请CA证书主体");
   const handleGoApplyCertificate = () => {
     setIsCertificateMissingNoticeOpen(false);
     onOpenCertificateManagement?.();
@@ -9131,13 +9194,16 @@ function BuyerPcMallPayLaterSignPage({ onOpenCertificateManagement }) {
             <div className="pc-paylater-form-row">
               <label><em>*</em> 签约主体:</label>
               <div className="pc-paylater-select-field">
-                <input value="测试较迷" readOnly />
+                <select value={signingSubject} onChange={(event) => setSigningSubject(event.target.value)}>
+                  <option>未申请CA证书主体</option>
+                  <option>已申请过CA证书主体</option>
+                </select>
               </div>
             </div>
             <p className="pc-paylater-form-tip">如未找到对应主体，请前往 <button type="button">【商家中心-账户管理-身份认证】</button> 添加</p>
             <div className="pc-paylater-form-row">
               <label><em>*</em> 企业名称:</label>
-              <input className="pc-paylater-disabled-input" value="测试较迷" readOnly />
+              <input className="pc-paylater-disabled-input" value={signingSubject} readOnly />
             </div>
             <div className="pc-paylater-form-row">
               <label><em>*</em> 统一社会信用代码:</label>
@@ -9149,27 +9215,74 @@ function BuyerPcMallPayLaterSignPage({ onOpenCertificateManagement }) {
             <h2><span>2</span> 协议签署人</h2>
             <div className="pc-paylater-form-row pc-paylater-sign-method-row">
               <label><em>*</em> 签署方式:</label>
-              <div className="pc-paylater-method-card is-active">
+              <button
+                className={`pc-paylater-method-card ${signMethod === "legal" ? "is-active" : ""}`}
+                type="button"
+                onClick={() => setSignMethod("legal")}
+              >
                 <strong>法定代表人签署 <b>推荐</b></strong>
                 <p>由法人本人完成电子签章</p>
-              </div>
-              <div className="pc-paylater-method-card">
+              </button>
+              <button
+                className={`pc-paylater-method-card ${signMethod === "delegate" ? "is-active" : ""}`}
+                type="button"
+                onClick={() => setSignMethod("delegate")}
+              >
                 <strong>委托授权人签署</strong>
                 <p>由经办人代签，需填写授权人实名信息</p>
-              </div>
+              </button>
             </div>
-            <div className="pc-paylater-form-row">
-              <label><em>*</em> 法定代表人:</label>
-              <input placeholder="请输入法定代表人姓名" />
-            </div>
-            <div className="pc-paylater-form-row">
-              <label><em>*</em> 法人身份证号:</label>
-              <input placeholder="请输入法人 18 位居民身份证号" />
-            </div>
-            <div className="pc-paylater-form-row">
-              <label><em>*</em> 法人手机号:</label>
-              <input placeholder="请输入法人本人手机号" />
-            </div>
+            {signMethod === "legal" ? (
+              <>
+                <div className="pc-paylater-form-row">
+                  <label><em>*</em> 法定代表人:</label>
+                  <input placeholder="请输入法定代表人姓名" />
+                </div>
+                <div className="pc-paylater-form-row">
+                  <label><em>*</em> 法人身份证号:</label>
+                  <input placeholder="请输入法人 18 位居民身份证号" />
+                </div>
+                <div className="pc-paylater-form-row">
+                  <label><em>*</em> 法人手机号:</label>
+                  <input placeholder="请输入法人本人手机号" />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="pc-paylater-form-row">
+                  <label><em>*</em> 授权人姓名:</label>
+                  <input placeholder="请输入授权人的真实姓名" />
+                </div>
+                <div className="pc-paylater-form-row">
+                  <label><em>*</em> 授权人身份证号:</label>
+                  <input placeholder="请输入授权人 18 位居民身份证号" />
+                </div>
+                <div className="pc-paylater-form-row">
+                  <label><em>*</em> 授权人手机号:</label>
+                  <input placeholder="请输入授权人本人手机号" />
+                </div>
+                <div className="pc-paylater-form-row pc-paylater-certificate-upload-row">
+                  <label><em>*</em> 签约授权文件:</label>
+                  <button className="pc-paylater-certificate-upload-box" type="button">
+                    <span aria-hidden="true">↥</span>
+                    支持 doc、docx、pdf、jpg、jpeg、png格式，文件大小上限 5M
+                  </button>
+                </div>
+                <p className="pc-paylater-certificate-upload-hint">需法人签字并加盖公章，<button type="button">下载授权文件模板</button></p>
+                {signingSubject === "未申请CA证书主体" ? (
+                  <>
+                    <div className="pc-paylater-form-row pc-paylater-certificate-upload-row">
+                      <label><em>*</em> CA证书授权文件:</label>
+                      <button className="pc-paylater-certificate-upload-box" type="button">
+                        <span aria-hidden="true">↥</span>
+                        支持PDF、PNG、JPG和JPEG格式，文件大小上限5M
+                      </button>
+                    </div>
+                    <p className="pc-paylater-certificate-upload-hint">需加盖公章，<a href="/企业认证授权公函（线下盖章授权）.docx" download="企业认证授权公函（线下盖章授权）.docx">下载CA证书授权文件模板</a></p>
+                  </>
+                ) : null}
+              </>
+            )}
           </div>
 
           <div className="pc-paylater-form-section">
@@ -9197,11 +9310,11 @@ function BuyerPcMallPayLaterSignPage({ onOpenCertificateManagement }) {
                 <button type="button" aria-label="关闭" onClick={() => setIsCertificateMissingNoticeOpen(false)}>×</button>
               </div>
               <div className="pc-paylater-ca-modal-body">
-                <p>当前不存在有效的CA证书，无法提交先货后款协议。</p>
+                <p>当前签约主体不存在有效的CA证书，无法提交先货后款协议。</p>
               </div>
               <div className="pc-paylater-ca-modal-foot">
-                <button className="btn btn-reset" type="button" onClick={handleGoApplyCertificate}>去申请CA证书</button>
-                <button className="btn btn-dark" type="button" onClick={() => setIsCertificateMissingNoticeOpen(false)}>关闭</button>
+                <button className="btn btn-reset" type="button" onClick={() => setIsCertificateMissingNoticeOpen(false)}>关闭</button>
+                <button className="btn btn-dark" type="button" onClick={handleGoApplyCertificate}>去申请CA证书</button>
               </div>
             </div>
           </div>
@@ -9218,7 +9331,6 @@ function CaCertificateWarmTip() {
         <strong><span>!</span> 温馨提示:</strong>
         <p>CA证书仅用于在线签署相关合同/协议文件，未申请CA证书或CA证书已过期的将无法正常在线签署合同/协议文件。</p>
       </div>
-      <button type="button">展开⌄</button>
     </div>
   );
 }
@@ -9228,6 +9340,12 @@ function BuyerPcMallPayLaterCertificatePage() {
   const [certificateApplyStep, setCertificateApplyStep] = useState("form");
   const [certificateSignMethod, setCertificateSignMethod] = useState("legal");
   const [certificateSmsCode, setCertificateSmsCode] = useState("");
+  const [subjectNameQuery, setSubjectNameQuery] = useState("");
+  const [selectedSubjectName, setSelectedSubjectName] = useState("");
+  const [subjectIdQuery, setSubjectIdQuery] = useState("");
+  const [appliedSubjectNameQuery, setAppliedSubjectNameQuery] = useState("");
+  const [appliedSubjectIdQuery, setAppliedSubjectIdQuery] = useState("");
+  const [isSubjectNameSelectOpen, setIsSubjectNameSelectOpen] = useState(false);
   const [isCertificateSubmitting, setIsCertificateSubmitting] = useState(false);
   const [certificateSubmitToast, setCertificateSubmitToast] = useState("");
   const [certificateSubmitErrorOpen, setCertificateSubmitErrorOpen] = useState(false);
@@ -9238,6 +9356,7 @@ function BuyerPcMallPayLaterCertificatePage() {
       status: "生效中",
       validRange: "2026-07-07 14:51:53~2027-07-07 14:51:53",
       issuedAt: "2026-07-07 14:51:53",
+      authorizationFile: "3c0389c671d4ec7e86bfbbb3a45e0d2f_1783608404646.docx",
       subjectName: "测试较迷",
       subjectId: "91330106MA2CGPT001"
     },
@@ -9246,6 +9365,7 @@ function BuyerPcMallPayLaterCertificatePage() {
       status: "已吊销",
       validRange: "2026-05-07 15:33:31~2027-05-07 15:33:31",
       issuedAt: "2026-05-07 15:33:31",
+      authorizationFile: "3c0389c671d4ec7e86bfbbb3a45e0d2f_1783608404646.docx",
       subjectName: "测试较迷",
       subjectId: "91330106MA2CGPT003"
     },
@@ -9254,10 +9374,30 @@ function BuyerPcMallPayLaterCertificatePage() {
       status: "已过期",
       validRange: "2024-04-18 09:49:58~2025-04-18 09:49:58",
       issuedAt: "2024-04-18 09:49:58",
+      authorizationFile: "3c0389c671d4ec7e86bfbbb3a45e0d2f_1783608404646.docx",
       subjectName: "测试较迷",
       subjectId: "91330106MA2CGPT004"
     }
   ];
+  const subjectNameOptions = [...new Set(certificateRows.map((item) => item.subjectName))];
+  const matchedSubjectNameOptions = subjectNameOptions.filter((item) => item.includes(subjectNameQuery.trim()));
+  const filteredCertificateRows = certificateRows.filter((item) => (
+    (!appliedSubjectNameQuery.trim() || item.subjectName.includes(appliedSubjectNameQuery.trim()))
+    && (!appliedSubjectIdQuery.trim() || item.subjectId.includes(appliedSubjectIdQuery.trim()))
+  ));
+  const handleCertificateQuery = () => {
+    setAppliedSubjectNameQuery(subjectNameQuery);
+    setAppliedSubjectIdQuery(subjectIdQuery);
+    setIsSubjectNameSelectOpen(false);
+  };
+  const handleCertificateQueryReset = () => {
+    setSubjectNameQuery("");
+    setSelectedSubjectName("");
+    setSubjectIdQuery("");
+    setAppliedSubjectNameQuery("");
+    setAppliedSubjectIdQuery("");
+    setIsSubjectNameSelectOpen(false);
+  };
   const handleApplyCertificate = () => {
     setShowCertificateApplyForm(true);
     setCertificateApplyStep("form");
@@ -9335,9 +9475,9 @@ function BuyerPcMallPayLaterCertificatePage() {
       ) : showCertificateApplyForm ? (
         <div className="pc-paylater-certificate-apply-page">
           <div className="pc-paylater-form-section">
-            <h2><span>1</span> 签约主体</h2>
+            <h2><span>1</span> 证书主体</h2>
             <div className="pc-paylater-form-row">
-              <label><em>*</em> 签约主体:</label>
+              <label><em>*</em> 证书主体:</label>
               <div className="pc-paylater-select-field">
                 <input value="测试较迷" readOnly />
               </div>
@@ -9354,24 +9494,24 @@ function BuyerPcMallPayLaterCertificatePage() {
           </div>
 
           <div className="pc-paylater-form-section">
-            <h2><span>2</span> 协议签署人</h2>
+            <h2><span>2</span> 证书申请人</h2>
             <div className="pc-paylater-form-row pc-paylater-sign-method-row">
-              <label><em>*</em> 签署方式:</label>
+              <label><em>*</em> 申请方式:</label>
               <button
                 className={`pc-paylater-method-card ${certificateSignMethod === "legal" ? "is-active" : ""}`}
                 type="button"
                 onClick={() => setCertificateSignMethod("legal")}
               >
-                <strong>法定代表人签署 <b>推荐</b></strong>
-                <p>由法人本人完成电子签章</p>
+                <strong>法定代表人申请 <b>推荐</b></strong>
+                <p>由法人本人进行CA证书申请</p>
               </button>
               <button
                 className={`pc-paylater-method-card ${certificateSignMethod === "delegate" ? "is-active" : ""}`}
                 type="button"
                 onClick={() => setCertificateSignMethod("delegate")}
               >
-                <strong>委托授权人签署</strong>
-                <p>由经办人代签，需填写授权人实名信息</p>
+                <strong>委托授权人申请</strong>
+                <p>由经办人代申请，需填写授权人实名信息</p>
               </button>
             </div>
             {certificateSignMethod === "legal" ? (
@@ -9404,13 +9544,13 @@ function BuyerPcMallPayLaterCertificatePage() {
                   <input placeholder="请输入授权人本人手机号" />
                 </div>
                 <div className="pc-paylater-form-row pc-paylater-certificate-upload-row">
-                  <label><em>*</em> 授权文件:</label>
+                  <label><em>*</em> CA证书授权文件:</label>
                   <button className="pc-paylater-certificate-upload-box" type="button">
                     <span aria-hidden="true">↥</span>
-                    支持 doc、docx、pdf、jpg、jpeg、png格式，文件大小上限 5M
+                    支持PDF、PNG、JPG和JPEG格式，文件大小上限5M
                   </button>
                 </div>
-                <p className="pc-paylater-certificate-upload-hint">需法人签字并加盖公章，<button type="button">下载授权文件模板</button></p>
+                <p className="pc-paylater-certificate-upload-hint">需加盖公章，<a href="/企业认证授权公函（线下盖章授权）.docx" download="企业认证授权公函（线下盖章授权）.docx">下载CA证书授权文件模板</a></p>
               </>
             )}
           </div>
@@ -9421,6 +9561,81 @@ function BuyerPcMallPayLaterCertificatePage() {
       ) : (
         <div className="pc-paylater-certificate-page">
           <CaCertificateWarmTip />
+          <div className="pc-paylater-certificate-query" role="search" aria-label="CA证书查询条件">
+            <div className="pc-paylater-certificate-query-field pc-paylater-certificate-subject-select">
+              <label htmlFor="certificate-subject-name">主体名称：</label>
+              <input
+                id="certificate-subject-name"
+                value={subjectNameQuery}
+                placeholder="请选择"
+                role="combobox"
+                aria-autocomplete="list"
+                aria-controls="certificate-subject-name-options"
+                aria-expanded={isSubjectNameSelectOpen}
+                onFocus={() => setIsSubjectNameSelectOpen(true)}
+                onChange={(event) => {
+                  setSubjectNameQuery(event.target.value);
+                  setSelectedSubjectName("");
+                  setIsSubjectNameSelectOpen(true);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") handleCertificateQuery();
+                  if (event.key === "Escape") setIsSubjectNameSelectOpen(false);
+                }}
+              />
+              {selectedSubjectName ? (
+                <button
+                  className="pc-paylater-certificate-select-clear"
+                  type="button"
+                  aria-label="清空主体名称"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => {
+                    setSubjectNameQuery("");
+                    setSelectedSubjectName("");
+                    setIsSubjectNameSelectOpen(false);
+                  }}
+                >
+                  ×
+                </button>
+              ) : <span className="pc-paylater-certificate-select-icon" aria-hidden="true" />}
+              {isSubjectNameSelectOpen ? (
+                <div id="certificate-subject-name-options" className="pc-paylater-certificate-subject-options" role="listbox">
+                  {matchedSubjectNameOptions.length ? matchedSubjectNameOptions.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      role="option"
+                      aria-selected={subjectNameQuery === item}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => {
+                        setSubjectNameQuery(item);
+                        setSelectedSubjectName(item);
+                        setIsSubjectNameSelectOpen(false);
+                      }}
+                    >
+                      {item}
+                    </button>
+                  )) : <span className="pc-paylater-certificate-subject-empty">暂无匹配主体</span>}
+                </div>
+              ) : null}
+            </div>
+            <div className="pc-paylater-certificate-query-field">
+              <label htmlFor="certificate-subject-id">主体证件号：</label>
+              <input
+                id="certificate-subject-id"
+                value={subjectIdQuery}
+                placeholder="请输入主体证件号"
+                onChange={(event) => setSubjectIdQuery(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") handleCertificateQuery();
+                }}
+              />
+            </div>
+            <div className="pc-paylater-certificate-query-actions">
+              <button className="pc-paylater-certificate-query-reset" type="button" onClick={handleCertificateQueryReset}>重置</button>
+              <button className="pc-paylater-certificate-query-submit" type="button" onClick={handleCertificateQuery}>查询</button>
+            </div>
+          </div>
           <div className="pc-paylater-certificate-toolbar">
             <button type="button" onClick={handleApplyCertificate}>申请CA证书</button>
           </div>
@@ -9428,30 +9643,39 @@ function BuyerPcMallPayLaterCertificatePage() {
             <table className="pc-paylater-certificate-table">
               <thead>
                 <tr>
-                  <th>证书编号</th>
-                  <th>状态</th>
-                  <th>证书有效期起止时间</th>
-                  <th>证书签发时间</th>
                   <th>主体名称</th>
                   <th>主体证件号</th>
+                  <th>CA证书编号</th>
+                  <th>证书状态</th>
+                  <th>证书有效期起止时间</th>
+                  <th>CA证书授权文件</th>
                 </tr>
               </thead>
               <tbody>
-                {certificateRows.map((item) => (
+                {filteredCertificateRows.map((item) => (
                   <tr key={item.certificateNo}>
+                    <td>{item.subjectName}</td>
+                    <td>{item.subjectId}</td>
                     <td>{item.certificateNo}</td>
                     <td>{item.status}</td>
                     <td>{item.validRange}</td>
-                    <td>{item.issuedAt}</td>
-                    <td>{item.subjectName}</td>
-                    <td>{item.subjectId}</td>
+                    <td>
+                      <a className="pc-paylater-certificate-file-link" href={`/${item.authorizationFile}`} download={item.authorizationFile}>
+                        {item.authorizationFile.slice(-22)}
+                      </a>
+                    </td>
                   </tr>
                 ))}
+                {!filteredCertificateRows.length ? (
+                  <tr className="pc-paylater-certificate-empty-row">
+                    <td colSpan="6">暂无符合条件的数据</td>
+                  </tr>
+                ) : null}
               </tbody>
             </table>
           </div>
           <div className="pc-paylater-certificate-pagination">
-            <span>{`共${certificateRows.length}条`}</span>
+            <span>{`共${filteredCertificateRows.length}条`}</span>
             <button className="pc-paylater-page-size" type="button">20 条/页</button>
             <button className="pc-paylater-page-arrow" type="button" disabled>‹</button>
             <button className="pc-paylater-page-current" type="button">1</button>
@@ -9515,8 +9739,23 @@ function BuyerPcMallOrderCenterPage({
   rows,
   onReset
 }) {
+  const [orderActionToast, setOrderActionToast] = useState("");
+
+  useEffect(() => {
+    if (!orderActionToast) return undefined;
+    const timerId = window.setTimeout(() => setOrderActionToast(""), 2400);
+    return () => window.clearTimeout(timerId);
+  }, [orderActionToast]);
+
+  const handleOrderAction = (action) => {
+    if (action === "申请开票") {
+      setOrderActionToast("当前订单已超过店铺可申请开票时限，请联系店铺线下开票~");
+    }
+  };
+
   return (
     <>
+      {orderActionToast ? <div className="page-toast" role="status">{orderActionToast}</div> : null}
       <div className="pc-mall-breadcrumb">商家中心 <span>››</span> 我的订单</div>
       <div className="pc-mall-panel pc-mall-order-page-panel">
         <div className="pc-mall-order-tabbar">
@@ -9643,7 +9882,7 @@ function BuyerPcMallOrderCenterPage({
                 <div className="pc-mall-order-body-cell">{item.deliveryStatus}</div>
                 <div className="pc-mall-order-actions">
                   {item.actions.map((action) => (
-                    <button key={action} type="button">{action}</button>
+                    <button key={action} type="button" onClick={() => handleOrderAction(action)}>{action}</button>
                   ))}
                 </div>
               </div>
@@ -11388,7 +11627,6 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                           <div className="pc-mall-invoice-title-card-main">
                             <div className="pc-mall-invoice-title-name">{item.title}</div>
                             <div className="pc-mall-invoice-title-tags">
-                              {item.isDefault ? <span className="pc-mall-invoice-title-default-tag">默认</span> : null}
                               {supportedInvoiceTypes.map((invoiceType) => (
                                 <span className={`pc-mall-invoice-tag is-${getBuyerPcMallInvoiceTypeTone(invoiceType)}`} key={`${item.id}-${invoiceType}`}>{invoiceType}</span>
                               ))}
@@ -11414,10 +11652,6 @@ function BuyerPcMallPage({ onPortalActionClick }) {
                             </div>
                           </div>
                           <div className="pc-mall-invoice-title-actions">
-                            <button className={`pc-mall-invoice-title-default-btn ${item.isDefault ? "is-active" : ""}`} type="button">
-                              <span className="pc-mall-invoice-title-default-dot" />
-                              设为默认
-                            </button>
                             <button className="pc-mall-invoice-title-icon-btn" type="button" onClick={() => handleOpenEditInvoiceTitleModal(item)}>编辑</button>
                             <button className="pc-mall-invoice-title-icon-btn" type="button" onClick={() => handleDeleteInvoiceTitle(item.id)}>删除</button>
                           </div>
@@ -12225,7 +12459,7 @@ function Header({ currentMarketingPage, specialCreateTab, onTopActionClick, cust
 
 function SupplierContractManagementPage({ initialTab = "合同管理", tabRequestId = 0 }) {
   const [activeTab, setActiveTab] = useState(initialTab);
-  const [showCertificateInfo, setShowCertificateInfo] = useState(false);
+  const [showCertificateInfo, setShowCertificateInfo] = useState(initialTab === "CA证书管理");
   const [showCertificateApplyForm, setShowCertificateApplyForm] = useState(false);
   const [certificateApplyStep, setCertificateApplyStep] = useState("form");
   const [certificateApplyMode, setCertificateApplyMode] = useState("personal");
@@ -12296,6 +12530,7 @@ function SupplierContractManagementPage({ initialTab = "合同管理", tabReques
   useEffect(() => {
     if (!supplierContractTabs.includes(initialTab)) return;
     setActiveTab(initialTab);
+    setShowCertificateInfo(initialTab === "CA证书管理");
   }, [initialTab, tabRequestId]);
   useEffect(() => () => {
     if (certificateSubmitTimerRef.current) {
@@ -12320,7 +12555,7 @@ function SupplierContractManagementPage({ initialTab = "合同管理", tabReques
               onClick={() => {
                 setActiveTab(tab);
                 setShowCertificateApplyForm(false);
-                setShowCertificateInfo(false);
+                setShowCertificateInfo(tab === "CA证书管理");
                 setCertificateApplyStep("form");
                 setCertificateApplyMode("personal");
               }}
@@ -12376,31 +12611,27 @@ function SupplierContractManagementPage({ initialTab = "合同管理", tabReques
 
       {isCertificateTab ? (
         showCertificateInfo ? (
-          <section className="supplier-certificate-info-card">
-            <div className="supplier-certificate-info-list">
-              <div><span>CA证书编号：</span><strong>CGPTCO202607077857</strong></div>
-              <div><span>证书状态：</span><strong>生效中</strong></div>
-              <div><span>证书有效期起止时间：</span><strong>2026-07-07 14:51:53~2027-07-07 14:51:53</strong></div>
-              <div><span>签发时间：</span><strong>2026-07-07 14:51:53</strong></div>
-              <div><span>店铺名称：</span><strong>AAAA店铺</strong></div>
-              <div><span>统一信用社会代码：</span><strong>91430105MA4L7NLM8W</strong></div>
-              <div><span>纳税人识别号：</span><strong>91510100621710689W</strong></div>
-              <div><span>企业名称：</span><strong>四川鸿昌塑胶工业有限公司</strong></div>
-              <div><span>授权人姓名：</span><strong>吴法无天</strong></div>
-              <div><span>授权人身份证号：</span><strong>666166666661234</strong></div>
-              <div><span>授权人手机号：</span><strong>18011031203</strong></div>
-              <div>
-                <span>授权文件：</span>
-                <a href="/3c0389c671d4ec7e86bfbbb3a45e0d2f_1783608404646.docx" download="3c0389c671d4ec7e86bfbbb3a45e0d2f_1783608404646.docx">
-                  <i className="supplier-certificate-info-file-icon" aria-hidden="true" />
-                  3c0389c671d4ec7e86bfbbb3a45e0d2f_1783608404646.docx
-                </a>
+          <>
+            <CaCertificateWarmTip />
+            <section className="supplier-certificate-info-card">
+              <div className="supplier-certificate-info-list">
+                <div><span>CA证书编号：</span><strong>CGPTCO202607077857</strong></div>
+                <div><span>证书状态：</span><strong>生效中</strong></div>
+                <div><span>证书有效期起止时间：</span><strong>2026-07-07 14:51:53~2027-07-07 14:51:53</strong></div>
+                <div>
+                  <span>CA证书授权文件：</span>
+                  <a href="/3c0389c671d4ec7e86bfbbb3a45e0d2f_1783608404646.docx" download="3c0389c671d4ec7e86bfbbb3a45e0d2f_1783608404646.docx">
+                    <i className="supplier-certificate-info-file-icon" aria-hidden="true" />
+                    3c0389c671d4ec7e86bfbbb3a45e0d2f_1783608404646.docx
+                  </a>
+                </div>
+                <div><span>店铺名称：</span><strong>AAAA店铺</strong></div>
+                <div><span>企业名称：</span><strong>四川鸿昌塑胶工业有限公司</strong></div>
+                <div><span>统一社会代码：</span><strong>91430105MA4L7NLM8W</strong></div>
+                <div><span>纳税人识别号：</span><strong>91510100621710689W</strong></div>
               </div>
-            </div>
-            <div className="supplier-certificate-info-actions">
-              <button className="btn btn-dark" type="button" onClick={handleApplyCertificate}>重新申请CA证书</button>
-            </div>
-          </section>
+            </section>
+          </>
         ) : showCertificateApplyForm ? (
           certificateApplyStep === "preview" ? (
             <section className="supplier-certificate-preview-card">
@@ -12476,7 +12707,7 @@ function SupplierContractManagementPage({ initialTab = "合同管理", tabReques
                       <input value="91510100621710689W" readOnly />
                     </label>
                     <div className="supplier-certificate-apply-auth-row">
-                      <span><i>*</i> 授权文件:</span>
+                      <span><i>*</i> CA证书授权文件:</span>
                       <div className="supplier-certificate-apply-auth-content">
                         <label className="supplier-certificate-apply-auth-picker">
                           <input
@@ -12486,10 +12717,10 @@ function SupplierContractManagementPage({ initialTab = "合同管理", tabReques
                           />
                           <span className="supplier-certificate-apply-auth-icon" aria-hidden="true" />
                           <strong className={certificateAuthorizationFileName ? "has-file" : ""}>
-                            {certificateAuthorizationFileName || "支持 doc、docx、pdf、jpg、jpeg、png格式，文件大小上限 5M"}
+                            {certificateAuthorizationFileName || "支持PDF、PNG、JPG和JPEG格式，文件大小上限5M"}
                           </strong>
                         </label>
-                        <p>需法人签字并加盖公章，<a href="/授权文件模板.docx" download="授权文件模板.docx">下载授权文件模板</a></p>
+                        <p>需加盖公章，<a href="/企业认证授权公函（线下盖章授权）.docx" download="企业认证授权公函（线下盖章授权）.docx">下载CA证书授权文件模板</a></p>
                       </div>
                     </div>
                   </>
@@ -12519,9 +12750,26 @@ function SupplierContractManagementPage({ initialTab = "合同管理", tabReques
         ) : (
           <>
             <CaCertificateWarmTip />
-            <section className="supplier-certificate-empty-card">
-              <p>您的店铺未申请CA证书，暂时无法签署相关合同/协议~点击下方「申请CA证书」即可申请</p>
-              <button className="supplier-certificate-empty-apply-btn" type="button" onClick={handleApplyCertificate}>申请CA证书</button>
+            <section className="supplier-certificate-info-card">
+              <div className="supplier-certificate-info-list">
+                <div><span>CA证书编号：</span><strong>-</strong></div>
+                <div><span>证书状态：</span><strong>-</strong></div>
+                <div><span>证书有效期起止时间：</span><strong>-</strong></div>
+                <div>
+                  <span>CA证书授权文件：</span>
+                  <a href="/3c0389c671d4ec7e86bfbbb3a45e0d2f_1783608404646.docx" download="3c0389c671d4ec7e86bfbbb3a45e0d2f_1783608404646.docx">
+                    <i className="supplier-certificate-info-file-icon" aria-hidden="true" />
+                    3c0389c671d4ec7e86bfbbb3a45e0d2f_1783608404646.docx
+                  </a>
+                </div>
+                <div><span>店铺名称：</span><strong>AAAA店铺</strong></div>
+                <div><span>企业名称：</span><strong>四川鸿昌塑胶工业有限公司</strong></div>
+                <div><span>统一社会代码：</span><strong>91430105MA4L7NLM8W</strong></div>
+                <div><span>纳税人识别号：</span><strong>91510100621710689W</strong></div>
+              </div>
+              <div className="supplier-certificate-info-actions">
+                <button className="btn btn-dark" type="button" onClick={handleApplyCertificate}>申请CA证书</button>
+              </div>
             </section>
           </>
         )
@@ -13315,6 +13563,539 @@ function PlatformCenterPage() {
   );
 }
 
+const platformShopManagementInitialFilters = {
+  shopId: "8210",
+  shopName: "",
+  shopAccount: "",
+  shopStatus: "",
+  contractSigned: "",
+  owesFees: "",
+  supplementalMaterials: "",
+  renewalContract: "",
+  shopType: "",
+  reentryRequired: "",
+  meituanPayEnabled: "",
+  paymentChannel: "",
+  supplierType: "",
+  licenseExpiryDays: "",
+  businessOwner: "",
+  shopTags: "",
+  contractStatus: "",
+  admissionStartDate: "",
+  admissionEndDate: "",
+  shopLevel: "",
+  newbieProtectionStatus: "",
+  invoiceDeadlineDays: ""
+};
+const platformShopManagementTabs = [
+  { key: "management", label: "店铺管理" },
+  { key: "admission", label: "入驻审核", badge: "5" },
+  { key: "category", label: "经营类目审核", badge: "110" },
+  { key: "reminder", label: "店铺提醒设置" }
+];
+
+const platformShopManagementRow = {
+  id: "8210",
+  name: "皇甫钰店铺名",
+  account: "jWQwmTF\nP",
+  level: "",
+  supplier: "",
+  tags: "",
+  owner: "",
+  category: "",
+  type: "商城店铺",
+  status: "开启",
+  operationStatus: "运营中",
+  invoiceApplicationDeadlineDays: 90,
+  contractSigned: "yes",
+  owesFees: "no",
+  supplementalMaterials: "no",
+  renewalContract: "no",
+  reentryRequired: "no",
+  meituanPayEnabled: "yes",
+  paymentChannel: "汇付",
+  supplierType: "普通供应商",
+  licenseExpiryDays: 180,
+  businessOwner: "",
+  filterTags: "",
+  contractStatus: "已签署",
+  admissionReviewedAt: "2026-04-18",
+  filterLevel: "普通",
+  newbieProtectionStatus: "保护期内"
+};
+
+function PlatformShopManagementPage() {
+  const [activeTab, setActiveTab] = useState("management");
+  const [tipExpanded, setTipExpanded] = useState(false);
+  const [filterExpanded, setFilterExpanded] = useState(false);
+  const [draftFilters, setDraftFilters] = useState(platformShopManagementInitialFilters);
+  const [appliedFilters, setAppliedFilters] = useState(platformShopManagementInitialFilters);
+  const [selected, setSelected] = useState(false);
+  const [serialNo, setSerialNo] = useState("0");
+  const [pageInput, setPageInput] = useState("");
+  const [notice, setNotice] = useState("");
+  const [batchDeadlineModalOpen, setBatchDeadlineModalOpen] = useState(false);
+  const [batchDeadlineDays, setBatchDeadlineDays] = useState("");
+  const [batchDeadlineError, setBatchDeadlineError] = useState("");
+  const [shopInvoiceDeadlineDays, setShopInvoiceDeadlineDays] = useState(platformShopManagementRow.invoiceApplicationDeadlineDays);
+
+  const showRow = useMemo(() => {
+    const shopIdMatches = !appliedFilters.shopId || platformShopManagementRow.id.includes(appliedFilters.shopId.trim());
+    const shopNameMatches = !appliedFilters.shopName || platformShopManagementRow.name.includes(appliedFilters.shopName.trim());
+    const accountMatches = !appliedFilters.shopAccount || platformShopManagementRow.account.replace(/\s/g, "").includes(appliedFilters.shopAccount.trim());
+    const statusMatches = !appliedFilters.shopStatus || platformShopManagementRow.status === appliedFilters.shopStatus;
+    const contractMatches = !appliedFilters.contractSigned || platformShopManagementRow.contractSigned === appliedFilters.contractSigned;
+    const owesFeesMatches = !appliedFilters.owesFees || platformShopManagementRow.owesFees === appliedFilters.owesFees;
+    const materialsMatches = !appliedFilters.supplementalMaterials || platformShopManagementRow.supplementalMaterials === appliedFilters.supplementalMaterials;
+    const renewalMatches = !appliedFilters.renewalContract || platformShopManagementRow.renewalContract === appliedFilters.renewalContract;
+    const shopTypeMatches = !appliedFilters.shopType || platformShopManagementRow.type === appliedFilters.shopType;
+    const reentryMatches = !appliedFilters.reentryRequired || platformShopManagementRow.reentryRequired === appliedFilters.reentryRequired;
+    const meituanPayMatches = !appliedFilters.meituanPayEnabled || platformShopManagementRow.meituanPayEnabled === appliedFilters.meituanPayEnabled;
+    const paymentChannelMatches = !appliedFilters.paymentChannel || platformShopManagementRow.paymentChannel === appliedFilters.paymentChannel;
+    const supplierTypeMatches = !appliedFilters.supplierType || platformShopManagementRow.supplierType === appliedFilters.supplierType;
+    const licenseExpiryMatches = !appliedFilters.licenseExpiryDays
+      || platformShopManagementRow.licenseExpiryDays <= Number(appliedFilters.licenseExpiryDays);
+    const ownerMatches = !appliedFilters.businessOwner || platformShopManagementRow.businessOwner.includes(appliedFilters.businessOwner.trim());
+    const tagsMatch = !appliedFilters.shopTags || platformShopManagementRow.filterTags.includes(appliedFilters.shopTags.trim());
+    const contractStatusMatches = !appliedFilters.contractStatus || platformShopManagementRow.contractStatus === appliedFilters.contractStatus;
+    const admissionStartMatches = !appliedFilters.admissionStartDate || platformShopManagementRow.admissionReviewedAt >= appliedFilters.admissionStartDate;
+    const admissionEndMatches = !appliedFilters.admissionEndDate || platformShopManagementRow.admissionReviewedAt <= appliedFilters.admissionEndDate;
+    const levelMatches = !appliedFilters.shopLevel || platformShopManagementRow.filterLevel === appliedFilters.shopLevel;
+    const newbieProtectionMatches = !appliedFilters.newbieProtectionStatus
+      || platformShopManagementRow.newbieProtectionStatus === appliedFilters.newbieProtectionStatus;
+    const invoiceDeadlineMatches = !appliedFilters.invoiceDeadlineDays
+      || String(shopInvoiceDeadlineDays) === appliedFilters.invoiceDeadlineDays;
+
+    return shopIdMatches
+      && shopNameMatches
+      && accountMatches
+      && statusMatches
+      && contractMatches
+      && owesFeesMatches
+      && materialsMatches
+      && renewalMatches
+      && shopTypeMatches
+      && reentryMatches
+      && meituanPayMatches
+      && paymentChannelMatches
+      && supplierTypeMatches
+      && licenseExpiryMatches
+      && ownerMatches
+      && tagsMatch
+      && contractStatusMatches
+      && admissionStartMatches
+      && admissionEndMatches
+      && levelMatches
+      && newbieProtectionMatches
+      && invoiceDeadlineMatches;
+  }, [appliedFilters, shopInvoiceDeadlineDays]);
+
+  const updateDraftFilter = (field, value) => {
+    setDraftFilters((current) => ({ ...current, [field]: value }));
+  };
+
+  const handleReset = () => {
+    setDraftFilters(platformShopManagementInitialFilters);
+    setAppliedFilters(platformShopManagementInitialFilters);
+    setSelected(false);
+    setNotice("筛选条件已重置");
+  };
+
+  const handleAction = (label) => {
+    setNotice(`已打开“${label}”操作`);
+  };
+
+  const handleBatchActionChange = (value) => {
+    if (!value) return;
+    if (value === "批量设置订单可申请开票时限") {
+      setBatchDeadlineDays("");
+      setBatchDeadlineError("");
+      setBatchDeadlineModalOpen(true);
+      return;
+    }
+    handleAction(value);
+  };
+
+  const handleConfirmBatchDeadline = () => {
+    if (!batchDeadlineDays) {
+      setBatchDeadlineError("请选择时限");
+      return;
+    }
+    setShopInvoiceDeadlineDays(Number(batchDeadlineDays));
+    setBatchDeadlineModalOpen(false);
+    setBatchDeadlineError("");
+    setNotice(`已将所选店铺的订单可申请开票时限设置为 ${batchDeadlineDays} 天`);
+  };
+
+  const actionLabels = [
+    "查看",
+    "编辑",
+    "经营类目",
+    "冻结",
+    "提醒签署合同",
+    "设置店铺类型",
+    "新建合同",
+    "设置业务负责人",
+    "设置店铺标签",
+    "下架商品",
+    "设置店铺所属供应商"
+  ];
+
+  return (
+    <div className="platform-shop-management-page" data-testid="platform-shop-management-page">
+      <section className="platform-shop-management-tabs-card">
+        <div className="platform-shop-management-tabs" role="tablist" aria-label="店铺管理分类">
+          {platformShopManagementTabs.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === tab.key}
+              className={`platform-shop-management-tab ${activeTab === tab.key ? "is-active" : ""}`}
+              onClick={() => setActiveTab(tab.key)}
+            >
+              {tab.label}
+              {tab.badge ? <span>{tab.badge}</span> : null}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {activeTab === "management" ? (
+        <>
+          <section className={`platform-shop-management-tip ${tipExpanded ? "is-expanded" : ""}`}>
+            <div className="platform-shop-management-tip-copy">
+              <span className="platform-shop-management-tip-icon" aria-hidden="true">!</span>
+              <div>
+                <strong>温馨提示：</strong>
+                <p>1. 自营店铺的商品不需要平台审核，也不需要汇付审核。新增后即发布成功</p>
+                {tipExpanded ? <p>2. 店铺资料变更后，相关信息将同步更新至店铺详情。</p> : null}
+              </div>
+            </div>
+            <button type="button" aria-expanded={tipExpanded} onClick={() => setTipExpanded((value) => !value)}>
+              {tipExpanded ? "收起" : "展开"} <span aria-hidden="true">{tipExpanded ? "⌃" : "⌄"}</span>
+            </button>
+          </section>
+
+          <section className={`platform-shop-management-filter-card ${filterExpanded ? "is-expanded" : ""}`}>
+            <div className={`platform-shop-management-filter ${filterExpanded ? "is-expanded" : ""}`}>
+              <label>
+                <span>店铺ID</span>
+                <div className="platform-shop-management-input-clear">
+                  <input value={draftFilters.shopId} onChange={(event) => updateDraftFilter("shopId", event.target.value)} />
+                  {draftFilters.shopId ? (
+                    <button type="button" aria-label="清空店铺ID" onClick={() => updateDraftFilter("shopId", "")}>×</button>
+                  ) : null}
+                </div>
+              </label>
+              <label>
+                <span>店铺名称</span>
+                <input value={draftFilters.shopName} onChange={(event) => updateDraftFilter("shopName", event.target.value)} />
+              </label>
+              <label>
+                <span>店铺账号</span>
+                <input value={draftFilters.shopAccount} onChange={(event) => updateDraftFilter("shopAccount", event.target.value)} />
+              </label>
+              <label>
+                <span>店铺状态</span>
+                <select value={draftFilters.shopStatus} onChange={(event) => updateDraftFilter("shopStatus", event.target.value)}>
+                  <option value="">请选择</option>
+                  <option value="开启">开启</option>
+                  <option value="冻结">冻结</option>
+                  <option value="关闭">关闭</option>
+                </select>
+              </label>
+
+              <label>
+                <span>是否签署合同</span>
+                <select value={draftFilters.contractSigned} onChange={(event) => updateDraftFilter("contractSigned", event.target.value)}>
+                  <option value="">请选择</option>
+                  <option value="yes">是</option>
+                  <option value="no">否</option>
+                </select>
+              </label>
+              <label>
+                <span>是否欠费</span>
+                <select value={draftFilters.owesFees} onChange={(event) => updateDraftFilter("owesFees", event.target.value)}>
+                  <option value="">请选择</option>
+                  <option value="yes">是</option>
+                  <option value="no">否</option>
+                </select>
+              </label>
+              <label>
+                <span>是否需要补充资料</span>
+                <select value={draftFilters.supplementalMaterials} onChange={(event) => updateDraftFilter("supplementalMaterials", event.target.value)}>
+                  <option value="">请选择</option>
+                  <option value="yes">是</option>
+                  <option value="no">否</option>
+                </select>
+              </label>
+
+              {filterExpanded ? (
+                <>
+                  <label>
+                    <span>是否需要续签合同</span>
+                    <select value={draftFilters.renewalContract} onChange={(event) => updateDraftFilter("renewalContract", event.target.value)}>
+                      <option value="">请选择</option>
+                      <option value="yes">是</option>
+                      <option value="no">否</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>店铺类型</span>
+                    <select value={draftFilters.shopType} onChange={(event) => updateDraftFilter("shopType", event.target.value)}>
+                      <option value="">全部</option>
+                      <option value="商城店铺">商城店铺</option>
+                      <option value="自营店铺">自营店铺</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>是否需要重新入网</span>
+                    <select value={draftFilters.reentryRequired} onChange={(event) => updateDraftFilter("reentryRequired", event.target.value)}>
+                      <option value="">请选择</option>
+                      <option value="yes">是</option>
+                      <option value="no">否</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>是否开通美团支付</span>
+                    <select value={draftFilters.meituanPayEnabled} onChange={(event) => updateDraftFilter("meituanPayEnabled", event.target.value)}>
+                      <option value="">请选择</option>
+                      <option value="yes">是</option>
+                      <option value="no">否</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>支付渠道</span>
+                    <select value={draftFilters.paymentChannel} onChange={(event) => updateDraftFilter("paymentChannel", event.target.value)}>
+                      <option value="">请选择</option>
+                      <option value="汇付">汇付</option>
+                      <option value="微信">微信</option>
+                      <option value="支付宝">支付宝</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>供应商类型</span>
+                    <select value={draftFilters.supplierType} onChange={(event) => updateDraftFilter("supplierType", event.target.value)}>
+                      <option value="">请选择</option>
+                      <option value="普通供应商">普通供应商</option>
+                      <option value="战略供应商">战略供应商</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>距营业执照过期</span>
+                    <div className="platform-shop-management-suffix-field">
+                      <input
+                        inputMode="numeric"
+                        value={draftFilters.licenseExpiryDays}
+                        onChange={(event) => updateDraftFilter("licenseExpiryDays", event.target.value.replace(/[^\d]/g, ""))}
+                      />
+                      <strong>天</strong>
+                    </div>
+                  </label>
+                  <label>
+                    <span>业务负责人</span>
+                    <input value={draftFilters.businessOwner} onChange={(event) => updateDraftFilter("businessOwner", event.target.value)} />
+                  </label>
+                  <label>
+                    <span>店铺标签</span>
+                    <select value={draftFilters.shopTags} onChange={(event) => updateDraftFilter("shopTags", event.target.value)}>
+                      <option value="">请选择</option>
+                      <option value="重点店铺">重点店铺</option>
+                      <option value="自营店铺">自营店铺</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>合同状态</span>
+                    <select value={draftFilters.contractStatus} onChange={(event) => updateDraftFilter("contractStatus", event.target.value)}>
+                      <option value="">请选择</option>
+                      <option value="已签署">已签署</option>
+                      <option value="待签署">待签署</option>
+                      <option value="已到期">已到期</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>入驻审核时间</span>
+                    <div className="platform-shop-management-date-range">
+                      <input type="date" aria-label="入驻审核开始时间" value={draftFilters.admissionStartDate} onChange={(event) => updateDraftFilter("admissionStartDate", event.target.value)} />
+                      <em>—</em>
+                      <input type="date" aria-label="入驻审核结束时间" value={draftFilters.admissionEndDate} onChange={(event) => updateDraftFilter("admissionEndDate", event.target.value)} />
+                    </div>
+                  </label>
+                  <label>
+                    <span>店铺等级</span>
+                    <select value={draftFilters.shopLevel} onChange={(event) => updateDraftFilter("shopLevel", event.target.value)}>
+                      <option value="">请选择</option>
+                      <option value="普通">普通</option>
+                      <option value="优质">优质</option>
+                      <option value="旗舰">旗舰</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>新手保护期状态</span>
+                    <select value={draftFilters.newbieProtectionStatus} onChange={(event) => updateDraftFilter("newbieProtectionStatus", event.target.value)}>
+                      <option value="">请选择</option>
+                      <option value="保护期内">保护期内</option>
+                      <option value="已结束">已结束</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>订单可申请开票时限</span>
+                    <select value={draftFilters.invoiceDeadlineDays} onChange={(event) => updateDraftFilter("invoiceDeadlineDays", event.target.value)}>
+                      <option value="">请选择</option>
+                      <option value="90">90天</option>
+                      <option value="180">180天</option>
+                      <option value="365">365天</option>
+                    </select>
+                  </label>
+                </>
+              ) : null}
+
+              <div className="platform-shop-management-filter-actions">
+                <button className="platform-shop-management-expand-btn" type="button" aria-expanded={filterExpanded} onClick={() => setFilterExpanded((value) => !value)}>
+                  {filterExpanded ? "收起" : "展开"} <span aria-hidden="true">{filterExpanded ? "⌃" : "⌄"}</span>
+                </button>
+                <button className="btn btn-reset" type="button" onClick={handleReset}>重置</button>
+                <button className="btn btn-search" type="button" onClick={() => { setAppliedFilters(draftFilters); setNotice("查询完成"); }}>查询</button>
+              </div>
+            </div>
+          </section>
+
+          <section className="platform-shop-management-table-card">
+            <div className="platform-shop-management-toolbar">
+              <select
+                aria-label="批量操作"
+                value=""
+                onChange={(event) => handleBatchActionChange(event.target.value)}
+              >
+                <option value="">批量操作</option>
+                <option value="批量设置店铺标签">批量设置店铺标签</option>
+                <option value="批量删除店铺标签">批量删除店铺标签</option>
+                <option value="批量设置订单可申请开票时限">批量设置订单可申请开票时限</option>
+              </select>
+            </div>
+
+            <div className="platform-shop-management-table-wrap">
+              <table className="platform-shop-management-table">
+                <thead>
+                  <tr>
+                    <th><input type="checkbox" aria-label="全选店铺" checked={selected && showRow} onChange={(event) => setSelected(event.target.checked)} /></th>
+                    <th>序号</th>
+                    <th>店铺ID</th>
+                    <th>店铺名称</th>
+                    <th>店铺账号</th>
+                    <th>店铺等级 <span className="platform-shop-management-help">?</span></th>
+                    <th>所属供应商</th>
+                    <th>店铺标签</th>
+                    <th>业务负责人</th>
+                    <th>经营类目</th>
+                    <th>店铺类型</th>
+                    <th>店铺状态</th>
+                    <th>经营状态</th>
+                    <th>订单可申请开票时限</th>
+                    <th className="platform-shop-management-operation-head">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {showRow ? (
+                    <tr>
+                      <td><input type="checkbox" aria-label="选择店铺8210" checked={selected} onChange={(event) => setSelected(event.target.checked)} /></td>
+                      <td><input className="platform-shop-management-serial-input" aria-label="店铺序号" value={serialNo} onChange={(event) => setSerialNo(event.target.value.replace(/[^\d]/g, ""))} /></td>
+                      <td>{platformShopManagementRow.id}</td>
+                      <td><button className="platform-shop-management-shop-link" type="button" onClick={() => handleAction("店铺详情")}>{platformShopManagementRow.name}</button></td>
+                      <td>{platformShopManagementRow.account}</td>
+                      <td>{platformShopManagementRow.level}</td>
+                      <td>{platformShopManagementRow.supplier}</td>
+                      <td>{platformShopManagementRow.tags}</td>
+                      <td>{platformShopManagementRow.owner}</td>
+                      <td>{platformShopManagementRow.category}</td>
+                      <td>{platformShopManagementRow.type}</td>
+                      <td>{platformShopManagementRow.status}</td>
+                      <td>{platformShopManagementRow.operationStatus}</td>
+                      <td>{shopInvoiceDeadlineDays}天</td>
+                      <td className="platform-shop-management-operation-cell">
+                        <div className="platform-shop-management-action-links">
+                          {actionLabels.map((label) => <button type="button" key={label} onClick={() => handleAction(label)}>{label}</button>)}
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    <tr className="platform-shop-management-empty-row">
+                      <td colSpan={15}>暂无符合条件的店铺</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="platform-shop-management-pagination">
+              <span>共 {showRow ? 1 : 0} 条</span>
+              <select aria-label="每页条数" defaultValue="20"><option value="20">20 条/页</option><option value="50">50 条/页</option></select>
+              <button type="button" disabled aria-label="上一页">‹</button>
+              <button type="button" className="is-active">1</button>
+              <button type="button" disabled aria-label="下一页">›</button>
+              <span>到第</span>
+              <input value={pageInput} onChange={(event) => setPageInput(event.target.value.replace(/[^\d]/g, ""))} placeholder="请输入" aria-label="跳转页码" />
+              <span>页</span>
+              <button className="btn btn-reset" type="button" onClick={() => setNotice(pageInput === "1" || pageInput === "" ? "已在第 1 页" : "当前仅有 1 页")}>跳转</button>
+            </div>
+          </section>
+
+          {batchDeadlineModalOpen ? (
+            <div className="modal-overlay platform-shop-management-deadline-modal-overlay" role="presentation" onClick={() => setBatchDeadlineModalOpen(false)}>
+              <div className="modal-mask" />
+              <div
+                className="platform-shop-management-deadline-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="platform-shop-management-deadline-modal-title"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="platform-shop-management-deadline-modal-head">
+                  <h3 id="platform-shop-management-deadline-modal-title">设置店铺订单可申请开票时限</h3>
+                  <button type="button" aria-label="关闭" onClick={() => setBatchDeadlineModalOpen(false)}>×</button>
+                </div>
+                <div className="platform-shop-management-deadline-modal-body">
+                  <label>
+                    <span>时限：</span>
+                    <select
+                      required
+                      aria-label="时限"
+                      aria-invalid={batchDeadlineError ? "true" : "false"}
+                      value={batchDeadlineDays}
+                      onChange={(event) => {
+                        setBatchDeadlineDays(event.target.value);
+                        setBatchDeadlineError("");
+                      }}
+                    >
+                      <option value="">请选择时限</option>
+                      <option value="90">90天</option>
+                      <option value="180">180天</option>
+                      <option value="365">365天</option>
+                    </select>
+                  </label>
+                  {batchDeadlineError ? <p className="platform-shop-management-deadline-modal-error" role="alert">{batchDeadlineError}</p> : null}
+                </div>
+                <div className="platform-shop-management-deadline-modal-foot">
+                  <button type="button" className="platform-shop-management-deadline-modal-cancel" onClick={() => setBatchDeadlineModalOpen(false)}>取消</button>
+                  <button type="button" className="platform-shop-management-deadline-modal-confirm" onClick={handleConfirmBatchDeadline}>确定</button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </>
+      ) : (
+        <section className="platform-shop-management-placeholder">
+          <h2>{platformShopManagementTabs.find((tab) => tab.key === activeTab)?.label}</h2>
+          <p>该标签页暂无待处理内容。</p>
+        </section>
+      )}
+
+      {notice ? <div className="platform-shop-management-notice" role="status" onAnimationEnd={() => setNotice("")}>{notice}</div> : null}
+    </div>
+  );
+}
+
 function PlatformTradeSettingsPage() {
   const [activeTab, setActiveTab] = useState(platformTradeSettingsTabs[0]);
 
@@ -13398,6 +14179,7 @@ function PlatformContractManagementPage({ isCreatingContract = false, onCreateCo
   const [activeTab, setActiveTab] = useState("合同管理");
   const [showCertificateEmpty, setShowCertificateEmpty] = useState(false);
   const [isBuyerContractCaNoticeOpen, setIsBuyerContractCaNoticeOpen] = useState(false);
+  const [isCreateContractCaNoticeOpen, setIsCreateContractCaNoticeOpen] = useState(false);
   const [contractFilters, setContractFilters] = useState({
     storeId: "",
     storeName: "超级个体工商户店铺66",
@@ -13558,10 +14340,28 @@ function PlatformContractManagementPage({ isCreatingContract = false, onCreateCo
               </div>
             </div>
             <div className="platform-contract-create-actions">
-              <button className="btn btn-dark" type="button">提交</button>
+              <button className="btn btn-dark" type="button" onClick={() => setIsCreateContractCaNoticeOpen(true)}>提交</button>
             </div>
           </div>
         </section>
+        {isCreateContractCaNoticeOpen ? (
+          <div className="modal-overlay platform-contract-create-ca-modal-overlay" role="presentation">
+            <div className="modal-mask" onClick={() => setIsCreateContractCaNoticeOpen(false)} />
+            <div className="platform-contract-create-ca-modal" role="dialog" aria-modal="true" aria-labelledby="platform-contract-create-ca-title">
+              <div className="platform-contract-create-ca-modal-head">
+                <h3 id="platform-contract-create-ca-title">温馨提示</h3>
+                <button type="button" aria-label="关闭" onClick={() => setIsCreateContractCaNoticeOpen(false)}>×</button>
+              </div>
+              <div className="platform-contract-create-ca-modal-body">
+                <p>当前店铺不存在有效的CA证书，无法提交合同/协议。</p>
+                <p>请让店铺登录后台系统打开【店铺&gt;合同管理&gt;CA证书管理】申请CA证书后，您再进行合同/协议创建~</p>
+              </div>
+              <div className="platform-contract-create-ca-modal-foot">
+                <button className="btn btn-dark" type="button" onClick={() => setIsCreateContractCaNoticeOpen(false)}>关闭</button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     );
   }
@@ -13970,8 +14770,8 @@ function PlatformContractManagementPage({ isCreatingContract = false, onCreateCo
                   <p>部分买家账号不存在有效的CA证书，提交重新签署合同失败</p>
                 </div>
                 <div className="platform-contract-buyer-ca-modal-foot">
-                  <a className="btn btn-reset" href="/买家先货后款协议提交失败数据.xlsx" download="买家先货后款协议提交失败数据.xlsx">下载失败数据</a>
-                  <button className="btn btn-dark" type="button" onClick={() => setIsBuyerContractCaNoticeOpen(false)}>关闭</button>
+                  <button className="btn btn-reset" type="button" onClick={() => setIsBuyerContractCaNoticeOpen(false)}>关闭</button>
+                  <a className="btn btn-dark" href="/买家先货后款协议提交失败数据.xlsx" download="买家先货后款协议提交失败数据.xlsx">下载失败数据</a>
                 </div>
               </div>
             </div>
@@ -14733,7 +15533,14 @@ function SupplierTradeSettingsPage({ shopWholesaleRule, onSaveShopWholesaleRule,
               </div>
 
               <div className="supplier-trade-html-form-row">
-                <div className="supplier-trade-html-label">店铺混批门槛：</div>
+                <div className="supplier-trade-html-label has-help">
+                  <span>店铺混批门槛</span>
+                  <span className="supplier-trade-html-help-tip" tabIndex={0} aria-label="查看店铺混批门槛说明">
+                    <img src={questionHeaderIcon} alt="" aria-hidden="true" />
+                    <span role="tooltip">{`当起批门槛验证方式为数量和金额同时满足时：则数量输入框和金额输入框两者均必填；\n当起批门槛验证方式为数量和金额满足其一时：则数量输入框和金额输入框可二选一进行填写。`}</span>
+                  </span>
+                  ：
+                </div>
                 <span>订单商品数量满</span>
                 {renderCounter(
                   newRule.minQuantity,
@@ -14754,7 +15561,14 @@ function SupplierTradeSettingsPage({ shopWholesaleRule, onSaveShopWholesaleRule,
               </div>
 
               <div className="supplier-trade-html-form-row">
-                <div className="supplier-trade-html-label">是否开启区域混批：</div>
+                <div className="supplier-trade-html-label has-help">
+                  <span>是否开启区域混批</span>
+                  <span className="supplier-trade-html-help-tip is-region" tabIndex={0} aria-label="查看区域混批说明">
+                    <img src={questionHeaderIcon} alt="" aria-hidden="true" />
+                    <span role="tooltip">{`1、开启区域混批后，可针对不同收货地区分别设置起批门槛；\n2、区域混批中的门槛校验方式与起批门槛验证方式所配置的一致。\n当起批门槛验证方式为数量和金额同时满足：则区域混批中的起批量和起批金额两者均必填；\n当起批门槛验证方式为数量和金额满足其一：则区域混批中的起批量和起批金额可二选一进行填写即可。`}</span>
+                  </span>
+                  ：
+                </div>
                 <span className={`supplier-trade-html-switch${newRule.regionEnabled ? "" : " is-off"}`} onClick={() => setNewRule((current) => ({ ...current, regionEnabled: !current.regionEnabled }))} />
               </div>
 
@@ -17821,6 +18635,7 @@ function ShopInvoicePage({
   const [activeOrderDetailNo, setActiveOrderDetailNo] = useState("");
   const [activeInvoiceDetailNo, setActiveInvoiceDetailNo] = useState("");
   const [activeInvoiceHistoryNo, setActiveInvoiceHistoryNo] = useState("");
+  const [isInvoiceItemsModalOpen, setIsInvoiceItemsModalOpen] = useState(false);
   const [isRejectedCardVisible, setIsRejectedCardVisible] = useState(true);
   const [isLogisticsExpanded, setIsLogisticsExpanded] = useState(true);
   const [isOperationLogsExpanded, setIsOperationLogsExpanded] = useState(true);
@@ -18108,6 +18923,14 @@ function ShopInvoicePage({
     if (!activeInvoiceHistory?.invoiceBatch || activeInvoiceHistory.invoiceBatch === "-") return 0;
     return shopInvoiceRows.filter((item) => item.invoiceBatch === activeInvoiceHistory.invoiceBatch).length;
   }, [activeInvoiceHistory, shopInvoiceRows]);
+  const activeInvoiceHistoryItems = useMemo(() => (
+    normalizeInvoiceDetailItems(activeInvoiceHistory, {
+      invoiceNo: activeInvoiceHistory?.invoiceNo,
+      invoiceAmountWithTax: activeInvoiceHistory?.invoiceAmountWithTax,
+      invoiceAmountWithoutTax: activeInvoiceHistory?.invoiceAmountWithoutTax,
+      invoicedAt: activeInvoiceHistory?.invoicedAt
+    })
+  ), [activeInvoiceHistory]);
 
   const handleShowAfterSaleHeaderTooltip = (event) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -18197,11 +19020,13 @@ function ShopInvoicePage({
   const handleOpenInvoiceHistory = (orderNo) => {
     setActiveOrderDetailNo("");
     setActiveInvoiceDetailNo("");
+    setIsInvoiceItemsModalOpen(false);
     setActiveInvoiceHistoryNo(orderNo);
     onOpenInvoiceHistoryTab?.();
   };
 
   const handleCloseInvoiceHistory = () => {
+    setIsInvoiceItemsModalOpen(false);
     setActiveInvoiceHistoryNo("");
     onCloseInvoiceHistoryTab?.();
   };
@@ -19116,9 +19941,9 @@ function ShopInvoicePage({
           historyRecords: appendShopInvoiceHistoryRecord(item.historyRecords, {
             key: `${item.orderNo}-invoiced-${firstInvoiceItem.invoicedAt}`,
             type: "complete",
-            label: "开票完成",
+            label: "开票",
             time: firstInvoiceItem.invoicedAt,
-            description: `已完成开票，发票号码 ${normalizedItems.map((invoiceItem) => invoiceItem.invoiceNo).join("、")}。`
+            description: "开票"
           })
         }
         : item
@@ -19300,9 +20125,9 @@ function ShopInvoicePage({
           historyRecords: appendShopInvoiceHistoryRecord(item.historyRecords, {
             key: `${item.orderNo}-modify-invoice-${invoiceModifiedAt}`,
             type: "modify_invoice",
-            label: "修改发票",
+            label: "修改开票",
             time: invoiceModifiedAt,
-            description: `更新发票信息，发票号码调整为 ${normalizedItems.map((invoiceItem) => invoiceItem.invoiceNo).join("、")}。`
+            description: "修改开票"
           })
         }
         : item
@@ -19740,6 +20565,11 @@ function ShopInvoicePage({
                             </button>
                             <span>，该开票批次共 {activeInvoiceBatchOrderCount} 笔订单</span>
                           </span>
+                        </p>
+                      ) : record.type === "complete" ? (
+                        <p className="shop-invoice-history-text">
+                          <span>{record.description || "开票"}</span>
+                          <button className="shop-invoice-history-link" type="button" onClick={() => setIsInvoiceItemsModalOpen(true)}>查看发票明细</button>
                         </p>
                       ) : record.description ? <p>{record.description}</p> : null}
                     </div>
@@ -20679,6 +21509,47 @@ function ShopInvoicePage({
         </div>
       ) : null}
 
+      {isInvoiceItemsModalOpen && activeInvoiceHistory ? (
+        <div className="shop-invoice-modal-mask" onClick={() => setIsInvoiceItemsModalOpen(false)}>
+          <div className="shop-invoice-confirm-modal shop-invoice-issue-modal shop-invoice-history-invoice-items-modal" role="dialog" aria-modal="true" aria-labelledby="invoice-items-modal-title" onClick={(event) => event.stopPropagation()}>
+            <div className="shop-invoice-confirm-head shop-invoice-history-invoice-items-head">
+              <h3 id="invoice-items-modal-title">发票明细</h3>
+              <button className="shop-invoice-reject-close" type="button" aria-label="关闭" onClick={() => setIsInvoiceItemsModalOpen(false)}>×</button>
+            </div>
+            <div className="shop-invoice-confirm-body">
+              <div className="shop-invoice-history-invoice-items-summary">订单编号：{activeInvoiceHistory.orderNo}，共 {activeInvoiceHistoryItems.length} 张发票</div>
+              <div className="shop-invoice-upload-table shop-invoice-history-invoice-items-table">
+                <div className="shop-invoice-upload-table-row is-head">
+                  <span>序号</span>
+                  <span>发票附件</span>
+                  <span>发票号码</span>
+                  <span>开票时间</span>
+                  <span>开票金额（含税）</span>
+                  <span>开票金额（不含税）</span>
+                </div>
+                {activeInvoiceHistoryItems.map((item, index) => {
+                  const sourceItem = activeInvoiceHistory.invoiceItems?.[index] || {};
+                  const attachmentName = sourceItem.attachmentName || `${item.invoiceNo === "-" ? "发票附件" : item.invoiceNo}.pdf`;
+                  return (
+                    <div className="shop-invoice-upload-table-row is-readonly" key={item.id}>
+                      <span className="shop-invoice-upload-table-index">{index + 1}</span>
+                      <span className="shop-invoice-history-invoice-attachment" title={attachmentName}>{attachmentName}</span>
+                      <span>{item.invoiceNo}</span>
+                      <span>{item.invoicedAt}</span>
+                      <span>{item.invoiceAmountWithTax}</span>
+                      <span>{item.invoiceAmountWithoutTax}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="shop-invoice-confirm-foot">
+              <button className="btn btn-dark" type="button" onClick={() => setIsInvoiceItemsModalOpen(false)}>关闭</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
     </div>
   );
 }
@@ -21221,6 +22092,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   const [miniappInvoiceTitleCreateForm, setMiniappInvoiceTitleCreateForm] = useState(initialMiniappInvoiceTitleCreateForm);
   const [miniappInvoiceTitleCreateErrors, setMiniappInvoiceTitleCreateErrors] = useState(initialMiniappInvoiceTitleCreateErrors);
   const [isMiniappDefaultBillingTypePickerOpen, setIsMiniappDefaultBillingTypePickerOpen] = useState(false);
+  const [isMiniappTitleTypeHelpOpen, setIsMiniappTitleTypeHelpOpen] = useState(false);
   const [miniappInvoiceOrderDetailNo, setMiniappInvoiceOrderDetailNo] = useState("");
   const [miniappServiceOrderId, setMiniappServiceOrderId] = useState("");
   const [miniappBatchSuccessToast, setMiniappBatchSuccessToast] = useState("");
@@ -24052,7 +24924,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                                     <strong>{item.taxNo}</strong>
                                   </div>
                                   <div className="miniapp-batch-field is-store">
-                                    <span>发票类型</span>
+                                    <span>申请开票类型</span>
                                     <strong>{item.invoiceType}</strong>
                                   </div>
                                   <div className="miniapp-batch-field is-store">
@@ -24564,7 +25436,10 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                 <main className="miniapp-title-form-content">
                   <section className="miniapp-title-form-card">
                     <div className="miniapp-title-form-group">
-                      <div className="miniapp-title-form-label is-required">抬头类型</div>
+                      <div className="miniapp-title-form-label miniapp-title-form-label-with-help is-required">
+                        <span>抬头类型</span>
+                        <button type="button" aria-label="查看抬头类型说明" onClick={() => setIsMiniappTitleTypeHelpOpen(true)}>?</button>
+                      </div>
                       <div className="miniapp-title-segmented">
                         {titleTypeOptions.map((item) => (
                           <button
@@ -24760,6 +25635,21 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                             </button>
                           ))}
                         </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                {isMiniappTitleTypeHelpOpen ? (
+                  <div className="miniapp-order-overlay miniapp-single-invoice-help-overlay" onClick={() => setIsMiniappTitleTypeHelpOpen(false)}>
+                    <div className="miniapp-order-sheet miniapp-single-invoice-help-sheet" onClick={(event) => event.stopPropagation()}>
+                      <div className="miniapp-single-invoice-help-head">
+                        <strong>抬头类型</strong>
+                        <button type="button" aria-label="关闭" onClick={() => setIsMiniappTitleTypeHelpOpen(false)}>×</button>
+                      </div>
+                      <div className="miniapp-single-invoice-help-body">
+                        <p>企业：营业执照类型为公司、企业、个体工商户或其他组织的，抬头类型请选择“企业”。</p>
+                        <p>个人：无营业执照，需要以个人姓名申请开票的，抬头类型请选择“个人”。</p>
                       </div>
                     </div>
                   </div>
@@ -27565,6 +28455,8 @@ export default function App() {
     };
     const platformCurrentPageLabel = platformCenterPage === "trade-settings"
       ? "交易设置"
+      : platformCenterPage === "shop-management"
+        ? "店铺管理"
       : platformCenterPage === "shop-todo-management"
         ? "待办管理"
       : platformCenterPage === "shop-contract-management"
@@ -27576,7 +28468,14 @@ export default function App() {
       : platformCenterPage === "shop-invoice-management"
         ? platformShopTab
         : "控制台";
-    const platformCustomTabs = platformCenterPage === "trade-settings" ? [{
+    const platformCustomTabs = platformCenterPage === "shop-management" ? [{
+      key: "platform-shop-management",
+      label: "店铺管理",
+      isCurrent: true,
+      closable: true,
+      onClick: () => handleSwitchPlatformCenterPage("shop-management"),
+      onClose: () => handleSwitchPlatformCenterPage("home")
+    }] : platformCenterPage === "trade-settings" ? [{
       key: "platform-trade-settings",
       label: "交易设置",
       isCurrent: true,
@@ -27726,7 +28625,7 @@ export default function App() {
             showHomeTab={!isPlatformFullReductionPage && platformCenterPage !== "shop-contract-management"}
           />
           <main className="workspace-main platform-workspace-main">
-            {platformCenterPage === "trade-settings" ? <PlatformTradeSettingsPage /> : platformCenterPage === "shop-invoice-management" ? (
+            {platformCenterPage === "shop-management" ? <PlatformShopManagementPage /> : platformCenterPage === "trade-settings" ? <PlatformTradeSettingsPage /> : platformCenterPage === "shop-invoice-management" ? (
               <ShopInvoicePage
                 activeShopTab={platformShopTab}
                 pageVariant="platform"
