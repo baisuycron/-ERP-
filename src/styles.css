@@ -4522,6 +4522,14 @@ input, select { border: 1px solid var(--line-deep); background: #fff; }
 .goods-table.detail-table th:nth-child(4) { width: 110px; }
 .goods-table.detail-table th:nth-child(5) { width: 110px; }
 .goods-table.detail-table th:nth-child(6) { width: 280px; }
+.goods-table.detail-table.has-product-activity-status th:nth-child(1) { width: 390px; }
+.goods-table.detail-table.has-product-activity-status th:nth-child(2) { width: 100px; }
+.goods-table.detail-table.has-product-activity-status th:nth-child(3) { width: 110px; }
+.goods-table.detail-table.has-product-activity-status th:nth-child(4) { width: 120px; }
+.goods-table.detail-table.has-product-activity-status th:nth-child(5) { width: 120px; }
+.goods-table.detail-table.has-product-activity-status th:nth-child(6) { width: 270px; }
+.goods-table.detail-table.has-product-activity-status th:nth-child(7) { width: 130px; }
+.product-activity-status { display: inline-flex; align-items: center; min-height: 24px; color: #222; font-weight: 500; white-space: nowrap; }
 .goods-panel .goods-pagination { padding-top: 16px; padding-bottom: 16px; margin-top: 0; }
 .activity-goods-table.no-selection th:nth-child(1) { width: 388px; }
 .activity-goods-table.no-selection th:nth-child(2) { width: 108px; }
