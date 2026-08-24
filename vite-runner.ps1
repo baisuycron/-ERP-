@@ -19,7 +19,7 @@ if (Test-Path $bundledNode) {
 }
 $attempt = 0
 $hostArg = "127.0.0.1"
-$portArg = "5173"
+$portArg = "6173"
 
 while ($true) {
   $attempt += 1

@@ -8,7 +8,7 @@
 
 - Browser-rendered screenshot: `D:\Thunderobot\GitHub\-ERP-\outputs\platform-shop-management-stable-shell.png`
 - Side-by-side comparison: `D:\Thunderobot\GitHub\-ERP-\outputs\platform-shop-management-shell-comparison.png`
-- URL: `http://127.0.0.1:5173/`
+- URL: `http://127.0.0.1:6173/`
 - CSS viewport: 2048 × 1079; device scale factor: 1.
 - Implementation pixels: 2047 × 1079（平台工作区保留滚动条宽度）。
 - State: 平台中心 > 店铺 > 店铺管理，默认筛选条件与单条店铺数据。

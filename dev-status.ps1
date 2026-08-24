@@ -20,7 +20,7 @@ if (Test-Path $pidFile) {
 
 $httpStatus = ""
 try {
-  $httpStatus = Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:5173" -TimeoutSec 3 | Select-Object -ExpandProperty StatusCode
+  $httpStatus = Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:6173" -TimeoutSec 3 | Select-Object -ExpandProperty StatusCode
 } catch {
   $httpStatus = "DOWN"
 }

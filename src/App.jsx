@@ -22210,7 +22210,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
     { key: "refund", label: "退款/售后", badge: 16, icon: "refund" }
   ];
   const mineServiceItems = ["我的评论", "我的消息", "我的收货地址", "发票管理", "账号管理", "平台客服", "举报信息", "身份认证"];
-  const miniappBaseInvoiceTitleItems = [
+  const miniappBaseInvoiceTitleItems = useMemo(() => ([
     {
       id: "default",
       title: "美团",
@@ -22256,15 +22256,15 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       defaultBillingType: "special",
       taxNo: "91310000MA1K3N8X5L"
     }
-  ];
+  ]), []);
   const hasCreatedDefaultInvoiceTitle = miniappCreatedInvoiceTitleItems.some((item) => item.isDefault);
-  const miniappInvoiceTitleItems = [
+  const miniappInvoiceTitleItems = useMemo(() => ([
     ...miniappBaseInvoiceTitleItems.map((item) => (
       hasCreatedDefaultInvoiceTitle ? { ...item, isDefault: false } : item
     )),
     ...miniappCreatedInvoiceTitleItems
-  ];
-  const miniappInvoiceTitleMetaByTitle = miniappInvoiceTitleItems.reduce((result, item) => {
+  ]), [hasCreatedDefaultInvoiceTitle, miniappBaseInvoiceTitleItems, miniappCreatedInvoiceTitleItems]);
+  const miniappInvoiceTitleMetaByTitle = useMemo(() => miniappInvoiceTitleItems.reduce((result, item) => {
     const invoiceTypes = item.tags.filter((tag) => tag === "电子普通发票" || tag === "电子增值税专用发票");
     result[item.title] = {
       taxNo: item.taxNo || "",
@@ -22273,12 +22273,12 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       invoiceTypes
     };
     return result;
-  }, {});
-  const miniappInvoiceTitleTaxNoMap = miniappInvoiceTitleItems.reduce((result, item) => {
+  }, {}), [miniappInvoiceTitleItems]);
+  const miniappInvoiceTitleTaxNoMap = useMemo(() => miniappInvoiceTitleItems.reduce((result, item) => {
     result[item.title] = item.taxNo || "";
     return result;
-  }, {});
-  const miniappInvoiceAssistantOrders = [
+  }, {}), [miniappInvoiceTitleItems]);
+  const miniappInvoiceAssistantOrders = useMemo(() => ([
     {
       id: "invoice-helper-1",
       storeName: "蓝月亮旗舰店(12301)",
@@ -22375,8 +22375,32 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       footerAmount: 2899,
       footerOrderCount: 2,
       images: ["cola", "cover"]
+    },
+    {
+      id: "invoice-helper-9",
+      storeName: "海尔官方旗舰店(88601)",
+      orderedAt: "2025-12-10 10:18:26",
+      itemCount: 2,
+      paymentMethod: "先款后货",
+      paidAmount: 2599,
+      invoiceAmount: 2599,
+      footerAmount: 2599,
+      footerOrderCount: 1,
+      images: ["cover", "latte"]
+    },
+    {
+      id: "invoice-helper-10",
+      storeName: "京东企业购(92018)",
+      orderedAt: "2025-12-08 09:36:45",
+      itemCount: 3,
+      paymentMethod: "先货后款",
+      paidAmount: 1999,
+      invoiceAmount: 1999,
+      footerAmount: 1999,
+      footerOrderCount: 1,
+      images: ["tea", "purple-drink"]
     }
-  ];
+  ]), []);
   const [miniappInvoiceRecordItems, setMiniappInvoiceRecordItems] = useState([
     {
       id: "invoice-record-1",
@@ -22590,6 +22614,25 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       ]
     },
     {
+      key: "invoice-title-adjust-sample",
+      store: "开票抬头校验测试店铺",
+      storeStatus: "已完成",
+      invoiceTypeOptions: ["电子普通发票"],
+      invoiceTitleValidationMessage: "当前发票抬头关联的抬头名称与纳税人识别号不匹配",
+      invoiceAdjustLabel: "去调整",
+      items: [
+        { key: "invoice-title-adjust-1", image: "tea", title: "企业采购办公套装", subtitle: "开票校验样本", price: "168", quantity: 1, status: "" },
+        { key: "invoice-title-adjust-2", image: "cover", title: "企业采购配送服务", subtitle: "", price: "20", quantity: 1, status: "" }
+      ],
+      summaryText: "共2件商品 实付",
+      summaryAmount: "188",
+      actions: [
+        { label: "确认收货", primary: true },
+        { label: "申请开票" },
+        { label: "申请售后" }
+      ]
+    },
+    {
       key: "completed-sample",
       store: "API测试店铺",
       storeStatus: "已完成",
@@ -22609,9 +22652,11 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
   const miniappInvoiceStoreName = miniappInvoiceSourceOrder?.store || "-";
   const isMiniappSpecialOnlyInvoicePreview = Boolean(miniappInvoiceSourceOrder?.specialInvoiceOnlyTip);
   const miniappPreviewInvoiceTitle = "美团";
-  const miniappPreviewInvoiceTypeOptions = isMiniappSpecialOnlyInvoicePreview
-    ? [buyerPcMallSpecialInvoiceType]
-    : (miniappInvoiceTitleMetaByTitle[miniappPreviewInvoiceTitle]?.invoiceTypes || [buyerPcMallNormalInvoiceType]);
+  const miniappPreviewInvoiceTypeOptions = Array.isArray(miniappInvoiceSourceOrder?.invoiceTypeOptions)
+    ? miniappInvoiceSourceOrder.invoiceTypeOptions
+    : isMiniappSpecialOnlyInvoicePreview
+      ? [buyerPcMallSpecialInvoiceType]
+      : (miniappInvoiceTitleMetaByTitle[miniappPreviewInvoiceTitle]?.invoiceTypes || [buyerPcMallNormalInvoiceType]);
   const hasMiniappPreviewInvoiceTypePicker = miniappPreviewInvoiceTypeOptions.length > 1;
   const displayedMiniappPreviewInvoiceType = hasMiniappPreviewInvoiceTypePicker
     ? miniappPreviewInvoiceType
@@ -23003,6 +23048,34 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
       defaultTitleValue: "湖南海商科技有限公司",
       receiverPhone: "13900002222",
       receiverEmail: "buyer@corp.com"
+    },
+    "invoice-helper-9": {
+      orderNo: "20260212022895777",
+      orderAmount: 2599,
+      afterSaleStatus: "-",
+      afterSaleAmount: 0,
+      applyAmount: 2599,
+      invoiceType: "电子普通发票",
+      pickupStore: "上海浦东门店(086601)",
+      defaultTitleValue: "湖南海商科技有限公司",
+      invalidTitleValue: "湖南海商科技有限公司",
+      validationMessage: "当前发票抬头关联的抬头名称与纳税人识别号不匹配",
+      receiverPhone: "13800003333",
+      receiverEmail: "invoice-a@corp.com"
+    },
+    "invoice-helper-10": {
+      orderNo: "20260212022895778",
+      orderAmount: 1999,
+      afterSaleStatus: "-",
+      afterSaleAmount: 0,
+      applyAmount: 1999,
+      invoiceType: "电子增值税专用发票",
+      pickupStore: "北京亦庄门店(092018)",
+      defaultTitleValue: "zd增值税专用发票抬头",
+      invalidTitleValue: "zd增值税专用发票抬头",
+      validationMessage: "未查询到发票抬头关联的企业信息，请核对纳税人识别号",
+      receiverPhone: "13800004444",
+      receiverEmail: "invoice-b@corp.com"
     }
   }), []);
   const displayedMiniappPendingOrders = useMemo(() => {
@@ -23284,7 +23357,9 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
     "invoice-helper-5": { orderStatus: "待结算", serviceAgentName: "小米有品生活馆客服" },
     "invoice-helper-6": { orderStatus: "已完成", serviceAgentName: "办公优选企业店客服" },
     "invoice-helper-7": { orderStatus: "已完成", serviceAgentName: "格力官方旗舰店客服" },
-    "invoice-helper-8": { orderStatus: "已完成", serviceAgentName: "华为企业购客服" }
+    "invoice-helper-8": { orderStatus: "已完成", serviceAgentName: "华为企业购客服" },
+    "invoice-helper-9": { orderStatus: "已完成", serviceAgentName: "海尔官方旗舰店客服" },
+    "invoice-helper-10": { orderStatus: "已完成", serviceAgentName: "京东企业购客服" }
   }), []);
   const activeMiniappServiceOrder = useMemo(() => {
     const matchedOrder = miniappInvoiceAssistantOrders.find((item) => item.id === miniappServiceOrderId);
@@ -23322,6 +23397,8 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
           pickupStore: seed.pickupStore || "-",
           titleOptions: ["", "美团", "湖南海商科技有限公司", "zd增值税专用发票抬头"],
           defaultTitleValue: seed.defaultTitleValue || "",
+          invalidTitleValue: seed.invalidTitleValue || "",
+          validationMessage: seed.validationMessage || "",
           receiverPhone: seed.receiverPhone || "-",
           receiverEmail: seed.receiverEmail || "-"
         };
@@ -23339,6 +23416,11 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
           : (titleInvoiceTypes[0] || "")
       );
       const supportedInvoiceTypes = getMiniappSupportedInvoiceTypes(row);
+      if (row.validationMessage && selectedTitle === row.invalidTitleValue) {
+        result[row.id] = row.validationMessage;
+        return result;
+      }
+
       if (!selectedTitle) {
         result[row.id] = "发票抬头不能为空";
         return result;
@@ -24352,9 +24434,19 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                             {miniappBatchSubmitAttempted && miniappBatchValidationByOrderId[row.id] ? (
                               <div className="miniapp-batch-card-notice">
                                 <span>{miniappBatchValidationByOrderId[row.id]}</span>
-                                {miniappBatchValidationByOrderId[row.id].startsWith("该店铺仅支持") ? (
-                                  <button className="miniapp-batch-card-adjust-btn" type="button" onClick={() => handleOpenMiniappBatchTitlePicker(row.id)}>去调整</button>
-                                ) : null}
+                                <button
+                                  className="miniapp-batch-card-adjust-btn"
+                                  type="button"
+                                  onClick={() => {
+                                    if (miniappBatchValidationByOrderId[row.id] === "请选择开票类型") {
+                                      handleOpenMiniappBatchInvoiceTypePicker(row.id);
+                                      return;
+                                    }
+                                    handleOpenMiniappBatchTitlePicker(row.id);
+                                  }}
+                                >
+                                  去调整
+                                </button>
                               </div>
                             ) : null}
                           </article>
@@ -26299,7 +26391,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                     <div className="miniapp-confirm-dialog">
                       <div className="miniapp-confirm-body">
                         <h3>温馨提示</h3>
-                        <p>该店铺仅支持电子增值税专用发票</p>
+                        <p>{miniappInvoiceSourceOrder?.invoiceTitleValidationMessage || "该店铺仅支持电子增值税专用发票"}</p>
                       </div>
                       <div className="miniapp-confirm-actions">
                         <button className="miniapp-confirm-cancel" type="button" onClick={() => setIsMiniappSpecialOnlyInvoiceTipOpen(false)}>取消</button>
@@ -26311,7 +26403,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                             setMiniappView("invoice-titles");
                           }}
                         >
-                          去调整抬头
+                          {miniappInvoiceSourceOrder?.invoiceAdjustLabel || "去调整抬头"}
                         </button>
                       </div>
                     </div>
@@ -26407,7 +26499,7 @@ function BuyerMiniAppMallPage({ onBackToPcMall, onPortalActionClick, shopWholesa
                           type="button"
                           onClick={() => {
                             if (!validateMiniappPreviewInvoiceType()) return;
-                            if (miniappInvoiceSourceOrder?.specialInvoiceOnlyTip) {
+                            if (miniappInvoiceSourceOrder?.specialInvoiceOnlyTip || miniappInvoiceSourceOrder?.invoiceTitleValidationMessage) {
                               setIsMiniappSpecialOnlyInvoiceTipOpen(true);
                               return;
                             }

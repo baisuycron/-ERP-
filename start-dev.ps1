@@ -10,7 +10,7 @@ if (-not (Test-Path $stableScript)) {
 
 function Test-DevServerReachable {
   try {
-    $statusCode = Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:5173" -TimeoutSec 3 | Select-Object -ExpandProperty StatusCode
+    $statusCode = Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:6173" -TimeoutSec 3 | Select-Object -ExpandProperty StatusCode
     return ($statusCode -eq 200)
   } catch {
     return $false
@@ -18,11 +18,11 @@ function Test-DevServerReachable {
 }
 
 if (Test-DevServerReachable) {
-  Write-Host "Dev server is already reachable at http://127.0.0.1:5173"
+  Write-Host "Dev server is already reachable at http://127.0.0.1:6173"
   exit 0
 }
 
-Write-Host "Starting dev server at http://127.0.0.1:5173 ..."
+Write-Host "Starting dev server at http://127.0.0.1:6173 ..."
 Write-Host "Close this window to stop the Vite dev server."
 
 & $stableScript

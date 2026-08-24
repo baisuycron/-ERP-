@@ -15,4 +15,4 @@ if (-not (Test-Path $viteEntry)) {
 }
 
 $env:CI = "1"
-& $bundledNode $viteEntry --host 127.0.0.1 --port 5173 --strictPort
+& $bundledNode $viteEntry --host 127.0.0.1 --port 6173 --strictPort

@@ -1,7 +1,7 @@
 import { createServer } from "vite";
 
 const host = "127.0.0.1";
-const port = 5173;
+const port = 6173;
 
 const server = await createServer({
   server: {
