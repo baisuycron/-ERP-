@@ -1589,8 +1589,6 @@ const platformFlashSaleRows = [
     id: "1217",
     name: "测试",
     shop: "诗语家居日用专营店",
-    buyerGroup: "北京分组",
-    buyerId: "2083059433",
     startTime: "2026-06-04 14:24:07",
     endTime: "2026-06-26 14:24:07",
     status: "进行中"
@@ -1862,10 +1860,10 @@ const seedActivitiesByPage = {
   专享价: createSpecialPriceSeedActivities(),
   专享价2: createSpecialPriceSeedActivities(),
   限时购1: [
-    { id: "1111", name: "双11限时购1活动", buyerGroup: "北京分组", buyerId: "2083059433", goodsCount: 12, startTime: "2026-11-01 00:00:00", endTime: "2026-11-11 23:59:59", status: "未开始", actions: ["查看", "编辑", "提前结束"] },
-    { id: "0001", name: "国庆节限时购1活动", buyerGroup: "黑龙江分组", buyerId: "2084008012", goodsCount: 2, startTime: "2026-10-01 00:00:00", endTime: "2026-10-08 23:59:59", status: "未开始", actions: ["查看", "编辑", "提前结束"] },
-    { id: "0011", name: "普通限时购1活动", buyerGroup: "四川分组", buyerId: "2080403003", goodsCount: 30, startTime: "2026-03-01 00:00:00", endTime: "2026-04-20 23:59:59", status: "进行中", actions: ["查看", "编辑", "提前结束", "复制链接"] },
-    { id: "0012", name: "元旦节限时购1活动", participantBuyerType: "all", buyerGroup: "全部买家", buyerId: "2080025606", goodsCount: 6, startTime: "2026-01-01 00:00:00", endTime: "2026-01-01 23:59:59", status: "已结束", actions: ["查看"] }
+    { id: "1111", name: "双11限时购1活动", goodsCount: 12, startTime: "2026-11-01 00:00:00", endTime: "2026-11-11 23:59:59", status: "未开始", actions: ["查看", "编辑", "提前结束"] },
+    { id: "0001", name: "国庆节限时购1活动", goodsCount: 2, startTime: "2026-10-01 00:00:00", endTime: "2026-10-08 23:59:59", status: "未开始", actions: ["查看", "编辑", "提前结束"] },
+    { id: "0011", name: "普通限时购1活动", goodsCount: 30, startTime: "2026-03-01 00:00:00", endTime: "2026-04-20 23:59:59", status: "进行中", actions: ["查看", "编辑", "提前结束", "复制链接"] },
+    { id: "0012", name: "元旦节限时购1活动", goodsCount: 6, startTime: "2026-01-01 00:00:00", endTime: "2026-01-01 23:59:59", status: "已结束", actions: ["查看"] }
   ],
   限时购: [
     { id: "2101", name: "春季限时购活动", goodsCount: 8, startTime: "2026-04-01 00:00:00", endTime: "2026-04-30 23:59:59", status: "进行中", actions: ["查看", "编辑", "提前结束", "复制链接"] },
@@ -5325,7 +5323,7 @@ const marketingPageConfigs = {
   限时购1: {
     createLabel: "新增限时购",
     defaultCategory: "常规活动",
-    initialFilters: { ...emptyFilters, buyerGroup: "", buyerId: "" }
+    initialFilters: { ...emptyFilters }
   },
   限时购: {
     createLabel: "新增限时购",
@@ -14871,7 +14869,6 @@ function PlatformFlashSaleDetailPage({ activity, onBack }) {
         <div className="platform-flash-sale-detail-line"><span>店铺:</span><strong>{activity.shop}</strong></div>
         <div className="platform-flash-sale-detail-line"><span>开始时间:</span><strong>{activity.startTime}</strong></div>
         <div className="platform-flash-sale-detail-line"><span>结束时间:</span><strong>{activity.endTime}</strong></div>
-        <div className="platform-flash-sale-detail-line platform-flash-sale-detail-buyer-line"><span>活动买家范围:</span><BuyerScopeReadonly activity={activity} /></div>
       </div>
 
       <div className="platform-flash-sale-detail-goods-label">商品详情:</div>
@@ -15136,8 +15133,7 @@ function PlatformFlashSalePage() {
     activityName: "",
     activityId: "",
     productId: "",
-    specId: "",
-    buyerId: ""
+    specId: ""
   });
   const [appliedFilters, setAppliedFilters] = useState(draftFilters);
   const [pageInput, setPageInput] = useState("");
@@ -15155,8 +15151,7 @@ function PlatformFlashSalePage() {
       activityName: "",
       activityId: "",
       productId: "",
-      specId: "",
-      buyerId: ""
+      specId: ""
     };
     setDraftFilters(nextFilters);
     setAppliedFilters(nextFilters);
@@ -15170,7 +15165,6 @@ function PlatformFlashSalePage() {
     if (appliedFilters.endTime.trim() && item.endTime > appliedFilters.endTime.trim()) return false;
     if (appliedFilters.activityName.trim() && !item.name.includes(appliedFilters.activityName.trim())) return false;
     if (appliedFilters.activityId.trim() && !item.id.includes(appliedFilters.activityId.trim())) return false;
-    if (appliedFilters.buyerId.trim() && !String(item.buyerId || "").includes(appliedFilters.buyerId.trim())) return false;
     return true;
   }), [appliedFilters]);
 
@@ -15238,10 +15232,6 @@ function PlatformFlashSalePage() {
                 <span>规格ID</span>
                 <input value={draftFilters.specId} onChange={(event) => handleDraftFilterChange("specId", event.target.value)} />
               </label>
-              <label className="platform-flash-sale-field">
-                <span>买家ID</span>
-                <input inputMode="numeric" value={draftFilters.buyerId} onChange={(event) => handleDraftFilterChange("buyerId", event.target.value.replace(/\D/g, ""))} />
-              </label>
               <div className="platform-flash-sale-filter-actions">
                 <button className="btn btn-reset" type="button" onClick={handleReset}>重置</button>
                 <button className="btn btn-dark" type="button" onClick={() => setAppliedFilters(draftFilters)}>查询</button>
@@ -15260,7 +15250,6 @@ function PlatformFlashSalePage() {
                     <th>活动ID</th>
                     <th>活动名称</th>
                     <th>店铺</th>
-                    <th>活动买家范围</th>
                     <th>开始时间 <span className="platform-flash-sale-sort">◆</span></th>
                     <th>结束时间 <span className="platform-flash-sale-sort">◆</span></th>
                     <th>状态</th>
@@ -15273,7 +15262,6 @@ function PlatformFlashSalePage() {
                       <td>{item.id}</td>
                       <td>{item.name}</td>
                       <td>{item.shop}</td>
-                      <td><span className={`platform-flash-sale-buyer-group-cell ${item.buyerGroup === "全部买家" ? "is-all-buyers" : ""}`}>{item.buyerGroup}</span></td>
                       <td>{item.startTime}</td>
                       <td>{item.endTime}</td>
                       <td>{item.status}</td>
@@ -15286,7 +15274,7 @@ function PlatformFlashSalePage() {
                     </tr>
                   )) : (
                     <tr>
-                      <td className="platform-flash-sale-empty" colSpan={8}>暂无数据</td>
+                      <td className="platform-flash-sale-empty" colSpan={7}>暂无数据</td>
                     </tr>
                   )}
                 </tbody>
@@ -16526,15 +16514,12 @@ function ListPage({ pageName, filters, setFilters, page, setPage, pageSize, setP
     return <SpecialPrice2ListPage filters={filters} setFilters={setFilters} page={page} setPage={setPage} pageSize={pageSize} setPageSize={setPageSize} onCreate={onCreate} onAction={onAction} activities={activities} onOpenBuyerGroupDetail={onOpenBuyerGroupDetail} />;
   }
 
-  const showFlashSaleOneBuyerFields = isFlashSaleOnePage(pageName);
   const filteredActivities = useMemo(() => activities.filter((item) => {
     if (filters.status !== "全部" && item.status !== filters.status) return false;
     if (filters.activityId && !item.id.includes(filters.activityId.trim())) return false;
     if (filters.activityName && !item.name.includes(filters.activityName.trim())) return false;
-    if (showFlashSaleOneBuyerFields && filters.buyerGroup && item.buyerGroup !== filters.buyerGroup) return false;
-    if (showFlashSaleOneBuyerFields && filters.buyerId && !String(item.buyerId || "").includes(filters.buyerId.trim())) return false;
     return true;
-  }), [activities, filters, showFlashSaleOneBuyerFields]);
+  }), [activities, filters]);
 
   const pageCount = Math.max(1, Math.ceil(filteredActivities.length / pageSize));
   const currentPage = Math.min(page, pageCount);
@@ -16543,35 +16528,14 @@ function ListPage({ pageName, filters, setFilters, page, setPage, pageSize, setP
   return (
     <>
       <section className="content-card filter-card">
-        <div className={`filter-grid ${showFlashSaleOneBuyerFields ? "filter-grid-flash-sale-one" : ""}`}>
+        <div className="filter-grid">
           <label className="filter-field field-status"><span>状态</span><select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}>{statuses.map((status) => <option key={status} value={status}>{status === "全部" ? "请选择" : status}</option>)}</select></label>
           <label className="filter-field field-date"><span>活动时间</span><input placeholder="开始时间        -        结束时间" value={filters.dateRange} onChange={(e) => setFilters({ ...filters, dateRange: e.target.value })} /></label>
           <label className="filter-field"><span>活动名称</span><input value={filters.activityName} onChange={(e) => setFilters({ ...filters, activityName: e.target.value })} /></label>
           <label className="filter-field"><span>活动ID</span><input value={filters.activityId} onChange={(e) => setFilters({ ...filters, activityId: e.target.value })} /></label>
           <label className="filter-field"><span>商品ID</span><input value={filters.productId} onChange={(e) => setFilters({ ...filters, productId: e.target.value })} /></label>
           <label className="filter-field"><span>规格ID</span><input value={filters.specId} onChange={(e) => setFilters({ ...filters, specId: e.target.value })} /></label>
-          {showFlashSaleOneBuyerFields ? (
-            <>
-              <label className="filter-field">
-                <span>活动买家范围</span>
-                <div className={`filter-select-wrap flash-sale-one-buyer-filter ${filters.buyerGroup ? "has-clear" : ""}`}>
-                  <select value={filters.buyerGroup || ""} onChange={(e) => setFilters({ ...filters, buyerGroup: e.target.value })}>
-                    <option value="" disabled hidden>请选择</option>
-                    <option value="全部买家">全部买家</option>
-                    {buyerGroups.map((group) => <option key={group.id} value={group.name}>{group.name}</option>)}
-                  </select>
-                  {filters.buyerGroup ? (
-                    <button className="filter-select-clear" type="button" aria-label="清除活动买家范围" onClick={() => setFilters({ ...filters, buyerGroup: "" })}>×</button>
-                  ) : null}
-                </div>
-              </label>
-              <label className="filter-field"><span>买家ID</span><input inputMode="numeric" pattern="[0-9]*" value={filters.buyerId || ""} onChange={(e) => setFilters({ ...filters, buyerId: e.target.value.replace(/\D/g, "") })} /></label>
-            </>
-          ) : null}
-          <div
-            className={`filter-actions ${showFlashSaleOneBuyerFields ? "flash-sale-one-filter-actions" : ""}`}
-            style={showFlashSaleOneBuyerFields ? { gridColumn: 4, gridRow: 3, width: "max-content", justifySelf: "end", justifyContent: "flex-start", alignSelf: "start" } : undefined}
-          >
+          <div className="filter-actions">
             <button className="btn btn-reset" type="button" onClick={() => setFilters(marketingPageConfigs[pageName]?.initialFilters || emptyFilters)}>重置</button><button className="btn btn-search" type="button">查询</button>
           </div>
         </div>
@@ -16580,9 +16544,9 @@ function ListPage({ pageName, filters, setFilters, page, setPage, pageSize, setP
       <section className="content-card table-card">
         <div className="table-toolbar"><button className="btn btn-create" type="button" onClick={onCreate}>{marketingPageConfigs[pageName]?.createLabel || "新增活动"}</button></div>
         <div className="table-shell">
-          <table className={`data-table ${showFlashSaleOneBuyerFields ? "flash-sale-one-data-table" : ""}`}>
-            <thead><tr><th>活动ID</th><th>活动名称</th>{showFlashSaleOneBuyerFields ? <th>活动买家范围</th> : null}<th>活动商品数</th><th>开始时间</th><th>结束时间</th><th>状态</th><th>操作</th></tr></thead>
-            <tbody>{rows.map((item) => <tr key={item.id}><td>{item.id}</td><td>{item.name}</td>{showFlashSaleOneBuyerFields ? <td><span className={`flash-sale-one-buyer-group-cell ${item.buyerGroup === "全部买家" ? "is-all-buyers" : ""}`}>{item.buyerGroup}</span></td> : null}<td>{item.goodsCount}</td><td>{item.startTime}</td><td>{item.endTime}</td><td className={`status-cell status-${item.status}`}>{item.status}</td><td><div className="action-links">{item.actions.map((action) => <button key={action} type="button" onClick={() => onAction(action, item)}>{action}</button>)}</div></td></tr>)}</tbody>
+          <table className="data-table">
+            <thead><tr><th>活动ID</th><th>活动名称</th><th>活动商品数</th><th>开始时间</th><th>结束时间</th><th>状态</th><th>操作</th></tr></thead>
+            <tbody>{rows.map((item) => <tr key={item.id}><td>{item.id}</td><td>{item.name}</td><td>{item.goodsCount}</td><td>{item.startTime}</td><td>{item.endTime}</td><td className={`status-cell status-${item.status}`}>{item.status}</td><td><div className="action-links">{item.actions.map((action) => <button key={action} type="button" onClick={() => onAction(action, item)}>{action}</button>)}</div></td></tr>)}</tbody>
           </table>
         </div>
         <div className="pagination-bar"><span>共 {filteredActivities.length} 条</span><select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}><option value={20}>20 条/页</option><option value={50}>50 条/页</option><option value={100}>100 条/页</option></select><button className="page-btn" type="button" disabled>‹</button><button className="page-btn is-current" type="button">{currentPage}</button><button className="page-btn" type="button" disabled={currentPage >= pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}>›</button><span>到第</span><input className="page-input" placeholder="请输入" /><span>页</span><button className="btn btn-jump" type="button">跳转</button></div>
@@ -16669,7 +16633,7 @@ function DetailPage({ pageName, detailActivity, page, setPage, pageSize, setPage
         <div className="detail-line"><span>活动分类:</span><strong>{detailActivity.category}</strong></div>
         <div className="detail-line"><span>开始时间:</span><strong>{detailActivity.startTime}</strong></div>
         <div className="detail-line"><span>结束时间:</span><strong>{detailActivity.endTime}</strong></div>
-        <div className="detail-line detail-buyer-scope-line"><span>活动买家范围:</span><BuyerScopeReadonly activity={detailActivity} /></div>
+        {!isFlashSaleOnePage(pageName) ? <div className="detail-line detail-buyer-scope-line"><span>活动买家范围:</span><BuyerScopeReadonly activity={detailActivity} /></div> : null}
       </div>
 
       <div className="detail-goods-label">商品详情:</div>
@@ -21609,7 +21573,6 @@ function ShopInvoicePage({
 
 function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, selectedProducts, selectedGoodsIds, productFieldEditModesByProduct, productFieldErrorsByProduct, onToggleProductFieldEditMode, onToggleGoodsSelection, onRemoveProduct, onBatchRemoveProducts, onBack, onOpenPicker, onOpenSpecPicker, onShowSpecDetail, onTerminateProduct, onUpdateProductFlashPrice, onUpdateProductLimit, onUpdateProductActivityStock, onSave, modalOpen }) {
   const isSpecialPricePage = isAnySpecialPricePage(pageName);
-  const showFlashSaleOneBuyerScope = isFlashSaleOnePage(pageName);
   const filteredProducts = useMemo(() => selectedProducts.filter((product) => {
     const productKeyword = form.productKeyword.trim();
     const productId = form.productId.trim();
@@ -21765,38 +21728,6 @@ function CreatePage({ pageName, form, isEditMode, onFormChange, onResetFilters, 
           <label className="create-field"><span><em>*</em> 活动分类:</span><div className="create-input-wrap"><select value={form.category} onChange={(e) => onFormChange("category", e.target.value)}><option value="">请选择活动分类</option>{activityCategories.map((item) => <option key={item} value={item}>{item}</option>)}</select></div></label>
           <label className="create-field"><span><em>*</em> 开始时间:</span><div className={`create-input-wrap with-icon ${isEditMode ? "is-disabled" : ""}`}><input placeholder="请选择开始时间" value={form.startTime} onChange={(e) => onFormChange("startTime", e.target.value)} disabled={isEditMode} /><i>◴</i></div></label>
           <label className="create-field"><span><em>*</em> 结束时间:</span><div className="create-input-wrap with-icon"><input placeholder="请选择结束时间" value={form.endTime} onChange={(e) => onFormChange("endTime", e.target.value)} /><i>◴</i></div></label>
-          {showFlashSaleOneBuyerScope ? (
-            <div className="create-field create-buyer-scope-field">
-              <span><em>*</em> 活动买家范围:</span>
-              <div className="create-buyer-scope-control">
-                <div className="create-buyer-scope-radios">
-                  <label className="create-radio"><input type="radio" name="participant-buyer-type" value="all" checked={(form.participantBuyerType || "all") === "all"} onChange={() => onFormChange("participantBuyerType", "all")} /><i />全部买家</label>
-                  <label className="create-radio"><input type="radio" name="participant-buyer-type" value="group" checked={form.participantBuyerType === "group"} onChange={() => onFormChange("participantBuyerType", "group")} /><i />指定买家分组</label>
-                </div>
-                {form.participantBuyerType === "group" ? (
-                  <div className="create-buyer-group-row">
-                    <div className={`create-input-wrap create-buyer-group-select ${form.participantBuyerGroup ? "has-clear" : ""}`}>
-                      <select value={form.participantBuyerGroup || ""} onChange={(e) => onFormChange("participantBuyerGroup", e.target.value)}>
-                        <option value="" disabled hidden>请选择</option>
-                        {buyerGroups.map((item) => <option key={item.id} value={item.name}>{item.name}</option>)}
-                      </select>
-                      {form.participantBuyerGroup ? (
-                        <button
-                          className="create-buyer-group-clear"
-                          type="button"
-                          aria-label="清除买家分组"
-                          onClick={() => onFormChange("participantBuyerGroup", "")}
-                        >
-                          ×
-                        </button>
-                      ) : null}
-                    </div>
-                    <button className={`create-buyer-group-view ${form.participantBuyerGroup ? "is-active" : ""}`} type="button">查看</button>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          ) : null}
           <div className="create-field"><span><em>*</em> 活动商品:</span><div className="create-actions-row"><button className="btn btn-create picker-btn" type="button" onClick={onOpenPicker} disabled={isEditMode}>+ 选择商品</button></div></div>
         </div>
 
@@ -27852,11 +27783,6 @@ export default function App() {
     let hasMissingFlashPrice = false;
     let hasMissingTotalLimit = false;
     let hasMissingActivityStock = false;
-
-    if (isFlashSaleOnePage(currentMarketingPage) && createForm.participantBuyerType === "group" && !createForm.participantBuyerGroup) {
-      setToastMessage("请选择买家分组");
-      return;
-    }
 
     selectedProducts.forEach((product) => {
       const productFieldEditModes = productFieldEditModesByProduct?.[product.id] || initialProductFieldEditModes;
